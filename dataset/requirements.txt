@@ -1,0 +1,2 @@
+# No third-party packages. Every script uses the Python standard library only
+# (tested with Python 3.14). A dataset/.venv is not needed.
