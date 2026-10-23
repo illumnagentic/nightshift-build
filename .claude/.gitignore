@@ -1,0 +1,5 @@
+# Progress files are committed in this repo.
+# The kit installer re-adds the ignore line below if it is missing,
+# so it stays, and the negation after it overrides it.
+progress/
+!progress/
