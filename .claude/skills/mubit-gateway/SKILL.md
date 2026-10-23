@@ -1,6 +1,6 @@
 ---
 name: mubit-gateway
-description: Route an LLM call through Mubit correctly from this project's Cloudflare Worker (TypeScript). Use when writing or reviewing any code that creates an OpenAI, Anthropic, Gemini or Vercel AI SDK client, sets a base URL or MUBIT_API_KEY, calls api.mubit.ai, handles a 401/403/404 from an LLM call, sees an error with type `middleware_gateway_error` or a code such as `missing_key`, `extra_credential_refused`, `provider_key_missing` or `starter_credit_model`, or needs the `x-middleware-request-id` of a call. Also use before adding `@mubit-ai/sdk` to the Worker (don't).
+description: Route an LLM call through Mubit correctly from this project's Python backend (Cloudflare Python Worker or plain FastAPI host). Use when writing or reviewing any code that creates an OpenAI, Anthropic or Gemini client, sets a base URL or MUBIT_API_KEY, calls api.mubit.ai, handles a 401/403/404 from an LLM call, sees an error with type `middleware_gateway_error` or a code such as `missing_key`, `extra_credential_refused`, `provider_key_missing` or `starter_credit_model`, or needs the `x-middleware-request-id` of a call. Also use before adding `mubit-sdk` (PyPI) or `@mubit-ai/sdk` (don't), or if anyone suggests calling an LLM from the TypeScript frontend (don't).
 ---
 
 # Mubit gateway
@@ -23,16 +23,17 @@ back. **Model IDs do not change.** There is no Mubit SDK needed for this.
 
 ## Base URLs — they differ per SDK
 
-| Client                                 | Base URL                                                                |
+| Client (Python)                        | Base URL                                                                |
 | -------------------------------------- | ----------------------------------------------------------------------- |
-| OpenAI SDK                             | `https://api.mubit.ai/openai/v1`                                        |
-| Anthropic SDK                          | `https://api.mubit.ai/anthropic` (**no** `/v1`, the SDK adds it)        |
-| `@google/genai`                        | `https://api.mubit.ai/gemini` (**no** `/v1beta`)                        |
-| OpenAI SDK against Gemini              | `https://api.mubit.ai/gemini/v1beta/openai` (refused on starter credit) |
-| Vercel AI SDK `@ai-sdk/openai`         | `https://api.mubit.ai/openai/v1`                                        |
-| Vercel AI SDK `@ai-sdk/anthropic`      | `https://api.mubit.ai/anthropic/v1` (**with** `/v1`)                    |
-| Vercel AI SDK `@ai-sdk/google`         | `https://api.mubit.ai/gemini/v1beta` (**with** `/v1beta`)               |
+| `openai`                               | `https://api.mubit.ai/openai/v1`                                        |
+| `anthropic`                            | `https://api.mubit.ai/anthropic` (**no** `/v1`, the SDK adds it)        |
+| `google-genai`                         | `https://api.mubit.ai/gemini` (**no** `/v1beta`)                        |
+| `openai` against Gemini                | `https://api.mubit.ai/gemini/v1beta/openai` (refused on starter credit) |
 | OpenRouter / Groq / Together / Mistral | `https://api.mubit.ai/compat/{service}/v1`                              |
+| Plain HTTPS POST                       | Full path, e.g. `https://api.mubit.ai/openai/v1/chat/completions`       |
+
+The docs show these base URLs for the JS SDKs. The Python SDKs build request paths the
+same way, so the same values should apply. _Unverified until the first call succeeds._
 
 The console's **Connect** page shows the base URL for the workspace. If it differs from
 the table, the console wins (`wrong_region` 401 names the right one).
@@ -47,34 +48,47 @@ the table, the console wins (`wrong_region` 401 names the right one).
 - **A second credential beside the Mubit key gets a 401.** With the Anthropic SDK, a stray
   `ANTHROPIC_AUTH_TOKEN` is sent too: unset it. A Google key in `GOOGLE_API_KEY` beats
   `GEMINI_API_KEY`.
-- Keys are Worker secrets (`wrangler secret put MUBIT_API_KEY`), never in `wrangler.toml`,
-  never in the frontend bundle.
+- Keys are backend secrets: on a Python Worker, `wrangler secret put MUBIT_API_KEY`
+  (locally in `.dev.vars`); on a FastAPI host, an environment variable from `.env`.
+  Never in `wrangler.toml`, never in the frontend bundle, never committed.
 - Two key permissions: **Inference** (send calls) and **Read only** (refused with
   `403 key_permission`). The app needs Inference.
 
 ## Server-side only
 
 **The API answers no CORS preflight.** A browser call fails. All LLM calls go from the
-Worker. That also keeps the key off users' devices.
+Python backend; the TypeScript frontend only ever calls our own API. That also keeps the
+key off users' devices.
 
-## In a Cloudflare Worker
+## In the Python backend
 
-- Use the provider SDK with `baseURL`, or plain `fetch`. Both work: it is just HTTPS.
-- **Do not put `@mubit-ai/sdk` in the Worker.** Its `Client` imports `@grpc/grpc-js`,
-  `@grpc/proto-loader` and `node:path` at module top level (checked in 0.13.2). Its
-  `learn` module uses `process.on` and defaults its endpoint to `http://127.0.0.1:3000`.
-  And its routes are not served by `api.mubit.ai` today (see `mubit-task-design`).
-  Adding it is a new dependency anyway: ask the human first.
+- Use the provider SDK with `base_url`, or a plain HTTPS POST. Both work: it is just HTTPS.
+- **Python Workers run on Pyodide.** Whether the `openai` / `google-genai` packages import
+  and make requests there is _unverified_. The Backend host spike in
+  `docs/decisions.md` checks it with one real call. If the SDK fights the runtime, send
+  a plain HTTPS POST with the same URL, header and body instead, or move to the FastAPI host.
+- **Do not add `mubit-sdk` (PyPI) or `@mubit-ai/sdk`.** Their memory / lessons routes
+  (`/v2/control/*`) are not served by `api.mubit.ai` today (see `mubit-task-design`), and
+  the gateway needs no SDK. Any new package is a new dependency anyway: ask the human first.
 
-Minimal shape (Gemini via `@google/genai`; swap per table):
+Minimal shapes (not run in this repo; swap per table):
 
-```ts
-import { GoogleGenAI } from "@google/genai";
+```python
+# Curator: OpenAI format, async (Python Workers handlers are async)
+from openai import AsyncOpenAI
 
-const ai = new GoogleGenAI({
-  apiKey: env.MUBIT_API_KEY,
-  httpOptions: { baseUrl: "https://api.mubit.ai/gemini" },
-});
+client = AsyncOpenAI(api_key=env.MUBIT_API_KEY, base_url="https://api.mubit.ai/openai/v1")
+```
+
+```python
+# Photo flags: Gemini
+from google import genai
+from google.genai import types
+
+client = genai.Client(
+    api_key=env.MUBIT_API_KEY,
+    http_options=types.HttpOptions(base_url="https://api.mubit.ai/gemini"),
+)
 ```
 
 ## Record the request ID
@@ -84,13 +98,18 @@ and error alike. Store it in D1 against our own `decision_id`. It is the only li
 our swipe/feedback rows back to the call in Mubit's **Requests** page, and support asks
 for it. (The console's own "Request" ID under Details is a different ID.)
 
-```ts
-// OpenAI SDK
-const { data, response } = await client.chat.completions.create({...}).withResponse();
-const mubitRequestId = response.headers.get("x-middleware-request-id");
+```python
+# openai SDK: the raw response exposes headers
+raw = await client.chat.completions.with_raw_response.create(
+    model=CURATOR_MODEL,
+    messages=messages,
+    metadata={"session_id": session_id},
+)
+mubit_request_id = raw.headers.get("x-middleware-request-id")
+completion = raw.parse()
 ```
 
-With plain `fetch`, read `res.headers.get("x-middleware-request-id")`.
+With a plain HTTPS POST, read the `x-middleware-request-id` response header.
 
 ## Headers Mubit reads (and strips before forwarding)
 
