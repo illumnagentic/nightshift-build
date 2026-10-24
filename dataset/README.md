@@ -7,17 +7,19 @@ sources live.
 Files in git:
 
 - `listings.jsonl` - one JSON object per listing, as written by `normalise.py`. Media and
-  stations are nested lists.
-- `listings.csv` - the same rows. List fields are JSON-encoded strings.
+  stations are nested lists. It keeps the scraped EPC values (see Demo EPC values).
+- `listings.csv` - the same rows. List fields are JSON-encoded strings. Scraped EPC values.
 - `listings.sqlite` - the D1-ready database, built from `d1/schema.sql` by
-  `scripts/build_d1.py`. Three tables; see Schema below.
+  `scripts/build_d1.py`. Three tables; see Schema below. It carries demo EPC values.
 - `d1/schema.sql` - the table definitions, the single source of truth for the data shape.
 - `d1/seed.sql` - plain `INSERT` statements for every row, generated from the same data.
+  It carries the same demo EPC values as `listings.sqlite`.
 - `reports/normalise-report.txt` and `reports/d1-build-report.txt` - counts from the last
   run of each script.
 - `scripts/` - the fetch, normalise, sanitise and build scripts. Python standard library
   only.
 - `tests/test_sanitise.py` - unit tests for the sanitise rules.
+- `tests/test_build_d1.py` - tests for the demo EPC pass and the D1 build.
 - `requirements.txt`, `.env.example`.
 
 Not in git:
@@ -123,7 +125,8 @@ a comment on each column giving its unit and what NULL means. In brief:
 - `listing_media` - one row per image: `(listing_id, kind, position, url)` with `kind` one
   of `photo`, `floorplan`, `epc`. The primary key is `(listing_id, kind, position)`;
   `position` is 0-based within the listing and kind. Later photo flags are meant to join
-  on that key.
+  on that key. The schema still allows `epc`, but the built database has no `epc` rows
+  (see Demo EPC values).
 - `listing_stations` - one row per nearby station: `(listing_id, position, name,
   distance_km, types)`, nearest first. `types` is a JSON array.
 
@@ -163,16 +166,42 @@ set to NULL and counted in `reports/normalise-report.txt`, never altered to fit.
   (`id`, `source`, `source_id`, `url`, `price_gbp`, `fetched_at`) is dropped and counted.
   The last run dropped none: 398 in, 398 kept.
 
+## Demo EPC values
+
+`listings.sqlite` and `d1/seed.sql` hold demo EPC data, added by `build_d1.py` when it
+reads `listings.jsonl`. `listings.jsonl` and `listings.csv` are not changed and keep the
+scraped values.
+
+- **Chart images and PDFs are gone from the D1 outputs.** Every `epc` media row is
+  dropped, so `listing_media` has no `epc` rows. The scraped URLs (313 listings, 329
+  rows) remain in `listings.jsonl`.
+- **`epc_current`.** The 93 letters found in agent text are kept. Each of the other 305
+  listings gets a made-up letter, drawn at random with a fixed seed (`EPC_SEED`,
+  20261024) and weighted to the spread of the 93 real letters (C 43, D 26, B 20, E 3,
+  A 1).
+- **`epc_potential`.** Made up for all 398 listings: the current letter improved by 0, 1
+  or 2 bands (weights 20, 50 and 30), never better than A. The scraped data has none.
+- **No marker.** Nothing in the database says which letters are made up. The only way to
+  tell is to compare with `listings.jsonl`: where `epc_current` is NULL there, the letter
+  in the database is made up. Every `epc_potential` is made up.
+- **Repeatable.** The same input gives byte-identical outputs. Listings are drawn in id
+  order from one seeded generator, so adding, removing or renaming any listing changes
+  every made-up letter after it.
+
+This is demo data. Do not treat it as the real rating of any home.
+
 ## Coverage
 
-398 listings. Percentages are of all 398 unless stated. Counted from `listings.sqlite`.
+398 listings. Percentages are of all 398 unless stated. Counted from `listings.sqlite`,
+except the two scraped EPC lines, which are counted from `listings.jsonl`.
 
-| Field                              | Count                                    | %    | Notes                                                                                           |
-| ---------------------------------- | ---------------------------------------- | ---- | ----------------------------------------------------------------------------------------------- |
-| `epc_current` (rating letter)      | 93                                       | 23%  | All taken from the agent's own text, e.g. "EPC Rating: C". Not checked against the certificate. |
-| EPC chart image (`epc` media rows) | 313 listings (329 rows)                  | 79%  | The chart Rightmove shows. A few are PDFs. The rating in the image was **not** read.            |
-| either of the two EPC fields       | 317                                      | 80%  | 81 listings have no EPC information at all.                                                     |
-| `epc_potential`                    | 0                                        | 0%   | Never found in text. The column is always NULL.                                                 |
+| Field                                         | Count                                    | %    | Notes                                                                                           |
+| --------------------------------------------- | ---------------------------------------- | ---- | ----------------------------------------------------------------------------------------------- |
+| `epc_current` in `listings.sqlite`            | 398                                      | 100% | 93 real, from the agent's own text, e.g. "EPC Rating: C", not checked against the certificate. 305 made up. |
+| `epc_potential` in `listings.sqlite`          | 398                                      | 100% | All made up.                                                                                    |
+| `epc_current` in `listings.jsonl` (scraped)   | 93                                       | 23%  | 305 are NULL.                                                                                   |
+| `epc_potential` in `listings.jsonl` (scraped) | 0                                        | 0%   | Never found in text. Always NULL in the scraped files.                                          |
+| EPC chart image (`epc` media rows)            | 0 in `listings.sqlite`; 313 listings (329 rows) in `listings.jsonl` | 79% scraped | The chart Rightmove shows. A few are PDFs. The rating in the image was **not** read. |
 | floorplan (at least 1)             | 398 (416 rows)                           | 100% | Required.                                                                                       |
 | `tenure`                           | 398                                      | 100% | Required. 2 taken from text.                                                                    |
 | `lease_years_remaining`            | 193 of 257 leasehold / share of freehold | 75%  | 5 from text. 1 freehold listing also carries a lease (see limitations).                         |
@@ -188,9 +217,13 @@ set to NULL and counted in `reports/normalise-report.txt`, never altered to fit.
 | `listed_date`                      | 398                                      | 100% |                                                                                                 |
 | stations (`listing_stations`)      | 398 listings (1,194 rows)                | 100% | Every row has a `distance_km`. 1,116 have a transport type; the 78 RapidAPI rows have none.     |
 
-Row counts: `listings` 398, `listing_media` 4,577, `listing_stations` 1,194.
+Row counts in `listings.sqlite`: `listings` 398, `listing_media` 4,248 (photo 3,832,
+floorplan 416, epc 0), `listing_stations` 1,194.
 
-EPC rating counts: C 43, D 26, B 20, E 3, A 1, none 305.
+`epc_current` counts in `listings.sqlite`: A 6, B 83, C 196, D 105, E 8.
+`epc_potential` counts: A 135, B 148, C 89, D 23, E 3. Both include made-up values.
+
+Scraped `epc_current` counts in `listings.jsonl`: C 43, D 26, B 20, E 3, A 1, none 305.
 
 `parsed_fields` on each row lists every field that was taken from free text rather than
 a structured field, so the app can treat those values with less trust.
@@ -226,7 +259,8 @@ Area:
 
 ## Known limitations and shortcuts
 
-- **EPC rating is the weak field.** Neither source has a structured EPC rating. The
+- **EPC rating is the weak field in the scraped source.** The database fills the gaps
+  with made-up demo values (see Demo EPC values). Neither source has a structured EPC rating. The
   Rightmove page and the RapidAPI detail response both give only the chart image URL
   (`epcGraphs` and `epcs`), so spending API calls on existing listings would not have
   added a single rating. Ratings come only from agent text. Reading the letter from the
@@ -244,7 +278,9 @@ Area:
   a service charge of 0 and 5 a ground rent of 0; some may be filler rather than fact.
   One RapidAPI 4-bed house (`rm-94396305`) has 0 bathrooms though its description mentions
   an en suite bathroom.
-- **EPC rating coverage is low.** Only 93 of 398 (23%) have a letter; see the first point.
+- **Scraped EPC rating coverage is low.** Only 93 of 398 (23%) have a real letter in
+  `listings.jsonl`; see the first point. `listings.sqlite` has a letter on every listing,
+  but 305 are made up.
 - **The data is unofficial and against Rightmove's terms** (see Sources). Demo use only.
 - **`seed.sql` is not idempotent.** It needs empty tables. A second import fails on the
   primary keys.
@@ -357,6 +393,6 @@ Known limits:
 - `seed.sql` needs empty tables. It is plain `INSERT`s with no `BEGIN`/`COMMIT` (D1 rejects
   them), so a second import fails on the primary keys. Drop and recreate the tables before
   re-seeding.
-- `seed.sql` is 2.2 MB in 6,169 statements, the largest 11,006 bytes against D1's limit of
+- `seed.sql` is 2.1 MB in 5,840 statements, the largest 11,004 bytes against D1's limit of
   about 100 KB per statement. An import of that size has not been tried. If D1 rejects it,
   split the file.

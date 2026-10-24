@@ -10,8 +10,10 @@ Usage (from the dataset/ directory):
 import argparse
 import json
 import os
+import random
 import sqlite3
 import sys
+from collections import Counter
 
 TABLES = ["listings", "listing_media", "listing_stations"]
 LISTING_COLS = [
@@ -24,6 +26,27 @@ LISTING_COLS = [
 JSON_COLS = {"key_features", "parsed_fields"}
 MEDIA_COLS = ["listing_id", "kind", "position", "url"]
 STATION_COLS = ["listing_id", "position", "name", "distance_km", "types"]
+
+
+BANDS = "ABCDEFG"
+EPC_SEED = 20261024
+
+
+def demo_epc(r, rng, letters, weights):
+    """Return a copy of record r prepared for the demo database.
+
+    Drops every EPC media item (PDFs and charts), since made-up letters would
+    contradict them. Keeps a real epc_current, otherwise draws one weighted by the
+    real letter counts. epc_potential is always made up: epc_current improved by
+    0, 1 or 2 bands (weights 20/50/30), never better than A.
+    """
+    out = dict(r)
+    out["media"] = [m for m in r["media"] if m["kind"] != "epc"]
+    if out["epc_current"] is None:
+        out["epc_current"] = rng.choices(letters, weights)[0]
+    gain = rng.choices([0, 1, 2], [20, 50, 30])[0]
+    out["epc_potential"] = BANDS[max(0, BANDS.index(out["epc_current"]) - gain)]
+    return out
 
 
 def rows_of(r):
@@ -63,6 +86,12 @@ def main():
     with open(os.path.join(ds, "listings.jsonl"), encoding="utf-8") as f:
         records = [json.loads(line) for line in f if line.strip()]
 
+    real = Counter(r["epc_current"] for r in records if r["epc_current"] is not None)
+    letters = sorted(real)
+    weights = [real[x] for x in letters]
+    rng = random.Random(EPC_SEED)
+    records = [demo_epc(r, rng, letters, weights) for r in sorted(records, key=lambda r: r["id"])]
+
     listings, media, stations = [], [], []
     for r in records:
         a, b, c = rows_of(r)
@@ -98,6 +127,9 @@ def main():
         f.write(seed)
 
     db_counts = counts(con)
+    epc_cur = dict(con.execute("SELECT epc_current, COUNT(*) FROM listings GROUP BY 1 ORDER BY 1"))
+    epc_pot = dict(con.execute("SELECT epc_potential, COUNT(*) FROM listings GROUP BY 1 ORDER BY 1"))
+    media_kinds = dict(con.execute("SELECT kind, COUNT(*) FROM listing_media GROUP BY 1 ORDER BY 1"))
     fk = con.execute("PRAGMA foreign_key_check").fetchall()
     integrity = con.execute("PRAGMA integrity_check").fetchall()
     con.close()
@@ -116,6 +148,10 @@ def main():
     lines += ["== pragma results ==",
               "  foreign_key_check: %s" % ("clean" if not fk else "%d violations" % len(fk)),
               "  integrity_check: %s" % integrity[0][0],
+              "== epc (demo values, see README) ==",
+              "  epc_current: " + ", ".join("%s %d" % kv for kv in epc_cur.items()),
+              "  epc_potential: " + ", ".join("%s %d" % kv for kv in epc_pot.items()),
+              "  media rows by kind: " + ", ".join("%s %d" % kv for kv in media_kinds.items()),
               "== seed.sql ==",
               "  statements: %d" % len(statements),
               "  size: %d bytes" % len(seed.encode("utf-8")),
