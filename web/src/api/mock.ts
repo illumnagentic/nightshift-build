@@ -63,6 +63,53 @@ const isText = (v: unknown): v is string =>
   typeof v === "string" && v.trim() !== "";
 const hash = (s: string) => [...s].reduce((h, c) => h + c.charCodeAt(0), 0);
 
+function savedPrefs(
+  text: string,
+  commute_postcode: string,
+  max: number | null,
+  commute_status: Prefs["commute_status"],
+): Prefs {
+  return {
+    text,
+    commute_postcode,
+    max_commute_min: max,
+    parsed: {
+      hard: {
+        max_price_gbp: null,
+        min_bedrooms: null,
+        property_types: null,
+        min_epc: null,
+        tenure: null,
+        min_lease_years: null,
+        max_commute_min: max,
+      },
+      soft: text
+        .split(/[,.]/)
+        .map((s) => s.trim())
+        .filter(Boolean),
+    },
+    commute_status,
+  };
+}
+
+// Seeded users start with saved prefs and finished commute times.
+const SEED_PREFS: Record<string, () => Prefs> = {
+  u_01: () =>
+    savedPrefs(
+      "Two bed flat under 550k, near a tube station, bright rooms, no ground floor.",
+      "EC2N 2DB",
+      45,
+      "ready",
+    ),
+  u_02: () =>
+    savedPrefs(
+      "Two bed flat, near a station, bright rooms, no ground floor.",
+      "N1C 4AG",
+      null,
+      "ready",
+    ),
+};
+
 // Some listings have no TfL answer, like the real backend.
 function commuteMinutes(listingId: string, postcode: string): number | null {
   const h = hash(listingId);
@@ -76,15 +123,15 @@ export function createMockClient(): ApiClient {
     { user_id: "u_02", username: "jordan" },
   ];
   const state = new Map<string, UserState>(
-    users.map((u) => [u.user_id, newUserState()]),
+    users.map((u) => [u.user_id, newUserState(SEED_PREFS[u.user_id]?.())]),
   );
   const decisions = new Map<string, Decision>();
   let decisionSeq = 0;
   let feedbackSeq = 0;
 
-  function newUserState(): UserState {
+  function newUserState(prefs: Prefs | null = null): UserState {
     return {
-      prefs: null,
+      prefs,
       swipes: 0,
       newCards: 0,
       version: 0,
@@ -180,28 +227,12 @@ export function createMockClient(): ApiClient {
       if (!isText(req?.text)) invalid("Prefs text is required.");
       if (!isText(req.commute_postcode))
         invalid("A commute postcode is required.");
-      const max = req.max_commute_min ?? null;
-      u.prefs = {
-        text: req.text,
-        commute_postcode: req.commute_postcode,
-        max_commute_min: max,
-        parsed: {
-          hard: {
-            max_price_gbp: null,
-            min_bedrooms: null,
-            property_types: null,
-            min_epc: null,
-            tenure: null,
-            min_lease_years: null,
-            max_commute_min: max,
-          },
-          soft: req.text
-            .split(/[,.]/)
-            .map((s) => s.trim())
-            .filter(Boolean),
-        },
-        commute_status: "pending",
-      };
+      u.prefs = savedPrefs(
+        req.text,
+        req.commute_postcode,
+        req.max_commute_min ?? null,
+        "pending",
+      );
       for (const [id, d] of decisions) {
         if (d.userId === userId && d.action === null) decisions.delete(id);
       }
