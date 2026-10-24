@@ -203,11 +203,11 @@ process-wording check exits 0.
 
 **Evidence location**: `evidence/web-feedback/step-3.md`.
 
-- [ ] Implemented
-- [ ] Tested — evidence: (date)
-- [ ] Best practices met — evidence: (date)
-- [ ] Matches locked requirements — evidence: (date)
-- [ ] No scope drift — evidence: (date)
+- [x] Implemented — feedbackForm.ts: set/edit/remove, canSubmit, toRequest, skipRequest, all pure (2026-10-24)
+- [x] Tested — evidence: npm test exit 0, 160 passed; feedbackForm.test.ts 20 tests cover each function (2026-10-24)
+- [x] Best practices met — evidence: typecheck and build exit 0; immutable updates, reuses api types (2026-10-24)
+- [x] Matches locked requirements — evidence: done-when met; check-process-refs.sh exit 0 (2026-10-24)
+- [x] No scope drift — evidence: only feedbackForm.ts, its test, step-3.md plus two TRADEOFFS lines (2026-10-24)
 
 ### Step 4 — Chip dialog
 
@@ -270,6 +270,8 @@ check exits 0.
 - Step 1 | Mock weights still count every non-skipped decision that offered a chip, including cards never answered; only skipped screens are left out. | The real backend's offered counting rules, once the contract states them.
 - Step 2 | `feedbackOutcome` treats any action other than exploration + `left` as optional, so an unknown future action would open optional feedback rather than none. | A closed action union is already typed; revisit only if the contract adds actions.
 - Step 2 | Four existing deck tests changed expectations or flow because a ranked right swipe now opens optional feedback (listed in the step evidence). Assertions kept; two now call `continue` before the next step. | None.
+- Step 3 | `toRequest` trusts the card's `chips` to have unique `chip_id`s; if a card repeated one, the body would repeat it. The contract says chips are unique per card. | Dedupe by `chip_id` in `toRequest` if the backend ever sends repeats.
+- Step 3 | `setAnswer` keeps raw text untrimmed in the form and trims only when building the request, so the text box can hold trailing spaces while typing. | None needed.
 
 ---
 
