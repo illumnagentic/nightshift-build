@@ -581,11 +581,17 @@ Response 200:
 `feedback_required` here is authoritative; the value on the card was only a hint. If
 `true`, the frontend must collect feedback before showing the next card. It is `true`
 for each of the user's first 15 swipes (onboarding), whatever the action. The
-count does not reset when prefs are re-saved. After that it is always `false`: left
-swipes show no feedback screen, and right swipes may show an optional one. After
-onboarding a superlike behaves as a right swipe for feedback (the optional screen), and
-still adds the favourite. Feedback sent for a post-onboarding left swipe is still
-accepted.
+count does not reset when prefs are re-saved. After that it is always `false`, and the
+frontend decides whether to show an optional feedback screen from the card's `source`
+and the action:
+
+- `ranked` card: an optional screen on any action (`left`, `right` or `superlike`);
+- `exploration` card, `left`: no screen (the curator was right, nothing to learn);
+- `exploration` card, `right` or `superlike`: an optional screen (a false exclude).
+
+`source` decides only this. It is still never shown on the card face. A superlike still
+adds the favourite. The user may skip an optional screen; a skip is sent as
+`skipped: true` (see feedback). Feedback sent for any swiped decision is accepted.
 
 The server does not enforce compulsory feedback. A swipe is never refused because the
 previous card has no feedback. The frontend obeys `feedback_required`.
@@ -608,6 +614,19 @@ returns 404 `decision_not_found`. An empty or whitespace-only
 `free_text` or chip `text` is stored as `null`, with no error. The server returns `null`,
 never `""`. A `chip_id` repeated within one request returns 422 `invalid_request`.
 
+`skipped` is optional and `false` when absent. `"skipped": true` records that the user
+skipped an optional feedback screen. It must come with `"chips": []` and
+`"free_text": null`; any other combination returns 422 `invalid_request`. A skipped
+decision is left out of the offered counts behind each factor's weight, so a skip never
+lowers a factor's weight. A later PUT without `skipped` replaces the skip. The response
+echoes `skipped`.
+
+Skip request:
+
+```json
+{"chips": [], "free_text": null, "skipped": true}
+```
+
 Request:
 
 ```json
@@ -629,9 +648,9 @@ Request:
 - A chip answer is about this property's version of the feature, not a general
   preference. The general preference is derived server side across cards.
 - Feedback is compulsory for the user's first 15 swiped cards (onboarding), on any
-  action. After that it is optional on right swipes, and left swipes show no feedback
-  screen. The server sets `feedback_required`; the frontend obeys it. The server does not
-  enforce it (see swipe).
+  action, with no skip. After that the frontend shows an optional screen by the rule
+  under swipe, and a skip is sent as `skipped: true`. The server sets
+  `feedback_required`; the frontend obeys it. The server does not enforce it (see swipe).
 - Every feedback PUT bumps the profile version, including an edit that changes nothing
   and a clear. `profile_version` in the response is the new version.
 
@@ -645,6 +664,7 @@ Response 200:
     {"chip_id": "balcony_terrace", "strength": "would_prefer_not", "text": null}
   ],
   "free_text": "Lovely kitchen, but the street felt noisy.",
+  "skipped": false,
   "profile_version": 14
 }
 ```
