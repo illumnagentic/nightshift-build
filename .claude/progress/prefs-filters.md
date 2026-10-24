@@ -170,11 +170,11 @@ excluded one breaks at least one.
 
 **Evidence location**: `evidence/prefs-filters/step-2.md`
 
-- [ ] Implemented
-- [ ] Tested — evidence: (date)
-- [ ] Best practices met — evidence: (date)
-- [ ] Matches locked requirements — evidence: (date)
-- [ ] No scope drift — evidence: (date)
+- [x] Implemented — filters.py passes/matching_listing_ids, only declared files, hunks trace to Step 2 (2026-10-24)
+- [x] Tested — evidence: reviewer re-ran pytest test_filters+test_prefs_unit+test_mubit 94 passed exit 0; mutations (EPC direction, lease >=, bedrooms NULL) each fail tests (2026-10-24)
+- [x] Best practices met — evidence: pure predicate, unknown never passes a set limit, real DB opened mode=ro, no new deps, check-process-refs exit 0 (2026-10-24)
+- [x] Matches locked requirements — evidence: Q3 NULLs, Q4 _lease_ok, Q6 HOUSE_TYPES, EPC A best, independent meets_every_limit oracle over 8 pref sets on 635 real listings (2026-10-24)
+- [x] No scope drift — evidence: git status shows filters.py, test_filters.py, evidence step-2.md, progress file only (2026-10-24)
 
 ### Step 3 — TfL commute, cached, batched per poll
 
@@ -254,6 +254,12 @@ Q13: Optional Worker vars `GEMINI_BASE` / `TFL_BASE` overriding the upstream hos
 2026-10-24 | step 1 redo | The guard covers only modules that use the `fake` fixture | a future API test module that skips it is unguarded | require the fixture in any new API test module — accepted by arbiter 2026-10-24: the only existing modules outside the guard (test_users.py, test_mubit.py) never call PUT /api/prefs, so nothing reaches Mubit today; a session-wide autouse would break the server-less unit tests; Step 3's brief must require test_commute.py to apply `pytestmark = pytest.mark.usefixtures("fake")` (or take `fake` in every test that hits the server) so the probe runs before any PUT /api/prefs, and its reviewer must confirm it
 
 2026-10-24 | step 1 redo | The probe leaves a throwaway `probe_*` user and prefs row in the local D1 | one extra row per session | none needed; seed.sh clears it — accepted by arbiter 2026-10-24: local D1 only, same pattern as the existing t_* test users, cleared by re-seeding; no effect on later steps or the eval
+
+2026-10-24 | step 2 | `matching_listing_ids(db, hard, commutes=None)` takes a listing-id to minutes mapping instead of joining `commute_cache` on the postcode | the table does not exist until Step 3; creating it here would be out of scope | Step 3 adds the join (or a loader returning the mapping) and a postcode-taking wrapper for B4; `passes` is unchanged — accepted by arbiter 2026-10-24: the commute_cache table is Step 3's, and `worker/src/filters.py` is already in Step 3's scope, so nothing later is blocked; Step 3's brief must require (a) a postcode-taking entry point in filters.py that loads the (listing, postcode) minutes from `commute_cache` and calls `matching_listing_ids` with them, so B4 never builds the mapping itself; (b) a listing with no cache row, or a cached null (TfL 404), maps to None and is excluded when `max_commute_min` is set; (c) the TfL batch selects listings with `commutes=None` (commute limit off), as the done-when requires; (d) unit tests for (a) and (b); Step 4 writes the final signature into B4 HOOKS
+
+2026-10-24 | step 2 | The filter loads every listing (635) and applies `passes` in Python, no SQL WHERE | one predicate in one place, so SQL and Python cannot disagree; the table is small | push a pre-filter into SQL only if the listing count grows by orders of magnitude — accepted by arbiter 2026-10-24: 635 rows in a local D1, one query per deck or poll; one predicate keeps the zero-violations claim checkable in one place; the dump is frozen, so the growth case does not arise this weekend
+
+2026-10-24 | step 2 | Unknown tenure with unknown lease is excluded when `min_lease_years` is set | conservative, consistent with Q3 (unknown never passes a set limit); the brief left it open | pass it instead if the pool proves too small (check count of such rows) — accepted by arbiter 2026-10-24: consistent with Q3; the real dump has 0 rows with NULL tenure (339 freehold, 236 leasehold, 60 share_of_freehold), so the pool cost today is nil
 
 ---
 
