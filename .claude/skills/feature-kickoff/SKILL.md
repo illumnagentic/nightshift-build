@@ -114,3 +114,21 @@ current one passes review. Never implement in the main context yourself.
 Every brief starts with the header: `PROGRESS: .claude/progress/<slug>.md`, then
 `STEP: <n>` or `REDO OF STEP <n>`. Briefs cite rules from RULES IN FORCE. The redo rule
 is in `.claude/CLAUDE.md`, and `.claude/hooks/check-step-order.sh` enforces the order.
+
+## When autonomy is on
+
+Read `Autonomy` from `.claude/kit-config.md`. If it is `on`, see `## Autonomous mode` in
+`.claude/CLAUDE.md`. Then:
+
+- **Requirements (sections 2 and 3).** Do not ask the section 2 questions. Quote
+  `REQUIREMENTS (LOCKED)` from the feature's line in `docs/plan.md`, the binding lines
+  in `docs/decisions.md`, and any human instruction. Anything genuinely ambiguous goes
+  to the `arbiter`. On ESCALATE, stop, write the reason, and tell the human.
+- **Branch.** Create the branch named in `docs/plan.md` from an up-to-date `main`
+  (`git switch main && git pull --ff-only && git switch -c <branch>`) before stamping
+  `BASE_SHA`.
+- **Approval (section 6).** Skipped. Instead the `Plan` agent, or the main agent, checks
+  the plan against the requirements and the step size rule in `docs/decisions.md`. Any
+  new capability, or dependency not on the approved list in kit-config, is an ESCALATE.
+- **Dirty working tree.** ESCALATE. Do not commit or stash someone else's changes.
+- Then go straight into the steps.

@@ -149,11 +149,11 @@ is replaced and by what; feature-wrapup ends by pushing, opening the PR and call
 
 **Evidence location**: the diff
 
-- [ ] Implemented
-- [ ] Tested — evidence: (date)
-- [ ] Best practices met — evidence: (date)
-- [ ] Matches locked requirements — evidence: (date)
-- [ ] No scope drift — evidence: (date)
+- [x] Implemented — diff: "When autonomy is on" added to the 4 skills; wrapup ends push, PR, safe-merge.sh (2026-10-24)
+- [x] Tested — evidence: web npm test exit 0; check-process-refs.sh exit 0; no code changed (2026-10-24)
+- [x] Best practices met — evidence: additive sections only, ESCALATE routes kept, no attribution in PR, never push to main; no banned words (2026-10-24)
+- [x] Matches locked requirements — evidence: text agrees with CLAUDE.md Autonomous mode, arbiter verdicts and qa-gate QA-GATE: PASS line (2026-10-24)
+- [x] No scope drift — evidence: git status shows only the 4 declared skills plus progress file bookkeeping (2026-10-24)
 
 ### Step 4 — safe-merge.sh and permissions
 
@@ -201,7 +201,7 @@ branch deletion on merge.
 
 ## TRADEOFFS
 
-_None logged._
+2026-10-24 | 3 | The old human-gate text in feature-kickoff, commit-workflow, pr-description and feature-wrapup is left in place and overridden by each new `## When autonomy is on` section | The brief said to edit existing text only where a sentence would now be false, and each section states it takes precedence | Reword those steps conditionally on `Autonomy`, which touches more existing text — accepted by arbiter 2026-10-24: each override names the exact section or step it replaces, CLAUDE.md `## Autonomous mode` (always loaded) states the same, and if an agent stops at an old gate it fails safe by asking the human; no later step or checkpoint is blocked
 
 ---
 

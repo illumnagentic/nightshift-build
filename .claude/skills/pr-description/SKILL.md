@@ -71,3 +71,15 @@ body. Listing every changed file — the diff does that. "Comprehensive", "robus
 about performance, security or correctness the diff does not evidence.
 
 If the honest description is three lines, it is three lines. Length is not quality.
+
+## When autonomy is on
+
+Read `Autonomy` from `.claude/kit-config.md`. If it is `on`, step 3 does not wait to be
+asked. Push first, then open the PR as drafted, with no attribution:
+
+```
+git push -u origin <branch>
+gh pr create --base main --title <title> --body <body>
+```
+
+Never push to `main`. Any ESCALATE: stop, write the reason, tell the human.
