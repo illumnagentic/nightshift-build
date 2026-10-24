@@ -146,11 +146,11 @@ All paths relative to the worktree root. Steps 1–5 are independent of the netw
 
 **Evidence location**: the diff.
 
-- [ ] Implemented
-- [ ] Tested — evidence: (date)
-- [ ] Best practices met — evidence: (date)
-- [ ] Matches locked requirements — evidence: (date)
-- [ ] No scope drift — evidence: (date)
+- [x] Implemented — dataset/README.md covers schema, sanitise rules, coverage, re-run order, Loading into D1 marked 'Not yet run' (2026-10-24)
+- [x] Tested — evidence: sqlite3 on listings.sqlite, tenure!='freehold': service_charge=0 -> 13, ground_rent=0 -> 29, n=257; matches README (2026-10-24)
+- [x] Best practices met — evidence: --remote line hedged 'Untested'; banned-word grep exit 1 (no hits); check-process-refs.sh exit 0 (2026-10-24)
+- [x] Matches locked requirements — evidence: README has three tables, NULL rule, normalise->tests->build_d1 order, exact wrangler schema.sql/seed.sql commands marked not yet run (2026-10-24)
+- [x] No scope drift — evidence: git status shows only dataset/README.md and the progress file modified (2026-10-24)
 
 ---
 
@@ -177,6 +177,8 @@ All paths relative to the worktree root. Steps 1–5 are independent of the netw
 - 2026-10-24 | step 4 | `seed.sql` is 2.2 MB, one INSERT per row (6169 statements, largest 11,006 bytes against D1's ~100 KB limit); a single `wrangler d1 execute --file` import of that size is untested | no D1 database exists yet | split into several files if D1 rejects the size.
 - 2026-10-24 | step 4 | On a constraint violation build_d1.py exits 1 and leaves a `listings.sqlite` holding the schema and no rows, and no seed.sql update | the first violation aborts by requirement | none needed; re-run after fixing the data.
 - 2026-10-24 | step 4 | seed.sql is written by hand-rolled escaping (double single quotes, NULL, repr for numbers) rather than iterdump; the self-check reloads it and counts match, and table contents were compared equal in a one-off check, but the build itself only checks counts | iterdump emits BEGIN/COMMIT and CREATE, filtering it is no simpler | compare full table contents in the self-check.
+- 2026-10-24 | step 5 | README coverage figures are typed in from a one-off query on listings.sqlite, not generated; they go stale on any re-run | a README is hand-written prose | have build_d1.py print them (already in the two reports) and point the README at the reports.
+- 2026-10-24 | step 5 | README states the `wrangler d1 execute` commands and the `--remote` flag from knowledge, untested; marked 'not yet run' | no D1 database exists | run them and correct the README.
 - Step 1: `postcode` has no format CHECK (UK postcode GLOB is unreliable).
 
 ---

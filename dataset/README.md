@@ -4,16 +4,29 @@ A frozen, offline dump of 398 London and commuter-belt homes **for sale**, built
 Property Swipe Agent hackathon app. The app reads these files. It never calls the
 sources live.
 
-Files:
+Files in git:
 
-- `listings.jsonl` - one JSON object per listing. This is the main output.
+- `listings.jsonl` - one JSON object per listing, as written by `normalise.py`. Media and
+  stations are nested lists.
 - `listings.csv` - the same rows. List fields are JSON-encoded strings.
-- `listings.sqlite` - not committed yet. The current file is an ad-hoc single table; a
-  D1-ready database built from a fixed schema replaces it (work in progress).
-- `raw/` - every response as downloaded. **Not in git** (48 MB, ignored by `.gitignore`).
-  It exists only on the machine that ran the fetch, so a fresh clone cannot rebuild the
-  outputs offline; it would have to fetch again.
-- `scripts/` - the fetch and normalise scripts. Python standard library only.
+- `listings.sqlite` - the D1-ready database, built from `d1/schema.sql` by
+  `scripts/build_d1.py`. Three tables; see Schema below.
+- `d1/schema.sql` - the table definitions, the single source of truth for the data shape.
+- `d1/seed.sql` - plain `INSERT` statements for every row, generated from the same data.
+- `reports/normalise-report.txt` and `reports/d1-build-report.txt` - counts from the last
+  run of each script.
+- `scripts/` - the fetch, normalise, sanitise and build scripts. Python standard library
+  only.
+- `tests/test_sanitise.py` - unit tests for the sanitise rules.
+- `requirements.txt`, `.env.example`.
+
+Not in git:
+
+- `raw/` - every response as downloaded. 48 MB, ignored by `.gitignore`. It exists only on
+  the machine that ran the fetch, so a fresh clone cannot rebuild the outputs offline; it
+  would have to fetch again. A fresh clone can still rebuild `listings.sqlite` and
+  `seed.sql` from `listings.jsonl` with `build_d1.py`.
+- `.env` - your RapidAPI keys. Never committed.
 
 ## Sources
 
@@ -98,27 +111,84 @@ Green Lane, St Albans, as separate listings: they share no photo URLs, but two p
 the same price and bedrooms, so the app will show similar cards. There were no
 duplicates across the two sources, because `details` skips homes already scraped.
 
+## Schema
+
+`d1/schema.sql` is the source of truth. Read it for exact columns, types, CHECK bounds and
+a comment on each column giving its unit and what NULL means. In brief:
+
+- `listings` - one row per listing (id `rm-<Rightmove id>`). Flat scalar columns: price,
+  bedrooms, bathrooms, property type, address, postcode, lat/lon, tenure, lease, service
+  charge, ground rent, council tax band, EPC rating, floor level, description, agent,
+  dates. `key_features` and `parsed_fields` are JSON arrays of strings held as text.
+- `listing_media` - one row per image: `(listing_id, kind, position, url)` with `kind` one
+  of `photo`, `floorplan`, `epc`. The primary key is `(listing_id, kind, position)`;
+  `position` is 0-based within the listing and kind. Later photo flags are meant to join
+  on that key.
+- `listing_stations` - one row per nearby station: `(listing_id, position, name,
+  distance_km, types)`, nearest first. `types` is a JSON array.
+
+Both child tables have a foreign key to `listings.id` with `ON DELETE CASCADE`. The old
+columns `photo_urls`, `floorplan_urls`, `epc_image_urls` and `nearest_stations` no longer
+exist as columns; the child tables replace them.
+
+## Sanitise rules
+
+`scripts/sanitise.py` runs as the last pass of `normalise.py`. Its bounds repeat the CHECKs
+in `schema.sql` by hand, and a test checks the two agree. A value that breaks a bound is
+set to NULL and counted in `reports/normalise-report.txt`, never altered to fit.
+
+- **Unknown is NULL.** Never `0` and never an empty string. Blank text becomes NULL.
+- **A real 0 stays 0.** A 0 in service charge, ground rent, bathrooms or any other money
+  or count field means zero, not unknown.
+- **Lease of 0 becomes NULL.** Rightmove fills `yearsRemainingOnLease` with 0 when no
+  lease is given, and the schema allows 1 to 999.
+- **Enums.** Property type maps to a fixed set (`flat`, `maisonette`, `house`, `terraced`,
+  `semi_detached`, `end_of_terrace`, `detached`, `bungalow`, `other`). "Apartment",
+  "Penthouse" and "Ground Flat" become `flat`; "Not Specified" becomes NULL; "Block of
+  Apartments" becomes `other`. Tenure is `freehold`, `leasehold` or `share_of_freehold`.
+  Council tax band is A to H and EPC rating A to G, upper case; "TBC" becomes NULL.
+  Price qualifier is `guide_price`, `offers_over`, `offers_in_region` or `fixed_price`.
+- **Distances in km.** Rightmove shows station distances in miles. The web pages say so.
+  The RapidAPI response gives no unit, and a distance with no unit is read as miles.
+  Every distance is converted to `distance_km` (rounded to 3 places).
+- **Clean text.** HTML tags are removed and entities decoded (`&amp;` becomes `&`) in the
+  description and key features. Whitespace is collapsed; paragraph breaks in the
+  description are kept. Floor level is lower case.
+- **Dates.** `listed_date` and `fetched_at` are ISO 8601 UTC, `YYYY-MM-DDTHH:MM:SSZ`. A
+  value that is not a date becomes NULL (for `fetched_at`, the row is dropped). A time
+  with no zone is read as UTC.
+- **Ranges.** Price 10,000 to 50,000,000; bedrooms and bathrooms 0 to 10; lease 1 to 999
+  years; service charge and ground rent 0 to 100,000 a year; distance 0 to 100 km; lat
+  50.5 to 52.5; lon -2.5 to 1.5 (South East England). A row missing a required field
+  (`id`, `source`, `source_id`, `url`, `price_gbp`, `fetched_at`) is dropped and counted.
+  The last run dropped none: 398 in, 398 kept.
+
 ## Coverage
 
-398 listings. Percentages are of all 398 unless stated.
+398 listings. Percentages are of all 398 unless stated. Counted from `listings.sqlite`.
 
 | Field                              | Count                                    | %    | Notes                                                                                           |
 | ---------------------------------- | ---------------------------------------- | ---- | ----------------------------------------------------------------------------------------------- |
 | `epc_current` (rating letter)      | 93                                       | 23%  | All taken from the agent's own text, e.g. "EPC Rating: C". Not checked against the certificate. |
-| `epc_image_urls` (EPC chart image) | 313                                      | 79%  | The chart Rightmove shows. A few are PDFs. The rating in the image was **not** read.            |
+| EPC chart image (`epc` media rows) | 313 listings (329 rows)                  | 79%  | The chart Rightmove shows. A few are PDFs. The rating in the image was **not** read.            |
 | either of the two EPC fields       | 317                                      | 80%  | 81 listings have no EPC information at all.                                                     |
-| `epc_potential`                    | 0                                        | 0%   | Never found in text. The column is always null.                                                 |
-| `floorplan_urls` (at least 1)      | 398                                      | 100% | Required.                                                                                       |
+| `epc_potential`                    | 0                                        | 0%   | Never found in text. The column is always NULL.                                                 |
+| floorplan (at least 1)             | 398 (416 rows)                           | 100% | Required.                                                                                       |
 | `tenure`                           | 398                                      | 100% | Required. 2 taken from text.                                                                    |
-| `lease_years_remaining`            | 193 of 257 leasehold / share of freehold | 75%  | 5 from text.                                                                                    |
-| `service_charge_gbp_pa`            | 175 of 257 leasehold / share of freehold | 68%  | 7 from text.                                                                                    |
-| `ground_rent_gbp_pa`               | 138 of 257 leasehold / share of freehold | 54%  | 6 from text.                                                                                    |
-| `council_tax_band`                 | 354                                      | 89%  |                                                                                                 |
+| `lease_years_remaining`            | 193 of 257 leasehold / share of freehold | 75%  | 5 from text. 1 freehold listing also carries a lease (see limitations).                         |
+| `service_charge_gbp_pa`            | 175 of 257 leasehold / share of freehold | 68%  | 7 from text. 13 of these are 0.                                                                 |
+| `ground_rent_gbp_pa`               | 138 of 257 leasehold / share of freehold | 54%  | 6 from text. 29 of these are 0.                                                                 |
+| `council_tax_band`                 | 302                                      | 76%  | 52 more said "TBC" and are NULL.                                                                |
 | `floor_level`                      | 147                                      | 37%  |                                                                                                 |
-| 6 or more photos                   | 398                                      | 100% | Required. 329 have 10 or more; at most 10 URLs are kept.                                        |
+| `bathrooms`                        | 384                                      | 96%  |                                                                                                 |
+| `property_type`                    | 397                                      | 100% | 1 "Not Specified" is NULL.                                                                      |
+| 6 or more photos                   | 398                                      | 100% | Required. 329 have 10 or more; at most 10 URLs are kept (3,832 `photo` rows).                   |
 | `lat` / `lon`                      | 398                                      | 100% | Required.                                                                                       |
 | full postcode                      | 398                                      | 100% |                                                                                                 |
-| `nearest_stations`                 | 398                                      | 100% |                                                                                                 |
+| `listed_date`                      | 398                                      | 100% |                                                                                                 |
+| stations (`listing_stations`)      | 398 listings (1,194 rows)                | 100% | Every row has a `distance_km`. 1,116 have a transport type; the 78 RapidAPI rows have none.     |
+
+Row counts: `listings` 398, `listing_media` 4,577, `listing_stations` 1,194.
 
 EPC rating counts: C 43, D 26, B 20, E 3, A 1, none 305.
 
@@ -139,9 +209,10 @@ Price: minimum £250,000, median £600,000, maximum £1,195,000.
 
 Bedrooms: 1 bed 67, 2 bed 161, 3 bed 106, 4 bed 47, 5 bed 17.
 
-Type: 257 flats (Flat 134, Apartment 103, Maisonette 15, other flat types 5) and 141
-houses (Terraced 41, Semi-Detached 35, Detached 29, End of Terrace 20, House 10, other
-6). Tenure: leasehold 205, freehold 141, share of freehold 52.
+Type (`property_type`): flat 240, terraced 41, semi_detached 35, detached 31,
+end_of_terrace 20, maisonette 16, house 11, bungalow 2, other 1, NULL 1.
+
+Tenure: leasehold 205, freehold 141, share of freehold 52.
 
 Area:
 
@@ -169,7 +240,20 @@ Area:
 - **Lease of 0.** Rightmove fills `yearsRemainingOnLease` with 0 when no lease applies.
   0 is stored as null. One freehold apartment still carries a 114-year lease because
   the agent entered both.
-- **Service charge of 0** on some freehold houses is kept as 0, as the agent stated it.
+- **Zero money values** are kept as 0, as the agent stated them. 8 freehold listings have
+  a service charge of 0 and 5 a ground rent of 0; some may be filler rather than fact.
+  One RapidAPI 4-bed house (`rm-94396305`) has 0 bathrooms though its description mentions
+  an en suite bathroom.
+- **EPC rating coverage is low.** Only 93 of 398 (23%) have a letter; see the first point.
+- **The data is unofficial and against Rightmove's terms** (see Sources). Demo use only.
+- **`seed.sql` is not idempotent.** It needs empty tables. A second import fails on the
+  primary keys.
+- **Station types.** RapidAPI's station `type` code is not decoded, so those 78 stations
+  have `types` = `[]`, meaning "none given".
+- **Some bounds are judgement calls.** Price, bedroom, lease and money limits in the
+  schema catch obvious bad data with wide margins. A listing outside the South East is
+  rejected until the lat/lon bounds change.
+- **Dates:** the schema checks the shape of a date, not that it is a real calendar day.
 - **Every search is the first page only**, newest first. The data is a recent snapshot
   of each area, not a sample of the market. The exception is three files from an
   earlier run, `raw/rightmove/search/{Hackney,Islington,Lambeth}_flats_0.html.gz`,
@@ -184,11 +268,13 @@ Area:
 - **Prices are as advertised**, including "Guide Price" and "Offers in Excess of"
   (`price_qualifier`).
 - **RapidAPI rows** have no floor level from structured data and no station distance
-  unit (the API does not say whether it is miles or km, so `unit` is null).
+  unit. The API does not say whether its distances are miles or km. They are read as
+  miles; the evidence is three stations that appear in both feeds, where the API figure
+  matched the web page's miles within 0.01 and not as km.
 - **Dedupe is heuristic.** It may merge two different homes or miss a duplicate listed
   with different coordinates.
-- **Odd property types** come straight from the agent: one "Block of Apartments", one
-  "Not Specified".
+- **Odd property types:** one "Block of Apartments" is `other`, one "Not Specified" is
+  NULL.
 - **Stale listings.** Homes sell. Some URLs will 404 within weeks.
 - The fetch scripts make one robots.txt request per run that is not written to the
   manifest.
@@ -212,11 +298,23 @@ source .venv/bin/activate
 pip install -r requirements.txt   # installs nothing
 ```
 
-Rebuild the outputs from `raw/` with no network access (only where `raw/` exists locally):
+Rebuild the outputs from `raw/` with no network access (only where `raw/` exists locally).
+Run the three steps in this order:
 
 ```bash
-python3 -I -B scripts/normalise.py --dataset .
+# 1. raw/ -> listings.jsonl, listings.csv, reports/normalise-report.txt  (from dataset/)
+cd dataset && python3 -I -B scripts/normalise.py --dataset .
+
+# 2. tests  (from the repository root)
+python3 -I -B -m unittest discover -s dataset/tests
+
+# 3. listings.jsonl -> listings.sqlite, d1/seed.sql, reports/d1-build-report.txt  (from dataset/)
+cd dataset && python3 -I -B scripts/build_d1.py --dataset .
 ```
+
+`build_d1.py` loads `d1/schema.sql` with foreign keys on, so the schema's constraints are
+the validation. It stops at the first violation and names the listing id and constraint.
+It does not need `raw/`.
 
 Fetch again. Each script skips files already in `raw/`, so a re-run only fetches what
 is missing. Delete the relevant `raw/` files first to refresh them.
@@ -234,9 +332,31 @@ python3 -I -B scripts/fetch_rapidapi.py --dataset . details --max 25 --identifie
 python3 -I -B scripts/fetch_rapidapi.py --dataset . search --identifier 'REGION^93965' --pages 1 --flats
 
 python3 -I -B scripts/normalise.py --dataset .
+python3 -I -B scripts/build_d1.py --dataset .
 ```
 
 `-I` keeps Python from importing anything from the current directory. `-B` stops it
 writing `__pycache__`. Real environment variables take precedence over `.env`. The
 `details` command skips search results that fail the selection rules and homes already
 scraped directly, because the detail response holds the same data.
+
+## Loading into D1
+
+**Not yet run.** No D1 database exists yet, so these commands have not been tried. Create
+the database first, then load the schema and the data:
+
+```bash
+wrangler d1 execute <db> --file dataset/d1/schema.sql
+wrangler d1 execute <db> --file dataset/d1/seed.sql
+```
+
+Untested: adding `--remote` should target the hosted database rather than the local one.
+
+Known limits:
+
+- `seed.sql` needs empty tables. It is plain `INSERT`s with no `BEGIN`/`COMMIT` (D1 rejects
+  them), so a second import fails on the primary keys. Drop and recreate the tables before
+  re-seeding.
+- `seed.sql` is 2.2 MB in 6,169 statements, the largest 11,006 bytes against D1's limit of
+  about 100 KB per statement. An import of that size has not been tried. If D1 rejects it,
+  split the file.
