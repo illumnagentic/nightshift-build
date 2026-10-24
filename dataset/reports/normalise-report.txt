@@ -1,0 +1,73 @@
+
+== pipeline counts ==
+  card_drop_auction                        14
+  card_drop_thin_no_floorplan              5
+  card_drop_thin_photos                    9
+  cards_duplicate_across_searches          5
+  cards_kept                               392
+  cards_seen                               425
+  detail_pages                             392
+  dropped_duplicate_property               14
+  dropped_thin_no_tenure                   6
+  rapid_cards_seen                         50
+  rapid_detail_files                       26
+
+== sanitise ==
+  records in: 398  kept: 398  dropped: 0
+  nulled:council_tax_band:tbc                                  52
+  nulled:property_type:not specified                           1
+  station_unit:rapidapi_uk_real_estate_rightmove:none:miles    78
+  station_unit:rightmove:miles:miles                           1116
+
+== final listings: 398 ==
+  by source: rightmove 372, rapidapi_uk_real_estate_rightmove 26
+== coverage ==
+  epc_current (any)                    93 (23%)
+  epc_potential                        0 (0%)
+  epc image url                        313 (79%)
+  floorplan                            398 (100%)
+  tenure                               398 (100%)
+  tenure from text                     2 (1%)
+  lease years (of leasehold/SoF)       193 (75%) of 257; from text: 5
+  service charge (of leasehold/SoF)    175 (68%) of 257; from text: 7
+  ground rent (of leasehold/SoF)       138 (54%) of 257; from text: 6
+  council tax band                     302 (76%)
+  floor level                          147 (37%)
+  >=6 photos                           398 (100%)
+  >=10 photos                          329 (83%)
+  lat/lon                              398 (100%)
+  full postcode                        398 (100%)
+  nearest stations                     398 (100%)
+  listed_date                          398 (100%)
+  (all epc_current values are text-derived: 93)
+
+== price ==
+  min 250000  median 600000  max 1195000
+  £250k-£400k: 63
+  £400k-£550k: 99
+  £550k-£700k: 74
+  £700k-£900k: 125
+  £900k-£1200k: 37
+== bedrooms ==
+  1: 67
+  2: 161
+  3: 106
+  4: 47
+  5: 17
+== property type ==
+  flat: 240
+  terraced: 41
+  semi_detached: 35
+  detached: 31
+  end_of_terrace: 20
+  maisonette: 16
+  house: 11
+  bungalow: 2
+  other: 1
+  None: 1
+== tenure ==
+  leasehold: 205
+  freehold: 141
+  share_of_freehold: 52
+== postcode area ==
+  SE 72, E 66, SW 53, N 53, GU 25, AL 24, RG 24, WD 21, W 21, NW 17, EC 15, WC 3, BR 2, IG 2

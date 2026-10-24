@@ -1,0 +1,16 @@
+== row counts (listings.sqlite) ==
+  listings: 398
+  listing_media: 4577
+  listing_stations: 1194
+== pragma results ==
+  foreign_key_check: clean
+  integrity_check: ok
+== seed.sql ==
+  statements: 6169
+  size: 2205201 bytes
+  largest statement: 11006 bytes (D1 limit about 100000)
+== self-check: schema.sql then seed.sql into empty in-memory db, foreign_keys=ON ==
+  listings: 398 (listings.sqlite 398)
+  listing_media: 4577 (listings.sqlite 4577)
+  listing_stations: 1194 (listings.sqlite 1194)
+  result: PASS
