@@ -5,7 +5,7 @@
 - **Started**: 2026-10-24
 - **Branch**: feat/web-prefs-favourites (stacked on feat/web-feedback, PR #13)
 - **BASE_SHA**: 914735a (rebased onto `main` after F3's squash merge; kickoff base was a4d0c48e8fbee1a74b7bc4bed97cd5cad77fcf32 — see AMENDMENTS 2026-10-25)
-- **Status**: in progress
+- **Status**: complete (2026-10-25)
 
 ---
 
@@ -110,6 +110,8 @@ BASE_SHA will stop being an ancestor.
   feat/web-prefs-favourites`, with no conflicts. F4's web and evidence files are
   unchanged by the rebase (the only new files are backend evidence from `main`).
   typecheck, 178 tests and build exit 0 after the rebase. New base: 914735a.
+- 2026-10-25, human: "confirm" — confirms the 2026-10-25 deck-refresh amendment made
+  under delegation.
 
 ---
 
@@ -311,11 +313,11 @@ process-wording check exits 0.
 - [ ] Lint run — result: not configured in kit-config, not run (2026-10-25)
 - [x] Typecheck run — result: `npm run typecheck`, exit 0 (2026-10-25)
 - [x] Build run — result: `npm run build`, exit 0 (2026-10-25)
-- [ ] Diff contains no files outside declared scope — every code and evidence file is declared at branch level; this progress file is in no step's scope (waiver proposed: it is the tracking file, and kit-config commits progress files) — left for the human (2026-10-25)
+- [x] Diff contains no files outside declared scope — every code and evidence file declared; the progress file waiver accepted by the human, "accept" (2026-10-25)
 - [x] Tradeoff ledger reviewed and signed off by human — all 8 entries accepted, "sign off the F4 tradeoff" (2026-10-25)
-- [ ] Human eye test completed
+- [x] Human eye test completed — human: "eyetest passed" (2026-10-25); orchestrator browser checks recorded in the step 4 and redo evidence
 
-QA-GATE: FAIL 2026-10-25 — only human sign-offs outstanding: 8 unsigned tradeoffs, eye test, progress-file scope waiver (and confirmation of the 2026-10-25 amendment made under delegation)
+QA-GATE: FAIL 2026-10-25 (all human sign-offs since given, 2026-10-25) — only human sign-offs outstanding: 8 unsigned tradeoffs, eye test, progress-file scope waiver (and confirmation of the 2026-10-25 amendment made under delegation)
 
 ---
 
