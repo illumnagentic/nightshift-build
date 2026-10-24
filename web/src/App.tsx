@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api, type User } from "./api";
 import { clearSession, getSession, setSession } from "./session";
+import DeckScreen from "./deck/DeckScreen";
 import UserPicker from "./UserPicker";
 
 export default function App() {
@@ -46,12 +47,15 @@ export default function App() {
       {checking ? (
         <p>Loading…</p>
       ) : user ? (
-        <p>
-          Signed in as {user.username}{" "}
-          <button type="button" onClick={switchUser}>
-            Switch user
-          </button>
-        </p>
+        <>
+          <p>
+            Signed in as {user.username}{" "}
+            <button type="button" onClick={switchUser}>
+              Switch user
+            </button>
+          </p>
+          <DeckScreen userId={user.user_id} />
+        </>
       ) : (
         <UserPicker onSelect={select} />
       )}

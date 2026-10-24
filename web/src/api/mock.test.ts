@@ -73,13 +73,44 @@ describe("users", () => {
 
 describe("prefs", () => {
   it("returns the all-null shape before anything is saved", async () => {
-    expect(await api.getPrefs(ALEX)).toEqual({
+    const { user_id } = await api.createUser({ username: "sam" });
+    expect(await api.getPrefs(user_id)).toEqual({
       text: null,
       commute_postcode: null,
       max_commute_min: null,
       parsed: null,
       commute_status: null,
     });
+  });
+
+  it("gives seeded users saved prefs with commute_status ready", async () => {
+    expect(await api.getPrefs(ALEX)).toEqual({
+      text: "Two bed flat under 550k, near a tube station, bright rooms, no ground floor.",
+      commute_postcode: "EC2N 2DB",
+      max_commute_min: 45,
+      parsed: {
+        hard: {
+          max_price_gbp: null,
+          min_bedrooms: null,
+          property_types: null,
+          min_epc: null,
+          tenure: null,
+          min_lease_years: null,
+          max_commute_min: 45,
+        },
+        soft: [
+          "Two bed flat under 550k",
+          "near a tube station",
+          "bright rooms",
+          "no ground floor",
+        ],
+      },
+      commute_status: "ready",
+    });
+    const jordan = await api.getPrefs(JORDAN);
+    expect(jordan.commute_status).toBe("ready");
+    expect(jordan.commute_postcode).toBe("N1C 4AG");
+    expect(jordan.max_commute_min).toBeNull();
   });
 
   it("returns pending from the save and ready on the next read", async () => {
@@ -121,11 +152,16 @@ describe("prefs", () => {
 
 describe("deck", () => {
   it("returns 409 prefs_missing, commute_pending and commute_failed", async () => {
-    await expectError(api.getDeck(ALEX), 409, "prefs_missing");
-    await api.putPrefs(ALEX, PREFS);
-    await expectError(api.getDeck(ALEX), 409, "commute_pending");
-    await ready(ALEX, "FAIL 1AA");
-    await expectError(api.getDeck(ALEX), 409, "commute_failed");
+    const { user_id } = await api.createUser({ username: "sam" });
+    await expectError(api.getDeck(user_id), 409, "prefs_missing");
+    await api.putPrefs(user_id, PREFS);
+    await expectError(api.getDeck(user_id), 409, "commute_pending");
+    await ready(user_id, "FAIL 1AA");
+    await expectError(api.getDeck(user_id), 409, "commute_failed");
+  });
+
+  it("serves cards to seeded users without a prefs call", async () => {
+    for (const id of [ALEX, JORDAN]) expect(await deck(id, 3)).toHaveLength(3);
   });
 
   it("returns 422 invalid_request for n outside 1-10 or not an integer", async () => {
