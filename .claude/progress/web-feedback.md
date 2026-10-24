@@ -5,7 +5,7 @@
 - **Started**: 2026-10-24
 - **Branch**: feat/web-feedback
 - **BASE_SHA**: dc0e819d63a39330b6e1c9aef38eef28f8100499
-- **Status**: in progress
+- **Status**: complete (2026-10-24) — merge blocked until the backend side adds `skipped` and the post-onboarding rule to `docs/api-contract.md` and `docs/decisions.md`
 
 ---
 
@@ -349,25 +349,25 @@ check exits 0.
 
 ## TRADEOFFS
 
-- Kickoff | The post-onboarding rule means left swipes on exploration cards never open feedback, so a sharp user could work out which cards are exploration after swiping. Noted and accepted by the human and the backend side for the recording. | Show the same optional screen on every swipe.
-- Step 1 | The mock also returns 422 `invalid_request` for a non-boolean `skipped`. The contract does not yet say this, so it is the mock's own guess. | Match whatever the merged contract says about malformed `skipped`.
-- Step 1 | Mock weights still count every non-skipped decision that offered a chip, including cards never answered; only skipped screens are left out. | The real backend's offered counting rules, once the contract states them.
-- Step 2 | `feedbackOutcome` treats any action other than exploration + `left` as optional, so an unknown future action would open optional feedback rather than none. | A closed action union is already typed; revisit only if the contract adds actions.
-- Step 2 | Four existing deck tests changed expectations or flow because a ranked right swipe now opens optional feedback (listed in the step evidence). Assertions kept; two now call `continue` before the next step. | None.
-- Step 3 | `toRequest` trusts the card's `chips` to have unique `chip_id`s; if a card repeated one, the body would repeat it. The contract says chips are unique per card. | Dedupe by `chip_id` in `toRequest` if the backend ever sends repeats.
-- Step 3 | `setAnswer` keeps raw text untrimmed in the form and trims only when building the request, so the text box can hold trailing spaces while typing. | None needed.
-- Step 4 | Not browser-tested and no component test exists (node test env, no jsdom), so focus return, Escape and the `showModal()` effect are unverified until the eye test. | A jsdom or browser test setup, which needs a dependency.
-- Step 4 | Focus return is done by hand in an effect (stored opener, `.focus()` after `close()`) rather than relying on the browser's own restore. If the opener is removed from the page it is silently skipped. | None needed unless the screen unmounts chips on save.
-- Step 4 | Backdrop click does not close the dialog; only Cancel and Escape do. | Add a click-outside handler if wanted.
-- Step 4 | Saved text is passed to `onSave` untrimmed (the form trims on build); Save is allowed with empty text. | None needed.
-- Step 5 | Not browser-tested and no component test for the screen (node test env, no jsdom), so heading focus, the dialog hand-off and error display are unverified until the eye test. | A jsdom or browser test setup, which needs a dependency.
-- Step 5 | The "Added to favourites" note moved from DeckScreen into the feedback screen for that phase; the card-phase note in DeckScreen is unchanged. | None.
-- Step 5 | On a failed send the chips and text box are disabled only while sending, then re-enabled; the typed answers stay in screen state. A user switch or unmount mid-send drops them. | None needed.
-- Step 5 | The compulsory hint shows only while nothing is answered and is linked to Done with `aria-describedby`; no other validation text. | None.
-- Redo of Step 5 | No component test for the empty-Done skip branch; it relies on the tested `canSubmit` and `skipRequest`. | Needs a DOM test environment.
-- Step 6 | The exhausted rule now fires only when the queue is at or below the refetch threshold; a batch with nothing new while more cards are queued is ignored rather than ending the deck. Reported by the implementer, not written by it (omission repeated; added by reviewer). | None; a refetch only starts at or below the threshold, so no loop.
-- Step 6 | The generation guard in `useDeck` has no automated test (node test env, no hook or DOM setup); only the reducer change is unit tested. Reported by the implementer, not written by it (added by reviewer). | A jsdom or browser test setup, which needs a dependency.
-- Step 7 | The tag is gated on a build-time env value and `card.source`; there is no automated test for it (no browser check by the implementer), so only the bundle grep and the human eye test cover it. | A DeckScreen render test under mock mode, if the human wants one.
+- Kickoff | The post-onboarding rule means left swipes on exploration cards never open feedback, so a sharp user could work out which cards are exploration after swiping. Noted and accepted by the human and the backend side for the recording. | Show the same optional screen on every swipe. | accepted by human 2026-10-24
+- Step 1 | The mock also returns 422 `invalid_request` for a non-boolean `skipped`. The contract does not yet say this, so it is the mock's own guess. | Match whatever the merged contract says about malformed `skipped`. | accepted by human 2026-10-24
+- Step 1 | Mock weights still count every non-skipped decision that offered a chip, including cards never answered; only skipped screens are left out. | The real backend's offered counting rules, once the contract states them. | accepted by human 2026-10-24
+- Step 2 | `feedbackOutcome` treats any action other than exploration + `left` as optional, so an unknown future action would open optional feedback rather than none. | A closed action union is already typed; revisit only if the contract adds actions. | accepted by human 2026-10-24
+- Step 2 | Four existing deck tests changed expectations or flow because a ranked right swipe now opens optional feedback (listed in the step evidence). Assertions kept; two now call `continue` before the next step. | None. | accepted by human 2026-10-24
+- Step 3 | `toRequest` trusts the card's `chips` to have unique `chip_id`s; if a card repeated one, the body would repeat it. The contract says chips are unique per card. | Dedupe by `chip_id` in `toRequest` if the backend ever sends repeats. | accepted by human 2026-10-24
+- Step 3 | `setAnswer` keeps raw text untrimmed in the form and trims only when building the request, so the text box can hold trailing spaces while typing. | None needed. | accepted by human 2026-10-24
+- Step 4 | Not browser-tested and no component test exists (node test env, no jsdom), so focus return, Escape and the `showModal()` effect are unverified until the eye test. | A jsdom or browser test setup, which needs a dependency. | accepted by human 2026-10-24
+- Step 4 | Focus return is done by hand in an effect (stored opener, `.focus()` after `close()`) rather than relying on the browser's own restore. If the opener is removed from the page it is silently skipped. | None needed unless the screen unmounts chips on save. | accepted by human 2026-10-24
+- Step 4 | Backdrop click does not close the dialog; only Cancel and Escape do. | Add a click-outside handler if wanted. | accepted by human 2026-10-24
+- Step 4 | Saved text is passed to `onSave` untrimmed (the form trims on build); Save is allowed with empty text. | None needed. | accepted by human 2026-10-24
+- Step 5 | Not browser-tested and no component test for the screen (node test env, no jsdom), so heading focus, the dialog hand-off and error display are unverified until the eye test. | A jsdom or browser test setup, which needs a dependency. | accepted by human 2026-10-24
+- Step 5 | The "Added to favourites" note moved from DeckScreen into the feedback screen for that phase; the card-phase note in DeckScreen is unchanged. | None. | accepted by human 2026-10-24
+- Step 5 | On a failed send the chips and text box are disabled only while sending, then re-enabled; the typed answers stay in screen state. A user switch or unmount mid-send drops them. | None needed. | accepted by human 2026-10-24
+- Step 5 | The compulsory hint shows only while nothing is answered and is linked to Done with `aria-describedby`; no other validation text. | None. | accepted by human 2026-10-24
+- Redo of Step 5 | No component test for the empty-Done skip branch; it relies on the tested `canSubmit` and `skipRequest`. | Needs a DOM test environment. | accepted by human 2026-10-24
+- Step 6 | The exhausted rule now fires only when the queue is at or below the refetch threshold; a batch with nothing new while more cards are queued is ignored rather than ending the deck. Reported by the implementer, not written by it (omission repeated; added by reviewer). | None; a refetch only starts at or below the threshold, so no loop. | accepted by human 2026-10-24
+- Step 6 | The generation guard in `useDeck` has no automated test (node test env, no hook or DOM setup); only the reducer change is unit tested. Reported by the implementer, not written by it (added by reviewer). | A jsdom or browser test setup, which needs a dependency. | accepted by human 2026-10-24
+- Step 7 | The tag is gated on a build-time env value and `card.source`; there is no automated test for it (no browser check by the implementer), so only the bundle grep and the human eye test cover it. | A DeckScreen render test under mock mode, if the human wants one. | accepted by human 2026-10-24
 
 ---
 
@@ -384,26 +384,33 @@ check exits 0.
 
 ## VERIFICATION
 
-Run by the QA gate on 2026-10-24 against BASE_SHA `dc0e819` and HEAD `9c05508` (second gate).
+Run by the QA gate on 2026-10-24 against BASE_SHA `dc0e819` and HEAD `57b27ac` (third gate).
+Commands were run on a clean export of HEAD (`git archive HEAD web`), so the dev server on
+:5183 was not disturbed. The working tree matched HEAD apart from the untracked
+`.claude/worktrees/`.
 
-**QA-GATE: FAIL 2026-10-24.** All commands are green. Every locked requirement and both code
-amendments are met. It fails only on what is left for people: 16 TRADEOFFS entries carry no
-human sign-off, the human eye test is not done, and the contract change this feature depends on
-(`skipped`, the post-onboarding rule) is not on `origin/main` (backend side, merge blocker).
+**QA-GATE: FAIL 2026-10-24.** Everything passes except the human sign-offs and the contract
+dependency. All commands are green, every locked requirement and every amendment is met, and
+every file is in a declared scope. It fails on three things only: 19 TRADEOFFS entries carry no
+human sign-off, the human eye test is not finished (keyboard and focus checks, post-onboarding
+checks and narrow width not done), and the contract change this feature depends on (`skipped`, the post-onboarding
+rule) is not on `origin/main` at `0755bcb` (backend side, merge blocker).
 
-- [x] All step checkboxes ticked with evidence — 35 of 35 (five steps and two redos), all dated 2026-10-24, order ok (2026-10-24)
-- [x] Every evidence path in this file exists — `evidence/web-feedback/step-1.md` to `step-5.md`, `step-2-redo.md`, `step-5-redo.md` all present (2026-10-24)
-- [x] Test suite run — result: `cd web && npm test` exit 0, 6 files, 162 tests passed (2026-10-24)
+- [x] All step checkboxes ticked with evidence — 45 of 45 (seven steps and two redos), all dated 2026-10-24, order ok (2026-10-24)
+- [x] Every evidence path in this file exists — `evidence/web-feedback/step-1.md` to `step-7.md`, `step-2-redo.md`, `step-5-redo.md` all present (2026-10-24)
+- [x] Test suite run — result: `cd web && npm test` exit 0, 6 files, 163 tests passed (2026-10-24)
 - [ ] Lint run — result: not configured in kit-config, not run
 - [x] Typecheck run — result: `cd web && npm run typecheck` exit 0 (2026-10-24)
-- [x] Build run — result: `cd web && npm run build` exit 0 (2026-10-24)
-- [ ] Diff contains no files outside declared scope — all code and evidence files are in a step's or redo's scope; `.claude/progress/web-feedback.md` itself is in no step's scope (it is the tracking file, committed per kit-config). Left for the human to accept.
-- [ ] Tradeoff ledger reviewed and signed off by human
-- [ ] Human eye test completed
+- [x] Build run — result: `cd web && npm run build` exit 0; the "Exploration (test only)" string is absent from the plain and `VITE_API_MODE=http` bundles and present once in the `VITE_API_MODE=mock` bundle (2026-10-24)
+- [ ] Diff contains no files outside declared scope — every code and evidence file is in a step's or redo's scope; `.claude/progress/web-feedback.md` itself is in no step's scope (it is the tracking file, committed per kit-config). Left for the human to accept.
+- [x] Tradeoff ledger reviewed and signed off by human — all 19 entries accepted, "accept all and continue" (2026-10-24)
+- [x] Human eye test completed — PARTIAL. Human verified: compulsory screen, chip dialog (phrase, strength, Save, edit, Remove), note-only Done, favourites note not repeated, drag on a phone over Tailscale ("Drag works well on the phone", "Everything else works well"). NOT human-verified: Skip and empty Done from card 16, right swipe on an exploration card, keyboard and focus checks, 320 px width (deferred by the human). The orchestrator checked cards 16-20 (optional with Skip) and an exploration left swipe (no screen) in the built-in browser. Human chose to continue without the remaining checks (2026-10-24)
 
 Also run: `cd web && npm ci` exit 0; `.claude/scripts/check-process-refs.sh dc0e819…` exit 0,
-no hits. REQUIREMENTS (LOCKED) block identical in all seven commits; it could not be checked
-before the first commit, which created the file.
+no hits. REQUIREMENTS (LOCKED) block identical in all nine commits that touch this file; it
+could not be checked before the first commit, which created the file. `git fetch origin` then
+`git show origin/main:docs/api-contract.md`: no `skipped` field on feedback; `docs/decisions.md`
+line 31 still reads "optional on right swipes". No remote branch carries the change either.
 
 ---
 
@@ -411,10 +418,11 @@ before the first commit, which created the file.
 
 ### Where this stands
 
-Everything passes except the human sign-offs and the contract dependency. Install, tests (162),
-typecheck and build are green. Both fixes from the first gate are in. What is left: sign the 16
-tradeoffs, do the eye test below, and wait for the backend side to put `skipped` into the
-contract.
+Everything passes except the human sign-offs and the contract dependency. Install, tests (163),
+typecheck and build are green. The deck now serves all 20 mock cards, and exploration cards
+carry a test-only tag in mock mode. What is left: sign the 19 tradeoffs, finish the eye test
+below (keyboard and focus on a laptop, cards 16 to 20, and a narrow screen), and wait for the backend side to put `skipped` and
+the post-onboarding rule into the contract.
 
 ### What was built
 
@@ -424,61 +432,68 @@ opens a dialog where you pick suggested words or type your own, and choose how m
 (Must have, Nice to have, Would prefer not, Deal-breaker). For the first 15 cards the screen is
 compulsory: no Skip, and Done stays grey until you answer one chip or write a note. After that it
 is optional: Skip is offered, Done with nothing filled in counts as a skip, and a left swipe on an
-exploration card goes straight to the next card.
+exploration card goes straight to the next card. In mock mode only, exploration cards show a
+small dashed "Exploration (test only)" tag so you can test that rule.
 
 ### Blocker before merge: the contract
 
 This feature sends `"skipped": true` on `PUT /decisions/{id}/feedback` and follows the
 post-onboarding rule you agreed with the backend side. Neither is written down yet. On
 `origin/main` (fetched 2026-10-24, at `0755bcb`), `docs/api-contract.md` has no `skipped`
-field, and `docs/decisions.md` line 31 still says feedback is "optional on right swipes". The
-backend side owns that change. Do not merge until it lands. If it differs from what is assumed
-here, redo step 1 to match.
+field, and `docs/decisions.md` line 31 still says feedback is "optional on right swipes". No
+other remote branch has the change. The backend side owns it. Do not merge until it lands. If
+it differs from what is assumed here, redo step 1 to match.
 
 ### What to check yourself
+
+On your phone, drag and the touch parts of steps 3 to 8 passed. Still open: the keyboard and
+focus parts (arrow keys in steps 3 and 8, all of step 6), which need a laptop, and steps 9 to
+12.
 
 1. In `web/`, make sure `.env` (or `.env.local`) has `VITE_API_MODE=mock` (see
    `web/.env.example`). The real backend on `main` has no deck or feedback endpoints yet, so
    mock mode is the only way to see this.
-2. Run `cd web && npm run dev -- --port 5183 --strictPort` and open http://localhost:5183.
-3. Pick the user `alex`. Swipe the first card right (or press the right arrow key). The screen
-   "Tell us why" should open, with "You liked this: £…, address". There should be no Skip
-   button, Done should be grey, and "Pick a feature or write a note to continue." should show.
-4. Tap a chip, for example Parking. A dialog opens over a dimmed page. Tap a suggested phrase:
-   the text box fills, no strength is picked, Save stays grey. Pick "Nice to have" and press
-   Save. The chip should now show "Nice to have" and Done should be enabled.
-5. Tap the same chip again. It should open with "Nice to have" and your text filled in, plus a
-   Remove button. Press Remove. The mark goes and Done goes grey again.
-6. Open the dialog and press Escape. It should close and focus should land back on the chip.
-   Press Tab through the whole screen: every chip, the note box and Done should be reachable.
-7. Write a note only, press Done. The next card should appear.
-8. Press Love (up arrow) on a card. The feedback screen should say "You loved this" and "Added
-   to favourites". Answer something and press Done. "Added to favourites" should not show above
-   the next card.
-9. Swipe until you have done 15 cards. From card 16 the screen should show a Skip button, and
-   Done should be enabled with nothing filled in. Press Skip: the next card appears. On the next
-   optional screen, press Done with nothing filled in: it should behave exactly like Skip. Mock
-   mode sends no network requests, so you cannot see the body Done sends. Until the real backend
-   exists, that it sends `skipped: true` is confirmed only by reading the code
-   (`web/src/feedback/FeedbackScreen.tsx`, the Done button).
-10. The mock makes every fifth new card an exploration card. `source` is never shown on screen,
-    so count cards. After card 15, swipe an exploration card left: no feedback screen should
-    open, the next card shows at once. Swipe another exploration card right: the optional
-    screen should open.
-11. Check on a narrow phone width (devtools device toolbar) that the chips wrap and the dialog
-    fits.
+2. Run `cd web && npm run dev -- --port 5183 --strictPort` and open http://localhost:5183
+   (or reuse the server already running on :5183).
+3. Pick the user `alex`. Swipe the first card right (or press the right arrow key). "Tell us
+   why" should open, with "You liked this: £…, address". No Skip button, Done grey, and "Pick a
+   feature or write a note to continue." showing.
+4. Tap a chip, for example Parking. Tap a suggested phrase: the text box fills, no strength is
+   picked, Save stays grey. Pick "Nice to have" and press Save. The chip shows "Nice to have"
+   and Done is enabled.
+5. Tap the same chip again. It opens with "Nice to have" and your text, plus Remove. Press
+   Remove. The mark goes and Done goes grey again.
+6. Open the dialog and press Escape (on a laptop). It closes and focus lands back on the chip.
+   Tab through the screen: every chip, the note box and Done are reachable.
+7. Write a note only, press Done. The next card appears.
+8. Press Love (up arrow) on a card. The screen says "You loved this" and "Added to favourites".
+   Answer something and press Done. "Added to favourites" must not show above the next card.
+9. Cards 5, 10, 15 and 20 should carry the dashed "Exploration (test only)" tag above the card.
+   No other card should. The tag must not move when you drag the card.
+10. Swipe through to card 16. From card 16 the screen shows Skip, and Done is enabled with
+    nothing filled in. Press Skip: the next card appears. On the next optional screen, press
+    Done with nothing filled in: it behaves exactly like Skip. Mock mode sends no network
+    requests, so you cannot see the body. That it sends `skipped: true` is confirmed only by
+    reading `web/src/feedback/FeedbackScreen.tsx` (the Done button) until the backend exists.
+11. On card 20 (tagged), swipe right. The optional screen with Skip should open. Nobody has
+    seen this case yet. The left-swipe case (no screen opens) was already checked in the
+    browser, so one pass is enough. Card 20 is the only tagged card after onboarding.
+12. Narrow width (you deferred this): devtools device toolbar at 320 px wide, or your phone.
+    The chips wrap, the dialog fits on screen without sideways scrolling, and Save, Cancel and
+    Remove are all reachable.
 
 ### Tools that will help
 
-- Browser devtools, Network tab: in mock mode the client runs in the browser, so nothing shows.
-  Once real mode works, look at the `PUT /api/decisions/<id>/feedback` body. Skip, and Done on
-  an empty optional screen, must both send `{"chips":[],"free_text":null,"skipped":true}`. Done
-  with answers must send chips in the card's order, trimmed text, `null` for blanks, and no
+- Browser devtools, Network tab: in mock mode nothing shows, because the client runs in the
+  browser. Once real mode works, look at the `PUT /api/decisions/<id>/feedback` body. Skip, and
+  Done on an empty optional screen, must both send `{"chips":[],"free_text":null,"skipped":true}`.
+  Done with answers must send chips in the card's order, trimmed text, `null` for blanks, and no
   `skipped`. The deck response shows `"source": "exploration"` for exploration cards.
 - Devtools Elements panel: answered chips carry `aria-pressed="true"`; Done has
-  `aria-describedby` pointing at the hint only while the compulsory screen is empty.
-- Devtools Accessibility pane or VoiceOver: the dialog should be announced by the chip name, and
-  the strengths as a group titled "How much does this matter?".
+  `aria-describedby` pointing at the hint only while the compulsory screen is empty. In a
+  non-mock build there should be no `deck-screen__test-tag` element anywhere.
+- Devtools Accessibility pane or VoiceOver: the dialog is announced by the chip name, and the
+  strengths as a group titled "How much does this matter?".
 - curl, once the backend endpoint exists:
   `curl -X PUT http://localhost:8787/api/decisions/<decision_id>/feedback -H 'Content-Type: application/json' -d '{"chips":[],"free_text":null,"skipped":true}'`
   should return the body echoed with `"skipped": true` and a `profile_version`.
@@ -486,8 +501,12 @@ here, redo step 1 to match.
 ### What is not done
 
 - The contract change above is not merged. Merge blocker, backend side.
-- None of the 16 TRADEOFFS entries is signed off:
+- The eye test is not finished: keyboard and focus checks (arrow keys, Escape, focus return,
+  Tab order; nobody has run these, the phone test could not), post-onboarding checks (steps 9
+  to 11 above) and narrow width.
+- None of the 19 TRADEOFFS entries is signed off:
   1. Left swipes on exploration cards never open feedback, so a sharp user could spot them.
+     (The entry says you and the backend side accepted this; it carries no sign-off marker.)
   2. The mock returns its own 422 for a non-boolean `skipped`; the contract says nothing.
   3. Mock weights still count unanswered, non-skipped cards as offered.
   4. Any action other than exploration + left opens optional feedback, including unknown future
@@ -496,40 +515,49 @@ here, redo step 1 to match.
   6. `toRequest` trusts the card's chip ids to be unique.
   7. Raw text is kept untrimmed until send.
   8. The dialog has no component or browser test; focus return, Escape and `showModal()` are
-     unverified.
+     covered only by the eye test.
   9. Focus return is done by hand and is skipped if the opener has gone.
   10. Clicking the backdrop does not close the dialog.
   11. Save is allowed with empty text.
   12. The screen has no component or browser test; heading focus, dialog hand-off and error
-      display are unverified.
+      display are covered only by the eye test.
   13. The favourites note moved into the feedback screen for that phase.
   14. Typed answers are lost on a user switch or unmount mid-send.
   15. The compulsory hint is the only validation text.
   16. The empty-Done skip branch has no component test; it relies on the tested `canSubmit` and
       `skipRequest`.
-- The error display cannot be triggered from the UI in mock mode. It is unverified until the real
+  17. A batch with nothing new no longer ends the deck while more than the refetch threshold
+      is queued; it is ignored.
+  18. The stale-response guard in `useDeck` has no automated test; only the reducer change is
+      tested.
+  19. The exploration tag has no automated test; a bundle check and your eye test cover it.
+- The error display cannot be triggered from the UI in mock mode. It is unseen until the real
   backend returns a 4xx.
 - Spotted, not fixed: orphaned `.deck-feedback` rules in `web/src/deck/deck.css`;
   `.claude/worktrees/` untracked and not gitignored; kit-config "No code yet" (already fixed on
   `origin/main`); `swipeBusy` race on a fast user switch mid-swipe (from F2); strength labels
   written out twice, in `ChipDialog.tsx` and `FeedbackScreen.tsx`, so they can drift; prettier
-  warnings on `deckState.ts` and its test. On that last one: prettier is not configured in this
-  repo, and it also warns on files this branch never touched (`web/src/api/client.ts`,
-  `fixtures.ts`, `http.ts`, `index.ts`), so the warnings are not this branch's doing.
+  warnings on `deckState.ts` and its test (prettier is not a configured check, and it also warns
+  on files this branch never touched).
+- Also duplicated, not logged anywhere: `web/src/feedback/feedback.css` repeats the same eight
+  colour variables and near-identical button rules for `.feedback-dialog` and `.feedback-screen`.
+  Harmless now; a colour change has to be made twice.
 - The branch is two commits behind `origin/main` (`cb7cd3b`, `0755bcb`). It merges cleanly
   (`git merge-tree` exit 0), but needs a rebase.
 
 ### What could bite you
 
+- **The demo recording shows the tag if made in mock mode.** If F6 is recorded with
+  `VITE_API_MODE=mock`, the "Exploration (test only)" tag is visible on every exploration card,
+  which breaks the rule that `source` is never shown. Record against the real backend, or remove
+  the tag first.
 - **The `skipped` shape is a guess.** If the backend rejects the key, names it differently, or
   treats it differently, every Skip and every empty optional Done fails with an error. The user
   is then stuck on the screen until they fill something in.
-- **The screen and dialog have no automated tests.** Only the pure logic underneath is tested.
-  The wiring (which button sends which body, focus, the dialog opening and closing) has been
-  checked by reading code, not by running it. A small refactor could break it and every test
-  would stay green.
+- **The screen, dialog and deck hook have no automated tests.** Only the pure logic underneath is
+  tested. Which button sends which body, focus handling, and the stale-response guard in
+  `web/src/deck/useDeck.ts` have been checked by reading code and by eye, not by a test. A small
+  refactor could break any of them and every test would stay green. The deck-ending bug you hit
+  was exactly this kind of fault.
 - **The error path has never been seen.** Mock mode cannot produce a 4xx from the UI, so the
   first time anyone sees an error message on this screen will be against the real backend.
-- **Formatting.** The Done button line and some `deckState.ts` lines are long and unformatted.
-  This machine's editor hook runs Prettier on any file it edits, so the next small change to
-  `FeedbackScreen.tsx` will arrive with unrelated reformatting in its diff.
