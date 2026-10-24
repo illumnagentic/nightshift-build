@@ -4,32 +4,15 @@ The server must point at the fake upstream: GEMINI_BASE=http://127.0.0.1:FAKE_PO
 fake key as MUBIT_API_KEY. The fake runs inside this test process.
 """
 import json
-import os
 import secrets
-import urllib.error
-import urllib.request
 
 import pytest
 
-from fake_upstream import FAKE_KEY, FakeUpstream
+from conftest import call
+from fake_upstream import FAKE_KEY
 
-BASE_URL = os.environ.get("BASE_URL", "http://localhost:8787").rstrip("/")
-FAKE_PORT = int(os.environ.get("FAKE_PORT", "8799"))
-
-
-def call(method, path, user_id=None, body=None, raw=None):
-    headers = {"Content-Type": "application/json"}
-    if user_id is not None:
-        headers["X-User-Id"] = user_id
-    data = raw if raw is not None else (None if body is None else json.dumps(body).encode())
-    req = urllib.request.Request(BASE_URL + path, data=data, method=method, headers=headers)
-    try:
-        with urllib.request.urlopen(req, timeout=20) as resp:
-            return resp.status, json.load(resp)
-    except urllib.error.HTTPError as err:
-        return err.code, json.load(err)
-    except urllib.error.URLError as err:
-        pytest.fail(f"Backend not reachable at {BASE_URL}: {err.reason}. Start `pywrangler dev` in test mode.")
+# No test here may PUT /api/prefs before the fake fixture's probe has passed.
+pytestmark = pytest.mark.usefixtures("fake")
 
 
 def assert_error(status, payload, expected_status, code):
@@ -38,14 +21,6 @@ def assert_error(status, payload, expected_status, code):
     assert set(payload["error"]) == {"code", "message"}
     assert payload["error"]["code"] == code
     assert isinstance(payload["error"]["message"], str) and payload["error"]["message"]
-
-
-@pytest.fixture(scope="module")
-def fake():
-    server = FakeUpstream(FAKE_PORT)
-    server.start()
-    yield server
-    server.stop()
 
 
 @pytest.fixture

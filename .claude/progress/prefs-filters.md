@@ -142,6 +142,16 @@ reaches the fake. One live parser call made by hand, status, `modelVersion` and
 - [x] Matches locked requirements — evidence: Q1/Q2/Q8/Q13 followed; contract diff is only the additive parse_failed line; test_prefs.py covers every Done-when case; live call mreq_01a16f66b9fb7ec3bfd4836b56681a41 recorded (2026-10-24)
 - [x] No scope drift — evidence: git status shows only declared files (2026-10-24)
 
+**Redo (arbiter FIX_NOW, 2026-10-24)**: test-mode guard. Files: `worker/tests/conftest.py`
+(new), `worker/tests/test_prefs.py`. A session-scoped fake fixture in `conftest.py`
+sends one probe PUT and stops the run (`pytest.exit`, non-zero) unless the fake
+recorded it with the fake key. Done when the suite passes in test mode, a run against
+a server with `GEMINI_BASE` on a dead port stops after the probe with a non-zero exit,
+and both runs are recorded in `evidence/prefs-filters/step-1.md`.
+
+- [x] Redo implemented — conftest.py session `fake` fixture + probe, test_prefs.py `pytestmark`; diff read, in declared scope (2026-10-24)
+- [x] Redo reviewed — evidence: reviewer re-ran: test mode 129 passed exit 0; GEMINI_BASE dead port exit 3, 11 passed then pytest.exit, no key printed; unit-only 64 passed exit 0; check-process-refs exit 0 (2026-10-24)
+
 ### Step 2 — Hard filter function
 
 **Goal**: `passes(listing, hard, commute_minutes) -> bool`, a pure predicate, and
@@ -241,13 +251,17 @@ Q13: Optional Worker vars `GEMINI_BASE` / `TFL_BASE` overriding the upstream hos
 
 2026-10-24 | step 1 | Test mode relies on `wrangler dev --var` beating `.dev.vars` (wrangler 4.152.0) | checked by probe; a wrangler upgrade could change it | the suite's final test and the fake's 401 would flag a wrong key; move to a tests-only worker config if it ever breaks — accepted by arbiter 2026-10-24: meets Q13's purpose (a real key never reaches the fake) by a recorded probe plus the fake's 401 and the final key assertion, with no extra file; the deviation from Q13's test-vars-file wording departs from an arbiter ruling, not from decisions.md
 
+2026-10-24 | step 1 redo | The guard covers only modules that use the `fake` fixture | a future API test module that skips it is unguarded | require the fixture in any new API test module — accepted by arbiter 2026-10-24: the only existing modules outside the guard (test_users.py, test_mubit.py) never call PUT /api/prefs, so nothing reaches Mubit today; a session-wide autouse would break the server-less unit tests; Step 3's brief must require test_commute.py to apply `pytestmark = pytest.mark.usefixtures("fake")` (or take `fake` in every test that hits the server) so the probe runs before any PUT /api/prefs, and its reviewer must confirm it
+
+2026-10-24 | step 1 redo | The probe leaves a throwaway `probe_*` user and prefs row in the local D1 | one extra row per session | none needed; seed.sh clears it — accepted by arbiter 2026-10-24: local D1 only, same pattern as the existing t_* test users, cleared by re-seeding; no effect on later steps or the eval
+
 ---
 
 ## SPOTTED, NOT FIXED
 
 2026-10-24 | `worker/README.md` | test instructions do not yet describe test mode or the fake upstream | low (Step 4 covers the README) — accepted by arbiter 2026-10-24: in Step 4's scope and done-when; Step 4 must also say test mode is mandatory and that the default BASE_URL (8787) is the normal dev server
 
-2026-10-24 | `worker/tests/test_prefs.py` | no guard if pytest runs against a normal dev server (real key, no GEMINI_BASE): the first PUT would reach the real Mubit; Q13 wanted a separate test vars file | medium (Step 4 README must say test mode is mandatory; consider a guard test that fails fast)
+2026-10-24 | `worker/tests/test_prefs.py` | no guard if pytest runs against a normal dev server (real key, no GEMINI_BASE): the first PUT would reach the real Mubit; Q13 wanted a separate test vars file | medium (Step 4 README must say test mode is mandatory; consider a guard test that fails fast) — resolved by Step 1 redo 2026-10-24
 
 ---
 

@@ -85,3 +85,28 @@ ground floor" went to `soft`, as there is no hard field for floor level.
   each case; tested.
 - Unusable output from the model is checked per field in `worker/src/prefs.py`; any
   invalid value becomes null.
+
+## Test-mode guard
+
+A session-scoped `fake` fixture in `worker/tests/conftest.py` starts the fake upstream,
+creates a throwaway user and sends one probe `PUT /api/prefs`. If the PUT does not return
+200, or the fake did not record exactly one request carrying the fake key, or the server
+is unreachable, it calls `pytest.exit` with return code 3 and a message naming the
+expected `pywrangler dev --var` flags. No key is printed. `test_prefs.py` applies the
+fixture to every test in the module (`pytestmark`), so no test there can PUT `/api/prefs`
+before the probe has passed. `test_users.py`, `test_mubit.py` and `test_prefs_unit.py` do
+not use it and need no server.
+
+- Test mode: `worker/scripts/seed.sh`, then `pywrangler dev --port 8788 --inspector-port
+  9239 --var MUBIT_API_KEY:<fake key> --var GEMINI_BASE:http://127.0.0.1:8799`;
+  `BASE_URL=http://localhost:8788 uv run --group dev pytest tests -q` gave 129 passed,
+  exit 0.
+- Misconfigured: same server restarted with `GEMINI_BASE:http://127.0.0.1:9` (dead port,
+  fake key, so no money could be spent). Same pytest command with `-v`: the 11 unit tests
+  in `test_mubit.py` ran and passed, `test_prefs.py::test_missing_header_is_401` was the
+  first test collected from the module, the probe failed, and the run ended with
+  `_pytest.outcomes.Exit: The server at http://localhost:8788 is not in test mode ...`,
+  exit 3. No test after the probe ran: 11 passed, none failed, 118 never started. The fake
+  saw 0 requests, since the server was pointed at port 9, not at the fake.
+- Unit tests alone, no server: `uv run --group dev pytest tests/test_mubit.py
+  tests/test_prefs_unit.py -q` gave 64 passed, exit 0.
