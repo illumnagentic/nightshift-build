@@ -70,11 +70,16 @@ For each step, write into the file:
 - **Files in scope** — the specific paths it may touch. Be precise. This list is the
   trip wire that catches sprawl later, so a lazy `src/**` defeats the purpose. If you
   genuinely cannot predict a path, say so in the step rather than widening the glob.
-- **Done when** — an observable condition, not "implemented correctly".
+- **Done when** — an observable condition, not "implemented correctly". If the step
+  shows a list, deck or paged view, the condition goes past the first batch. If the
+  step relies on a rule another step introduced, restate that rule here.
 - **Evidence location** — where evidence for this step lives. Durable: in the repo, or
   a location the human names. Never only a session scratch area. "The diff" is fine
   where the diff is the evidence.
 - The five checkboxes, all unticked.
+
+The human eye test belongs in VERIFICATION at wrap-up, not in a step's done-when. A
+reviewer cannot tick a box that waits on the human.
 
 Order steps so each leaves the repo in a working state. If that is impossible, say so
 explicitly rather than pretending otherwise.

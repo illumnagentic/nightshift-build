@@ -106,6 +106,11 @@ partially covering the cases in the requirement.
 
 Do not bury it in prose. Do not describe it as a design decision if it is a compromise.
 
+Reporting it is not enough: also write it into the progress file before you report.
+Insert it as the last entry of the TRADEOFFS section, directly above
+`## SPOTTED, NOT FIXED`. Never append to the end of the file. Say in your report that
+you did it.
+
 ## Output
 
 Return exactly this and nothing else:
