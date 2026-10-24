@@ -46,7 +46,7 @@ Branch names are proposals; set them at feature-kickoff.
 
 - [x] **F1 Shell** — `feat/web-shell` — Vite + React + TS, pick or create user, API
   client against mocks from the contract.
-- [ ] **F2 Swipe deck** — `feat/web-deck` — property card, swipe left / right,
+- [x] **F2 Swipe deck** — `feat/web-deck` — property card, swipe left / right,
   superlike.
 - [ ] **F3 Feedback screen** — `feat/web-feedback` — filtered chips, phrase dialog with
   preset suggestions, free-text box, compulsory for the first 15–20 cards.
