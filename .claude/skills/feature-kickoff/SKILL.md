@@ -115,10 +115,10 @@ Every brief starts with the header: `PROGRESS: .claude/progress/<slug>.md`, then
 `STEP: <n>` or `REDO OF STEP <n>`. Briefs cite rules from RULES IN FORCE. The redo rule
 is in `.claude/CLAUDE.md`, and `.claude/hooks/check-step-order.sh` enforces the order.
 
-## When autonomy is on
+## In full automation
 
-Read `Autonomy` from `.claude/kit-config.md`. If it is `on`, see `## Autonomous mode` in
-`.claude/CLAUDE.md`. Then:
+Run `.claude/scripts/autonomy.sh status`. If it prints `on`, see `## Modes` in
+`.claude/CLAUDE.md`. Otherwise ignore this section. Then:
 
 - **Requirements (sections 2 and 3).** Do not ask the section 2 questions. Quote
   `REQUIREMENTS (LOCKED)` from the feature's line in `docs/plan.md`, the binding lines

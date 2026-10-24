@@ -102,9 +102,9 @@ changed config key, a non-additive schema change, or altered default behaviour t
 would break an existing caller. Internal refactoring is not breaking. When it is
 genuinely borderline, say so and let the human decide rather than quietly picking.
 
-## When autonomy is on
+## In full automation
 
-Read `Autonomy` from `.claude/kit-config.md`. If it is `on`:
+Run `.claude/scripts/autonomy.sh status`. If it prints `on`:
 
 - Step 3 (ask) is skipped. Still delegate to `commit-composer`, and still commit only
   through `safe-commit.sh`.

@@ -36,16 +36,13 @@ Leave blank if the repo has none. Never invent one.
 - **Test framework**: vitest (web)
 - **Where tests live**: alongside source as `*.test.ts` in `web/src/`
 
-## Autonomy
-
-- **Autonomy**: on
-  <!-- `on` means the kit runs without human approval of plans, commits, PRs, merges
-       and tradeoffs. Decisions go to the `arbiter` subagent. `off` or unset restores
-       the human gates. -->
+## Dependencies
 
 - **Approved dependencies**: fastapi, google-genai, pytest
-  <!-- In autonomous mode these may be added without asking. Any other dependency
-       escalates. -->
+  <!-- Applies only in full automation. These may be added without asking. Any other
+       dependency escalates. In default mode every new dependency is a question for
+       the human. -->
+
 
 ## Brief notes
 

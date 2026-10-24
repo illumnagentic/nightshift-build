@@ -146,6 +146,16 @@ the switch starts off on every machine, how to turn it on (two confirmations) an
 (one), and how to check the GitHub repo settings. It refers to existing files rather
 than repeating them.
 
+**2026-10-24 — (arbiter).** Extra step 8, after step 7: README points to AUTO_SETUP.
+
+- **Goal**: someone setting up a clone from `.claude/README.md` finds the mode-layer
+  setup.
+- **Files**: `.claude/README.md`
+- **Done when**: `.claude/README.md` gains one line or short paragraph, after the
+  commit-guard install block, pointing to `.claude/AUTO_SETUP.md` for the full-automation
+  layer (setup on another machine and updating the kit); nothing else in the README
+  changes; `git diff --stat` shows only that file plus progress bookkeeping.
+
 ---
 
 ## RULES IN FORCE
@@ -314,11 +324,11 @@ checks (declared scopes).
 
 **Evidence location**: the diff
 
-- [ ] Implemented
-- [ ] Tested — evidence: (date)
-- [ ] Best practices met — evidence: (date)
-- [ ] Matches locked requirements — evidence: (date)
-- [ ] No scope drift — evidence: (date)
+- [x] Implemented — evidence: diff of 8 kit files plus .claude/AUTO_SETUP.md; no Autonomy setting remains, all switch checks use autonomy.sh status (2026-10-24)
+- [x] Tested — evidence: fresh scratch copy rv with no switch: gh pr create --body-file command gives no decision, exit 0; a push to main is blocked, exit 2; check-process-refs 6 accepted hits (2026-10-24)
+- [x] Best practices met — evidence: AUTO_SETUP claims checked against autonomy-guard.sh, autonomy.sh, settings.json; no banned words (2026-10-24)
+- [x] Matches locked requirements — evidence: CLAUDE.md ## Modes; safe-merge wording matches safe-merge.sh lines 108-117; AMENDMENTS AUTO_SETUP content covered (2026-10-24)
+- [x] No scope drift — evidence: git status shows only in-scope files plus progress file (2026-10-24)
 
 ---
 
@@ -358,16 +368,21 @@ checks (declared scopes).
 
 2026-10-24 | 6 (redo) | A bare push outside a repo, or where git fails, gets no decision; the `@{push}` target is judged by name (`main` or `*/main`) only | minimum rule set | resolve the destination ref properly — accepted by arbiter 2026-10-24: no decision falls back to the settings deny rules and a normal prompt, and the autonomous allow-list never covers a bare push, so it fails safe
 
+2026-10-24 | 7 | The implementer created a switch file in a scratch copy of the kit by splitting the name in the shell command, to test the guard's allow path; the real switch was never touched | the guard denies the literal name in Bash, and the canonical command would hit the real script | a test harness shipped in the repo
+
+2026-10-24 | 7 | The step 7 guard check covers only the one `gh pr create --body-file` form | brief's done-when | the full guard matrix stays in `evidence/kit-autonomy/autonomy-guard-checks.md` — accepted by arbiter 2026-10-24: that one form is exactly the done-when and the route the pr-description skill now prescribes; every other form was exercised in step 6's evidence, and any other spelling gets no decision and falls back to a normal prompt, which fails safe
+
 ---
 
 ## SPOTTED, NOT FIXED
 
 - PR #7 (`feat/web-shell`) merged as a merge commit "Merge pull request #7", against
   the squash decision in `docs/decisions.md`. Already on `main`; not rewritten. Step 5
-  stops it recurring. | low
+  stops it recurring. | low — accepted by arbiter 2026-10-24: rewriting `main` needs a force-push, which the kit denies; step 5's squash-only settings and safe-merge.sh stop a repeat, so nothing later is blocked
 - `.claude/scripts/safe-merge.sh` | allows progress-file changes made after the
   `QA-GATE: PASS` line was written; it checks the line exists, not that it is newer
   than the last code change | low — FIXED 2026-10-24: safe-merge's post-PASS check refuses non-progress/plan changes after the PASS commit (test: 'code commit after PASS')
+- `.claude/README.md` | after-clone setup covers only the commit guard; it does not point to `.claude/AUTO_SETUP.md` for the mode layer | low — FIX_NOW by arbiter 2026-10-24: cheap, see AMENDMENTS (arbiter) step 8
 
 ---
 

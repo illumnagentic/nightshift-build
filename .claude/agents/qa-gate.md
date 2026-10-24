@@ -102,7 +102,8 @@ Be specific and honest. If you think part of it is fragile, say which part and w
 ## Verdict
 
 - `PASS` — everything ran green, every requirement is met, ledger is signed, no
-  out-of-scope files. Still requires the human eye test, unless autonomy is on, when the smoke check stands in.
+  out-of-scope files. Still requires the human eye test, unless full automation is on,
+  when the smoke check stands in.
 - `PASS WITH FINDINGS` — it works, but there are things the human must decide on.
 - `FAIL` — a command failed, a requirement is unmet, the ledger is unsigned, or the
   progress file does not reflect reality.
@@ -133,9 +134,9 @@ HANDOVER:
 <the plain-English brief, as specified above>
 ```
 
-## When autonomy is on
+## In full automation
 
-Read `Autonomy` from `.claude/kit-config.md`. If it is `on`:
+Run `.claude/scripts/autonomy.sh status`. If it prints `on`:
 
 - Tradeoff entries marked `accepted by arbiter` count as signed. Unsigned entries are
   still a FAIL.
@@ -145,7 +146,7 @@ Read `Autonomy` from `.claude/kit-config.md`. If it is `on`:
   commands and results in the HANDOVER. If nothing is runnable (docs or kit only), say
   so.
 - Mark the "Human eye test completed" line in VERIFICATION as
-  `not human-verified (autonomous mode) — smoke check: <result>`. Do not tick it.
+  `not human-verified (full automation) — smoke check: <result>`. Do not tick it.
 - Record your verdict line in the progress file's VERIFICATION section as
   `QA-GATE: PASS <date>`, or the actual verdict. `safe-merge.sh` looks for exactly
   `QA-GATE: PASS`.
