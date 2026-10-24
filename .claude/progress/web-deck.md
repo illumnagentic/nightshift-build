@@ -87,7 +87,20 @@ This session's conversation, quoted above. `docs/plan.md`, `docs/decisions.md`,
 
 ## AMENDMENTS
 
-_None._
+- 2026-10-24, human, after seeing the deck in the browser. Answers to four points:
+  1. "arraow keys are fine: left for dislike, right for like. I would change the
+     superlike to love, for display name, and use heart shape instead of texts for the
+     actual user interface." Read as: arrow keys stay as built (the photo-button key
+     overlap is accepted); the superlike button shows a heart instead of text, with the
+     display/accessible name "Love". The API action stays `superlike`. Dislike and Like
+     keep text labels unless the human says otherwise.
+  2. Floor level shown as "First": "fix now".
+  3. Postcode shown twice in the address: "fix now".
+  4. Dark-mode contrast on the page heading: "add it to F2, use bright mode by default.
+     we will do styling later on." `web/src/index.css` is added to F2's scope for this
+     only.
+  Points 2–3 are a redo of Step 3; points 1 and 4 a redo of Step 4. Both redos are
+  reviewed in order before Step 5 is briefed.
 
 ---
 
@@ -192,6 +205,22 @@ tests and build exit 0. The card is not wired into the app yet.
 - [x] Matches locked requirements — evidence: card never reads source/chips/feedback_required; nulls omitted or "Commute unknown"; features capped at 4; enum labels match contract (2026-10-24)
 - [x] No scope drift — evidence: only declared files plus progress file; index.css untouched; deck.css all under .deck-card; check-process-refs exit 0 (2026-10-24)
 
+#### Redo of Step 3 — floor and postcode wording
+
+**Goal**: Floor level reads as a floor ("First floor"), and the postcode is not shown twice when the address already contains it or its outward code.
+
+**Files in scope**: `web/src/deck/format.ts`, `web/src/deck/format.test.ts`, `web/src/deck/PropertyCard.tsx`, `evidence/web-deck/step-3-redo.md`.
+
+**Done when**: a floor level without the word "floor" gets " floor" appended and the first letter capitalised ("first" → "First floor"; "second floor" → "Second floor"), with sensible handling of values that are not floors (checked against the distinct `floor_level` values in `dataset/listings.jsonl`, read only); the address line shows the full postcode once: if the address already contains the full postcode it is not appended, and if the address ends with the postcode's outward code that trailing code is replaced by the full postcode ("…, Bushey, Hertfordshire, WD23" + "WD23 2PL" → "…, Bushey, Hertfordshire, WD23 2PL"); both rules are pure functions in `format.ts` with tests; nulls still omitted; typecheck, tests and build exit 0; the process-wording check exits 0.
+
+**Evidence location**: `evidence/web-deck/step-3-redo.md`.
+
+- [x] Implemented — floorLevelLabel and addressLine in format.ts, used by PropertyCard.tsx (2026-10-24)
+- [x] Tested — evidence: typecheck, npm test (121 passed), build all exit 0; floor table covers dataset values, addressLine tests incl. WD23 case, full-postcode, append, nulls (2026-10-24)
+- [x] Best practices met — evidence: regex-escaped outward code, anchored by non-alphanumeric lead, pure functions, empty address omitted via `address &&` at PropertyCard.tsx:78 (2026-10-24)
+- [x] Matches locked requirements — evidence: distinct floor_level values in evidence match dataset/listings.jsonl; unknowns omitted, never "" in DOM (2026-10-24)
+- [x] No scope drift — evidence: only format.ts, format.test.ts, PropertyCard.tsx, evidence file changed; old assertions kept; process-refs exit 0 (2026-10-24)
+
 ### Step 4 — Deck screen with buttons, keys and feedback stub
 
 **Goal**: After sign-in the user sees the deck and can dislike, like or superlike each
@@ -216,6 +245,22 @@ when low; empty and blocked states show plain messages (`error.message` for erro
 - [x] Best practices met — evidence: buttons disabled in flight, repeat/text-input guards, focus to Continue, 44px targets, reduced-motion, listener cleanup (2026-10-24)
 - [x] Matches locked requirements — evidence: feedback driven by swipe response, favourites note both paths, key on decision_id, source never read, error.message shown (2026-10-24)
 - [x] No scope drift — evidence: only declared files changed; useDeck/deckState/smoke.test untouched; process-refs exit 0 (2026-10-24)
+
+#### Redo of Step 4 — Love button and light page
+
+**Goal**: The superlike button is shown as a heart with the accessible name "Love", and the page renders light by default whatever the browser's colour scheme.
+
+**Files in scope**: `web/src/deck/DeckScreen.tsx`, `web/src/deck/deck.css`, `web/src/index.css`, `evidence/web-deck/step-4-redo.md`.
+
+**Done when**: the superlike button shows a heart shape (inline SVG or a heart character, no icon library, no new dependency) and no visible text; its accessible name is "Love"; it still calls `swipe("superlike")`; ArrowUp still superlikes; Dislike and Like keep their text labels; any user-facing "Superlike" wording in the deck screen reads "Love" instead (the "Added to favourites" note is unchanged); `web/src/index.css` sets `color-scheme: light` and an explicit light background and dark text on the page, so the heading and "Signed in as" line are readable in a dark-mode browser; no other styling changes; typecheck, tests and build exit 0; the process-wording check exits 0.
+
+**Evidence location**: `evidence/web-deck/step-4-redo.md`.
+
+- [ ] Implemented
+- [ ] Tested — evidence: (date)
+- [ ] Best practices met — evidence: (date)
+- [ ] Matches locked requirements — evidence: (date)
+- [ ] No scope drift — evidence: (date)
 
 ### Step 5 — Drag to swipe
 
@@ -252,6 +297,8 @@ still work and do not start a drag; typecheck, tests and build exit 0.
 - Step 4 | `DeckScreen` and `FeedbackStub` have no component test (node env, no jsdom; out of scope). Checked by eye. | Needs a DOM test environment.
 - Step 4 | `commute_pending` Retry refetches once per click; there is no polling. | Polling belongs with the prefs/commute UI (F4).
 - Step 4 | Arrow keys are listened for on `window`, so they also fire when focus is on a button such as Switch user or a photo arrow. Only text inputs are exempt, as briefed. | Scope the listener to the deck root, which needs focus management.
+- Step 3 redo | `addressLine` treats the postcode as present if its whitespace-stripped form appears anywhere in the stripped address, so it could in theory match inside a longer run of characters. | Needs a word-boundary check on the stripped form; unlikely in real addresses.
+- Step 3 redo | `floorLevelLabel` only appends " floor" to ordinals ("22nd floor"); it does not reword them ("22nd" stays an ordinal). | Fine for every value in the dataset.
 
 ---
 

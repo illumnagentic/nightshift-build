@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { PriceQualifier, PropertyType, Tenure } from "../api/types";
 import {
+  addressLine,
   commuteLine,
   floorLevelLabel,
   formatPrice,
@@ -80,13 +81,64 @@ describe("tenureLabel", () => {
 });
 
 describe("floorLevelLabel", () => {
-  it("capitalises the first letter and keeps the rest", () => {
-    expect(floorLevelLabel("second floor")).toBe("Second floor");
+  const cases: [string, string][] = [
+    ["first", "First floor"],
+    ["ground", "Ground floor"],
+    ["top", "Top floor"],
+    ["lower ground", "Lower ground floor"],
+    ["raised ground", "Raised ground floor"],
+    ["1st", "1st floor"],
+    ["22nd", "22nd floor"],
+    ["second floor", "Second floor"],
+    ["higher than 2nd floor (with lift)", "Higher than 2nd floor (with lift)"],
+    ["  first  ", "First floor"],
+  ];
+
+  it.each(cases)("maps %j", (value, label) => {
+    expect(floorLevelLabel(value)).toBe(label);
   });
 
   it("returns null for null or blank text", () => {
     expect(floorLevelLabel(null)).toBeNull();
     expect(floorLevelLabel("  ")).toBeNull();
+  });
+});
+
+describe("addressLine", () => {
+  it("replaces a trailing outward code with the full postcode", () => {
+    expect(
+      addressLine("Yew House, Plantation Close, Bushey, Hertfordshire, WD23", "WD23 2PL"),
+    ).toBe("Yew House, Plantation Close, Bushey, Hertfordshire, WD23 2PL");
+  });
+
+  it("replaces an outward code followed by punctuation or space, ignoring case", () => {
+    expect(addressLine("High Street, Bushey, wd23. ", "WD23 2PL")).toBe(
+      "High Street, Bushey, WD23 2PL",
+    );
+  });
+
+  it("leaves the address alone when it holds the full postcode", () => {
+    expect(addressLine("High Street, Bushey, WD23 2PL", "WD23 2PL")).toBe(
+      "High Street, Bushey, WD23 2PL",
+    );
+    expect(addressLine("High Street, Bushey, wd232pl", "WD23 2PL")).toBe(
+      "High Street, Bushey, wd232pl",
+    );
+  });
+
+  it("appends the postcode otherwise", () => {
+    expect(addressLine("High Street, Bushey", "WD23 2PL")).toBe("High Street, Bushey, WD23 2PL");
+  });
+
+  it("does not treat a longer code as the outward code", () => {
+    expect(addressLine("High Street, XWD23", "WD23 2PL")).toBe("High Street, XWD23, WD23 2PL");
+  });
+
+  it("returns whichever part exists, or null", () => {
+    expect(addressLine("High Street", null)).toBe("High Street");
+    expect(addressLine(null, "WD23 2PL")).toBe("WD23 2PL");
+    expect(addressLine(null, null)).toBeNull();
+    expect(addressLine("  ", "")).toBeNull();
   });
 });
 

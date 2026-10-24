@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { Card } from "../api/types";
 import {
+  addressLine,
   commuteLine,
   floorLevelLabel,
   formatPriceWithQualifier,
@@ -29,7 +30,7 @@ export function PropertyCard({ card }: { card: Card }) {
     floorLevelLabel(listing.floor_level),
   ].filter((detail): detail is string => detail !== null);
 
-  const address = [listing.address, listing.postcode].filter(Boolean).join(", ");
+  const address = addressLine(listing.address, listing.postcode) ?? "";
   const features = listing.key_features.slice(0, MAX_FEATURES);
 
   return (

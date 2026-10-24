@@ -54,7 +54,23 @@ export function tenureLabel(tenure: Tenure | null): string | null {
 
 export function floorLevelLabel(floor: string | null): string | null {
   const text = floor?.trim();
-  return text ? text.charAt(0).toUpperCase() + text.slice(1) : null;
+  if (!text) return null;
+  const label = /floor/i.test(text) ? text : `${text} floor`;
+  return label.charAt(0).toUpperCase() + label.slice(1);
+}
+
+const squash = (text: string) => text.replace(/\s+/g, "").toLowerCase();
+
+export function addressLine(address: string | null, postcode: string | null): string | null {
+  const addr = address?.trim() || null;
+  const code = postcode?.trim() || null;
+  if (!addr || !code) return addr ?? code;
+  if (squash(addr).includes(squash(code))) return addr;
+  const outward = code.split(/\s+/)[0].replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const trailing = new RegExp(`(^|[^A-Za-z0-9])${outward}[\\s,.;]*$`, "i");
+  return trailing.test(addr)
+    ? addr.replace(trailing, (_, lead: string) => `${lead}${code}`)
+    : `${addr}, ${code}`;
 }
 
 export function commuteLine(commute: Commute): string {
