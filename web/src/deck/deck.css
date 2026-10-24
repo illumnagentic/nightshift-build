@@ -168,3 +168,100 @@
     transition: none;
   }
 }
+
+.deck-screen {
+  --screen-accent: #0b5cad;
+  --screen-superlike: #b4540a;
+
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+.deck-screen__actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  width: calc(100% - 32px);
+  max-width: 400px;
+}
+
+.deck-screen__note {
+  margin: 0;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: #fbe9d6;
+  color: #6b3205;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.deck-screen .deck-action,
+.deck-screen .deck-feedback .deck-action {
+  flex: 1;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 2px solid var(--screen-accent);
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--screen-accent);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.deck-screen .deck-action:hover:not(:disabled) {
+  background: var(--screen-accent);
+  color: #ffffff;
+}
+
+.deck-screen .deck-action--superlike {
+  border-color: var(--screen-superlike);
+  background: var(--screen-superlike);
+  color: #ffffff;
+}
+
+.deck-screen .deck-action--superlike:hover:not(:disabled) {
+  background: #8f4208;
+  color: #ffffff;
+}
+
+.deck-screen .deck-action:focus-visible {
+  outline: 3px solid var(--screen-accent);
+  outline-offset: 2px;
+}
+
+.deck-screen .deck-action:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.deck-screen .deck-feedback {
+  box-sizing: border-box;
+  width: calc(100% - 32px);
+  max-width: 400px;
+  padding: 20px;
+  border-radius: 16px;
+  background: #ffffff;
+  color: #1a1f24;
+  box-shadow: 0 8px 28px rgba(20, 30, 40, 0.14);
+}
+
+.deck-screen .deck-feedback h2 {
+  margin: 0 0 8px;
+  font-size: 1.25rem;
+}
+
+.deck-screen .deck-feedback p {
+  margin: 0 0 16px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .deck-screen .deck-action {
+    transition: none;
+  }
+}

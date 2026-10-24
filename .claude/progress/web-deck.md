@@ -211,11 +211,11 @@ when low; empty and blocked states show plain messages (`error.message` for erro
 
 **Evidence location**: `evidence/web-deck/step-4.md`.
 
-- [ ] Implemented
-- [ ] Tested — evidence: (date)
-- [ ] Best practices met — evidence: (date)
-- [ ] Matches locked requirements — evidence: (date)
-- [ ] No scope drift — evidence: (date)
+- [x] Implemented — web/src/deck/DeckScreen.tsx, FeedbackStub.tsx, App.tsx wired, deck.css (2026-10-24)
+- [x] Tested — evidence: typecheck, npm test (106 passed), build all exit 0; no component test, logged tradeoff (2026-10-24)
+- [x] Best practices met — evidence: buttons disabled in flight, repeat/text-input guards, focus to Continue, 44px targets, reduced-motion, listener cleanup (2026-10-24)
+- [x] Matches locked requirements — evidence: feedback driven by swipe response, favourites note both paths, key on decision_id, source never read, error.message shown (2026-10-24)
+- [x] No scope drift — evidence: only declared files changed; useDeck/deckState/smoke.test untouched; process-refs exit 0 (2026-10-24)
 
 ### Step 5 — Drag to swipe
 
@@ -249,6 +249,9 @@ still work and do not start a drag; typecheck, tests and build exit 0.
 - Step 2 | Responses for a previous user are dropped, but the in-flight request itself is not aborted (the client has no abort support). | Add `AbortSignal` to `ApiClient`.
 - Step 3 | `PropertyCard` has no component test (node env, no jsdom; out of scope). Only `format.ts` is tested; the card is checked by eye. | Needs a DOM test environment.
 - Step 3 | Photo position is local state, so the parent must give the card `key={card.decision_id}` or the next card keeps the previous index (it is clamped, not wrong, but not reset). | Lift the index into deck state or reset in an effect.
+- Step 4 | `DeckScreen` and `FeedbackStub` have no component test (node env, no jsdom; out of scope). Checked by eye. | Needs a DOM test environment.
+- Step 4 | `commute_pending` Retry refetches once per click; there is no polling. | Polling belongs with the prefs/commute UI (F4).
+- Step 4 | Arrow keys are listened for on `window`, so they also fire when focus is on a button such as Switch user or a photo arrow. Only text inputs are exempt, as briefed. | Scope the listener to the deck root, which needs focus management.
 
 ---
 
