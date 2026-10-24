@@ -74,14 +74,16 @@ key off users' devices.
 Minimal shapes (not run in this repo; swap per table):
 
 ```python
-# Curator: OpenAI format, async (Python Workers handlers are async)
+# OpenAI format, async (Python Workers handlers are async). Ran in a local
+# Python Worker on 24 Oct 2026 against starter model gpt-4o-mini: worked.
 from openai import AsyncOpenAI
 
 client = AsyncOpenAI(api_key=env.MUBIT_API_KEY, base_url="https://api.mubit.ai/openai/v1")
 ```
 
 ```python
-# Photo flags: Gemini
+# Gemini: curator (gemini-3.8-flash) and photo flags (gemini-3.5-flash-lite).
+# The google-genai SDK has not been run in a Python Worker yet.
 from google import genai
 from google.genai import types
 
@@ -101,7 +103,7 @@ for it. (The console's own "Request" ID under Details is a different ID.)
 ```python
 # openai SDK: the raw response exposes headers
 raw = await client.chat.completions.with_raw_response.create(
-    model=CURATOR_MODEL,
+    model=MODEL,
     messages=messages,
     metadata={"session_id": session_id},
 )
