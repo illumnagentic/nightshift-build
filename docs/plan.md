@@ -19,7 +19,7 @@ Branch names are proposals; set them at feature-kickoff.
 
 ## Shared, before either side builds
 
-- [ ] **API contract** — Zsolt + Yewen — `docs/api-contract.md`: endpoints, request and
+- [x] **API contract** — Zsolt + Yewen — `docs/api-contract.md`: endpoints, request and
   response shapes, `decision_id`, card `source` flag. Frontend mocks come from it.
 
 ## Backend — Zsolt
