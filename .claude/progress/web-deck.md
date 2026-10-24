@@ -162,11 +162,11 @@ transition; typecheck and tests exit 0.
 
 **Evidence location**: `evidence/web-deck/step-2.md`.
 
-- [ ] Implemented
-- [ ] Tested — evidence: (date)
-- [ ] Best practices met — evidence: (date)
-- [ ] Matches locked requirements — evidence: (date)
-- [ ] No scope drift — evidence: (date)
+- [x] Implemented — web/src/deck/deckState.ts (pure reducer), useDeck.ts (2026-10-24)
+- [x] Tested — evidence: npm test exit 0, 81 passed; 29 deckState tests cover each transition; typecheck and build exit 0 (2026-10-24)
+- [x] Best practices met — evidence: stale-user guard, in-flight ref, no refetch loop on failure/exhausted; getDeck default n=10 so no-new-cards inference is sound (2026-10-24)
+- [x] Matches locked requirements — evidence: only swipe response feedback_required read (deckState.ts:125); source never read; empty_reason and blocked codes handled (2026-10-24)
+- [x] No scope drift — evidence: only deckState.ts, deckState.test.ts, useDeck.ts, evidence/web-deck/step-2.md plus progress file; check-process-refs exit 0 (2026-10-24)
 
 ### Step 3 — Property card
 
@@ -243,7 +243,10 @@ still work and do not start a drag; typecheck, tests and build exit 0.
 
 ## TRADEOFFS
 
-_None logged._
+- Step 2 | `useDeck.ts` has no automated test (node env, no jsdom or hook renderer, both out of scope). Typecheck and build only; exercised by eye in step 4. | Proper cover needs a DOM test environment.
+- Step 2 | A failed swipe (for example 404 `decision_not_found` after a prefs re-save) leaves the same card on top, so Retry repeats the failing call. No handling for discarding stale cards. | Needs the contract's re-save flow, which belongs with the prefs form (F4).
+- Step 2 | When a fetch adds no new cards the deck is marked `exhausted` even if the server gave no `empty_reason`, to avoid a refetch loop. | Would need the server to say when it has nothing further.
+- Step 2 | Responses for a previous user are dropped, but the in-flight request itself is not aborted (the client has no abort support). | Add `AbortSignal` to `ApiClient`.
 
 ---
 
@@ -251,6 +254,7 @@ _None logged._
 
 - `.claude/worktrees/` | untracked and not gitignored on `main` | low
 - `.claude/kit-config.md` Project type | still says "No code yet" | low
+- `web/src/deck/useDeck.ts` | an old user's swipe callback resets the shared `swipeBusy` ref even if a new user's swipe has started; only on a rapid user switch mid-swipe; a per-request token would fix it (step 2 reviewer) | low
 
 ---
 
