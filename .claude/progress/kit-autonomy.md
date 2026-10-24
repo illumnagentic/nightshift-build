@@ -5,7 +5,7 @@
 - **Started**: 2026-10-24
 - **Branch**: feat/kit-autonomy
 - **BASE_SHA**: 628a2c711b4095d4f342a03dfc50b9244e6960ed
-- **Status**: in progress
+- **Status**: complete (2026-10-24)
 
 ---
 
@@ -424,17 +424,17 @@ nothing else in the README changes.
 
 ## VERIFICATION
 
-- [x] All step checkboxes ticked with evidence — qa-gate re-run: 40/40 PLAN boxes ticked, all dated 2026-10-24, in step order; step 6 redo evidence line present (2026-10-24)
-- [x] Every evidence path in this file exists — qa-gate re-run: the three evidence files and `evidence/kit-autonomy/harness/` exist; other steps say "the diff" (2026-10-24)
-- [x] Test suite run — result: `cd web && npm ci` exit 0, `npm test` 50/50 passed, exit 0; guard harness run.py 142 OK + run2.py 30 OK, BAD COUNT 0; safe-merge harness 21 cases as recorded, exit 0; fake `shlex.py`/`json.py` in cwd, push to main → exit 2 (2026-10-24)
+- [x] All step checkboxes ticked with evidence — qa-gate final run: 40/40 PLAN boxes ticked, all dated 2026-10-24, in step order; step 6 and step 7 redo evidence lines present (2026-10-24)
+- [x] Every evidence path in this file exists — qa-gate final run: the three evidence files and `evidence/kit-autonomy/harness/` exist; other steps say "the diff" (2026-10-24)
+- [x] Test suite run — result: `cd web && npm ci` exit 0, `npm test` 50/50 passed, exit 0; guard harness run.py and run2.py exit 0, BAD COUNT 0; safe-merge harness exit 0, every row as in `evidence/kit-autonomy/safe-merge-checks.md`; fake `shlex.py`/`json.py` in cwd, push to main → exit 2; `bash -n` on the three scripts and `json.tool` on settings exit 0; local simulation of safe-merge's scope check on this branch: 0 files out of scope (2026-10-24)
 - [ ] Lint run — result: not configured in kit-config, not run
 - [x] Typecheck run — result: `cd web && npm run typecheck` exit 0 (2026-10-24)
 - [x] Build run — result: `cd web && npm run build` exit 0 (2026-10-24)
-- [x] Diff contains no files outside declared scope — qa-gate re-run: all 37 non-progress files match a declared scope or the step 6 redo amendment (`evidence/kit-autonomy/harness/`) (2026-10-24)
-- [x] Tradeoff ledger reviewed and signed off by human — qa-gate: 21/21 TRADEOFFS entries carry `signed off by human (Zsolt) 2026-10-24` (uncommitted at time of check). SPOTTED entry for PR #7 carries an arbiter marker only (2026-10-24)
+- [x] Diff contains no files outside declared scope — qa-gate final run: all 37 non-progress files match a declared scope or amendment (2026-10-24)
+- [x] Tradeoff ledger reviewed and signed off by human — qa-gate final run: 21/21 TRADEOFFS and 3/3 SPOTTED entries carry `signed off by human (Zsolt) 2026-10-24`, committed in 093b4b8 (2026-10-24)
 - [ ] Human eye test completed — PARTIAL: the human did one live check on 2026-10-24 (Edit of the guard hook raised a permission prompt; refused). The rest of the checklist is not human-verified.
 
-QA-GATE: PASS WITH FINDINGS 2026-10-24 — all commands green, requirements met, ledger signed. Findings: `.claude/AUTO_SETUP.md` line 44 and `evidence/kit-autonomy/safe-merge-checks.md` lines 9–10 still say the harnesses are not committed, which the step 6 redo made false; the eye test is partial.
+QA-GATE: PASS 2026-10-24
 
 ---
 
@@ -464,22 +464,18 @@ prompt, and you refused it. The rest is not done.
 4. Open https://github.com/illumnagentic/nightshift-build/settings, General, Pull
    Requests. Only "Allow squash merging" should be ticked, set to "Pull request title",
    with "Automatically delete head branches" on.
-5. Decide on the two stale lines. `.claude/AUTO_SETUP.md` line 44 tells Claude "The
-   harnesses are not in the repo. Write them in the session scratchpad."
-   `evidence/kit-autonomy/safe-merge-checks.md` lines 9–10 say the harness "and fixtures
-   were kept in the session scratchpad and are not committed". Both stopped being true
-   with the step 6 redo. Each fix is a few words, but it needs a redo and a qa-gate
-   re-run.
+5. Open `.claude/AUTO_SETUP.md` and read section B as if you were setting up Yewen's
+   laptop. Every step should make sense without this conversation.
 6. Optional, to try the switch: ask Claude to turn full automation on. It should ask
    you once in chat, then the harness should show a permission prompt for
    `.claude/scripts/autonomy.sh on`. Approve, check `status` prints `on (since
    2026-10-24)`, then ask it to turn it off. It should ask once and `status` should
    print `off`.
-7. After the PR is open and a committed `QA-GATE: PASS` line exists, run
-   `.claude/scripts/safe-merge.sh <pr-number> --check-only`. It should print
-   `ok: all checks passed`. This is the first run against real GitHub; the stub tests
-   did not cover the fetch path. The current line reads `PASS WITH FINDINGS`, and
-   safe-merge refuses that by design.
+7. Commit this progress file (it now holds the PASS line), push the branch and open the
+   PR. Then run `.claude/scripts/safe-merge.sh <pr-number> --check-only`. It should
+   print `ok: all checks passed`. This is the first run against real GitHub; the stub
+   tests did not cover the fetch path. If the PASS line is not committed, or anything
+   other than this file or `docs/plan.md` is committed after it, it refuses.
 
 **Tools that will help**
 
@@ -500,10 +496,9 @@ prompt, and you refused it. The rest is not done.
 
 **What is not done**
 
-- The eye test is partial. You checked only the hook-edit prompt.
-- `.claude/AUTO_SETUP.md` line 44 and `evidence/kit-autonomy/safe-merge-checks.md` lines
-  9–10 say the harnesses are not in the repo. They are.
-- Your sign-off markers on the TRADEOFFS entries are in the working tree, not committed.
+- The eye test is partial. You checked only the hook-edit prompt. Nothing else in this
+  feature has been verified by a human.
+- Lint is not configured in kit-config, so it was not run.
 - safe-merge.sh has never run against real GitHub. Fetch, `ls-tree`, `show` and the
   merge itself were tested with stub `gh` and `git` only.
 - The guard's switch-file and content checks are text matches. Splitting or building
@@ -519,8 +514,10 @@ prompt, and you refused it. The rest is not done.
 - A `*` in a scope entry also matches `/`.
 - `check-process-refs.sh` exits 1 with 59 hits, all under `evidence/kit-autonomy/` (6
   verbatim script output, 53 harness fixtures). Waived by you.
-- SPOTTED: PR #7 merged as a merge commit on `main`. Not rewritten. This entry carries an
-  arbiter marker only, not your sign-off.
+- SPOTTED: PR #7 merged as a merge commit on `main`. Not rewritten. Signed off by you.
+- No branch protection on `main`. The guard and the settings deny rules are the only
+  things stopping a push to `main` from this machine; nothing stops it from another
+  tool or another person.
 - Hook `ask` is not documented for bypassPermissions mode; the settings ask rule is the
   second confirmation there.
 
