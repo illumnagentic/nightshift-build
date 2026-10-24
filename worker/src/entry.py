@@ -1,15 +1,19 @@
+import json
 import logging
 import re
 import secrets
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, FastAPI, Request
+from fastapi import APIRouter, Body, Depends, FastAPI, Header, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from starlette.exceptions import HTTPException
 from workers import WorkerEntrypoint
 import asgi
+
+import mubit
+import prefs
 
 USERNAME_RE = re.compile(r"[A-Za-z0-9_-]{1,32}")
 
@@ -35,7 +39,7 @@ async def api_error_handler(request: Request, exc: ApiError):
 # Covers bad types, missing fields and malformed JSON: FastAPI reports all as validation errors.
 @app.exception_handler(RequestValidationError)
 async def validation_error_handler(request: Request, exc: RequestValidationError):
-    return error_response(422, "invalid_request", "Request body must be JSON like {\"username\": \"alex\"}.")
+    return error_response(422, "invalid_request", "Request body is missing, malformed or has the wrong field types.")
 
 
 # Routing 404s and 405s are raised as HTTPException; give them the contract shape, keeping headers like Allow.
@@ -86,6 +90,78 @@ async def create_user(body: NewUser, request: Request):
             raise ApiError(409, "username_taken", "That username is already taken.")
         raise
     return {"user_id": user_id, "username": username}
+
+
+async def current_user(request: Request, x_user_id: str | None = Header(None)) -> str:
+    """The user id from X-User-Id; 401 unknown_user when it is missing, empty or not a user."""
+    if x_user_id:
+        result = await request.scope["env"].DB.prepare("SELECT user_id FROM users WHERE user_id = ?").bind(x_user_id).all()
+        if result.results:
+            return x_user_id
+    raise ApiError(401, "unknown_user", "No user with that id.")
+
+
+def prefs_response(row) -> dict:
+    """The GET /prefs body from a prefs row, or all-null when there is none."""
+    if row is None:
+        return {"text": None, "commute_postcode": None, "max_commute_min": None, "parsed": None, "commute_status": None}
+    return {
+        "text": row["text"],
+        "commute_postcode": row["commute_postcode"],
+        "max_commute_min": row["max_commute_min"],
+        "parsed": json.loads(row["parsed_json"]),
+        "commute_status": row["commute_status"],
+    }
+
+
+async def prefs_row(db, user_id: str):
+    result = await db.prepare("SELECT * FROM prefs WHERE user_id = ?").bind(user_id).all()
+    return result.results[0] if result.results else None
+
+
+@api.get("/prefs")
+async def get_prefs(request: Request, user_id: str = Depends(current_user)):
+    return prefs_response(await prefs_row(request.scope["env"].DB, user_id))
+
+
+@api.put("/prefs")
+async def put_prefs(request: Request, body: dict = Body(...), user_id: str = Depends(current_user)):
+    text, postcode, max_commute = body.get("text"), body.get("commute_postcode"), body.get("max_commute_min")
+    if not isinstance(text, str) or not text.strip():
+        raise ApiError(422, "invalid_request", "text is required and must not be blank.")
+    if not isinstance(postcode, str):
+        raise ApiError(422, "invalid_request", "commute_postcode is required.")
+    # A JSON true is a Python int, so bool is refused by name.
+    if max_commute is not None and (isinstance(max_commute, bool) or not isinstance(max_commute, int) or not 1 <= max_commute <= 180):
+        raise ApiError(422, "invalid_request", "max_commute_min must be a whole number from 1 to 180.")
+    normalised = prefs.normalise_postcode(postcode)
+    if normalised is None:
+        raise ApiError(422, "invalid_postcode", "commute_postcode must be a full UK postcode such as EC2N 2DB.")
+
+    env = request.scope["env"]
+    # Parse first, write after: a failed parse leaves the saved prefs as they were.
+    try:
+        result = await mubit.generate_content(
+            env.MUBIT_API_KEY, prefs.MODEL, prefs.build_parse_body(text), getattr(env, "GEMINI_BASE", None) or mubit.GEMINI_BASE
+        )
+    except Exception as exc:
+        logging.warning("Prefs parser call failed: %s: %s", type(exc).__name__, exc)
+        raise ApiError(502, "parse_failed", "We could not read your preferences. Please try again.")
+    parsed = prefs.parse_reply(result.data, max_commute)
+    if parsed is None:
+        logging.warning("Prefs parser reply unusable, request_id=%s", result.request_id)
+        raise ApiError(502, "parse_failed", "We could not read your preferences. Please try again.")
+
+    updated_at = datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
+    await env.DB.prepare(
+        "INSERT INTO prefs (user_id, text, commute_postcode, max_commute_min, parsed_json, parse_request_id,"
+        " commute_status, commute_fail_streak, updated_at) VALUES (?, ?, ?, ?, ?, ?, 'pending', 0, ?)"
+        " ON CONFLICT(user_id) DO UPDATE SET text = excluded.text, commute_postcode = excluded.commute_postcode,"
+        " max_commute_min = excluded.max_commute_min, parsed_json = excluded.parsed_json,"
+        " parse_request_id = excluded.parse_request_id, commute_status = 'pending', commute_fail_streak = 0,"
+        " updated_at = excluded.updated_at"
+    ).bind(user_id, text, normalised, max_commute, json.dumps(parsed), result.request_id, updated_at).run()
+    return {"text": text, "commute_postcode": normalised, "max_commute_min": max_commute, "parsed": parsed, "commute_status": "pending"}
 
 
 app.include_router(api)

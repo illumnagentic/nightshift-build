@@ -153,7 +153,8 @@ Re-saving prefs mid-session discards every served card that has not been swiped.
 local deck and fetch a new one once `commute_status` is `ready`. The dropped cards
 return to the pool and can be served again.
 
-Errors: 422 `invalid_postcode`.
+Errors: 422 `invalid_postcode`. 502 `parse_failed` if the preferences could not be read
+(the stored prefs are unchanged; the frontend shows the message and lets the user retry).
 
 ## Deck
 
