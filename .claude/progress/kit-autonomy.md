@@ -128,11 +128,11 @@ tradeoffs as signed and runs a smoke check recorded as not human-verified.
 
 **Evidence location**: the diff
 
-- [ ] Implemented
-- [ ] Tested — evidence: (date)
-- [ ] Best practices met — evidence: (date)
-- [ ] Matches locked requirements — evidence: (date)
-- [ ] No scope drift — evidence: (date)
+- [x] Implemented — diff: new .claude/agents/arbiter.md; qa-gate.md model opus + "When autonomy is on" section (2026-10-24)
+- [x] Tested — evidence: web npm test exit 0; check-process-refs.sh exit 0; no code changed (2026-10-24)
+- [x] Best practices met — evidence: arbiter text confines Edit to markers, no source edits/ticking/locked block; no banned words (2026-10-24)
+- [x] Matches locked requirements — evidence: arbiter.md has 3 verdicts, 6 triggers, ACCEPT marker form matching CLAUDE.md Autonomous mode; qa-gate opus, signed tradeoffs, smoke check, QA-GATE: PASS line (2026-10-24)
+- [x] No scope drift — evidence: git status shows only the two declared files changed (2026-10-24)
 
 ### Step 3 — Skills honour the switch
 
