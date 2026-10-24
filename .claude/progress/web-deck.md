@@ -186,11 +186,11 @@ tests and build exit 0. The card is not wired into the app yet.
 
 **Evidence location**: `evidence/web-deck/step-3.md`.
 
-- [ ] Implemented
-- [ ] Tested — evidence: (date)
-- [ ] Best practices met — evidence: (date)
-- [ ] Matches locked requirements — evidence: (date)
-- [ ] No scope drift — evidence: (date)
+- [x] Implemented — web/src/deck/PropertyCard.tsx, format.ts, deck.css; not imported anywhere else (2026-10-24)
+- [x] Tested — evidence: npm test exit 0; format.test.ts covers 4 qualifiers, 9 property types, 3 tenures, nulls, commute line; typecheck and build exit 0 (2026-10-24)
+- [x] Best practices met — evidence: real buttons with aria-labels, focus-visible outline, aria-live count, reduced-motion rule, draggable=false, clamped index (2026-10-24)
+- [x] Matches locked requirements — evidence: card never reads source/chips/feedback_required; nulls omitted or "Commute unknown"; features capped at 4; enum labels match contract (2026-10-24)
+- [x] No scope drift — evidence: only declared files plus progress file; index.css untouched; deck.css all under .deck-card; check-process-refs exit 0 (2026-10-24)
 
 ### Step 4 — Deck screen with buttons, keys and feedback stub
 
@@ -247,6 +247,8 @@ still work and do not start a drag; typecheck, tests and build exit 0.
 - Step 2 | A failed swipe (for example 404 `decision_not_found` after a prefs re-save) leaves the same card on top, so Retry repeats the failing call. No handling for discarding stale cards. | Needs the contract's re-save flow, which belongs with the prefs form (F4).
 - Step 2 | When a fetch adds no new cards the deck is marked `exhausted` even if the server gave no `empty_reason`, to avoid a refetch loop. | Would need the server to say when it has nothing further.
 - Step 2 | Responses for a previous user are dropped, but the in-flight request itself is not aborted (the client has no abort support). | Add `AbortSignal` to `ApiClient`.
+- Step 3 | `PropertyCard` has no component test (node env, no jsdom; out of scope). Only `format.ts` is tested; the card is checked by eye. | Needs a DOM test environment.
+- Step 3 | Photo position is local state, so the parent must give the card `key={card.decision_id}` or the next card keeps the previous index (it is clamped, not wrong, but not reset). | Lift the index into deck state or reset in an effect.
 
 ---
 
@@ -255,6 +257,7 @@ still work and do not start a drag; typecheck, tests and build exit 0.
 - `.claude/worktrees/` | untracked and not gitignored on `main` | low
 - `.claude/kit-config.md` Project type | still says "No code yet" | low
 - `web/src/deck/useDeck.ts` | an old user's swipe callback resets the shared `swipeBusy` ref even if a new user's swipe has started; only on a rapid user switch mid-swipe; a per-request token would fix it (step 2 reviewer) | low
+- `web/src/deck/PropertyCard.tsx` | photo `alt` is the address on every photo, so screen readers repeat it per photo; the "n of m" live region partly offsets this (step 3 reviewer) | low
 
 ---
 
