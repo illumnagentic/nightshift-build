@@ -44,7 +44,7 @@ Branch names are proposals; set them at feature-kickoff.
 
 ## Frontend — Yewen
 
-- [ ] **F1 Shell** — `feat/web-shell` — Vite + React + TS, pick or create user, API
+- [x] **F1 Shell** — `feat/web-shell` — Vite + React + TS, pick or create user, API
   client against mocks from the contract.
 - [ ] **F2 Swipe deck** — `feat/web-deck` — property card, swipe left / right,
   superlike.
