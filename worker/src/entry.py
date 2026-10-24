@@ -1,9 +1,73 @@
-from fastapi import FastAPI
+import re
+import secrets
+from datetime import datetime, timezone
+
+from fastapi import APIRouter, FastAPI, Request
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 from workers import WorkerEntrypoint
 import asgi
 
-# Routes are added on a router with prefix "/api", the base URL the web app proxies to.
+USERNAME_RE = re.compile(r"[A-Za-z0-9_-]{1,32}")
+
 app = FastAPI()
+# Routes sit on a router with prefix "/api", the base URL the web app proxies to.
+api = APIRouter(prefix="/api")
+
+
+class ApiError(Exception):
+    def __init__(self, status: int, code: str, message: str):
+        self.status, self.code, self.message = status, code, message
+
+
+def error_response(status: int, code: str, message: str) -> JSONResponse:
+    return JSONResponse({"error": {"code": code, "message": message}}, status_code=status)
+
+
+@app.exception_handler(ApiError)
+async def api_error_handler(request: Request, exc: ApiError):
+    return error_response(exc.status, exc.code, exc.message)
+
+
+# Covers bad types, missing fields and malformed JSON: FastAPI reports all as validation errors.
+@app.exception_handler(RequestValidationError)
+async def validation_error_handler(request: Request, exc: RequestValidationError):
+    return error_response(422, "invalid_request", "Request body must be JSON like {\"username\": \"alex\"}.")
+
+
+class NewUser(BaseModel):
+    username: str
+
+
+@api.get("/users")
+async def list_users(request: Request):
+    result = await request.scope["env"].DB.prepare(
+        "SELECT user_id, username FROM users ORDER BY created_at, rowid"
+    ).all()
+    return {"users": [{"user_id": row["user_id"], "username": row["username"]} for row in result.results]}
+
+
+@api.post("/users", status_code=201)
+async def create_user(body: NewUser, request: Request):
+    username = body.username.strip()
+    if not USERNAME_RE.fullmatch(username):
+        raise ApiError(422, "invalid_request", "Username must be 1 to 32 characters: letters, digits, _ or -.")
+    user_id = "u_" + secrets.token_hex(8)
+    created_at = datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
+    try:
+        await request.scope["env"].DB.prepare(
+            "INSERT INTO users (user_id, username, created_at) VALUES (?, ?, ?)"
+        ).bind(user_id, username, created_at).run()
+    except Exception as exc:
+        # The UNIQUE constraint decides, so two simultaneous requests cannot both win.
+        if "UNIQUE constraint failed" in str(exc):
+            raise ApiError(409, "username_taken", "That username is already taken.")
+        raise
+    return {"user_id": user_id, "username": username}
+
+
+app.include_router(api)
 
 
 class Default(WorkerEntrypoint):
