@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import type { BlockedCode } from "./deckState";
 import FeedbackStub from "./FeedbackStub";
 import { PropertyCard } from "./PropertyCard";
+import { SwipeableCard } from "./SwipeableCard";
 import { useDeck } from "./useDeck";
 import "./deck.css";
 
@@ -11,6 +12,14 @@ const BLOCKED_LINES: Record<BlockedCode, string> = {
   commute_failed:
     "Commute times could not be worked out. Save your preferences again.",
 };
+
+function isPhotoButton(target: EventTarget | null): boolean {
+  return (
+    target instanceof Element &&
+    target.tagName === "BUTTON" &&
+    target.closest(".deck-card") !== null
+  );
+}
 
 function isTextInput(target: EventTarget | null): boolean {
   return (
@@ -39,7 +48,8 @@ export default function DeckScreen({ userId }: { userId: string }) {
         e.altKey ||
         e.ctrlKey ||
         e.metaKey ||
-        isTextInput(e.target)
+        isTextInput(e.target) ||
+        isPhotoButton(e.target)
       )
         return;
       if (e.key === "ArrowLeft") swipe("left");
@@ -61,7 +71,13 @@ export default function DeckScreen({ userId }: { userId: string }) {
       {phase === "card" && card && (
         <>
           {state.favourited && FAVOURITES_NOTE}
-          <PropertyCard key={card.decision_id} card={card} />
+          <SwipeableCard
+            key={card.decision_id}
+            disabled={busy}
+            onSwipe={swipe}
+          >
+            <PropertyCard card={card} />
+          </SwipeableCard>
           <div className="deck-screen__actions">
             <button
               type="button"

@@ -268,3 +268,38 @@
     transition: none;
   }
 }
+
+.swipeable-card {
+  position: relative;
+  width: calc(100% - 32px);
+  max-width: 400px;
+  touch-action: pan-y;
+  user-select: none;
+}
+
+.swipeable-card .deck-card {
+  width: 100%;
+}
+
+.swipeable-card__cue {
+  position: absolute;
+  top: 16px;
+  padding: 4px 12px;
+  border: 3px solid currentColor;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.85);
+  font: 700 1.25rem system-ui, sans-serif;
+  text-transform: uppercase;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.swipeable-card__cue--like {
+  left: 16px;
+  color: #1a7f37;
+}
+
+.swipeable-card__cue--dislike {
+  right: 16px;
+  color: #b42318;
+}

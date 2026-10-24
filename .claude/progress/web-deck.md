@@ -285,11 +285,11 @@ still work and do not start a drag; typecheck, tests and build exit 0.
 
 **Evidence location**: `evidence/web-deck/step-5.md`.
 
-- [ ] Implemented
-- [ ] Tested — evidence: (date)
-- [ ] Best practices met — evidence: (date)
-- [ ] Matches locked requirements — evidence: (date)
-- [ ] No scope drift — evidence: (date)
+- [x] Implemented — web/src/deck/SwipeableCard.tsx, DeckScreen.tsx wiring, deck.css (2026-10-24)
+- [x] Tested — evidence: typecheck 0, npm test 0, build 0, check-process-refs 0; drag has no automated test, logged tradeoff, eye test at wrap-up (2026-10-24)
+- [x] Best practices met — evidence: drag disabled while busy, button pointer-down guard, reduced-motion removes tilt, dragSnapToOrigin, aria-hidden cues (2026-10-24)
+- [x] Matches locked requirements — evidence: onSwipe={swipe} same fn as buttons; isPhotoButton guard in keydown; source unread; only motion added (lock shows motion, framer-motion, motion-dom, motion-utils, tslib) (2026-10-24)
+- [x] No scope drift — evidence: diff limited to declared files plus progress file; PropertyCard/useDeck/deckState untouched (2026-10-24)
 
 ---
 
@@ -310,6 +310,11 @@ still work and do not start a drag; typecheck, tests and build exit 0.
 - Step 4 redo | The light page is fixed: `color-scheme: light` with a white background and dark text, so there is no dark mode. Other deck colours were already fixed. | Add a dark theme when styling is done.
 
 ---
+- Step 5 | Drag has no automated test (node env, no jsdom; out of scope). Drag, spring-back and photo-button behaviour are checked by eye only. | Needs a DOM test environment.
+- Step 5 | The card always springs back to centre on release, including when it triggers a swipe; there is no fly-off animation. The next card replaces it once the swipe response arrives. | Animate the card off screen, which needs exit handling around the deck key.
+- Step 5 | Distance threshold is 30% of card width or 600 px/s release velocity; both are untuned guesses. | Tune by hand on a real touch device.
+- Step 5 | Arrow keys are ignored only when the event target is a button inside `.deck-card`. Focus on other buttons (Switch user, action buttons) still lets arrows swipe. | Scope the listener to the deck root, with focus management.
+- Step 5 | Reduced motion removes only the rotation; the drag offset and the Like / Dislike cue fade remain, since the drag itself must still work. | Hide the cue when reduced, if wanted.
 
 ## SPOTTED, NOT FIXED
 
