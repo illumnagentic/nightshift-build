@@ -89,16 +89,17 @@ export default function App() {
               onNeedPrefs={() => setTab("prefs")}
             />
           </div>
-          {tab === "prefs" && (
+          <div hidden={tab !== "prefs"}>
             <PrefsScreen
+              key={user.user_id}
               userId={user.user_id}
-              onSaved={() => {}}
+              onSaved={() => setDeckKey((k) => k + 1)}
               onReady={() => {
                 setDeckKey((k) => k + 1);
-                setTab("deck");
+                setTab((t) => (t === "prefs" ? "deck" : t));
               }}
             />
-          )}
+          </div>
           {tab === "favourites" && <FavouritesScreen userId={user.user_id} />}
         </>
       ) : (

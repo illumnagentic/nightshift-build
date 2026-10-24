@@ -159,7 +159,8 @@ export default function DeckScreen({
         <div role="alert">
           <p>{failure.message}</p>
           <p>{BLOCKED_LINES[failure.code]}</p>
-          {failure.code === "prefs_missing" && (
+          {(failure.code === "prefs_missing" ||
+            failure.code === "commute_failed") && (
             <button type="button" className="deck-action" onClick={onNeedPrefs}>
               Set preferences
             </button>

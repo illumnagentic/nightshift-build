@@ -267,11 +267,11 @@ process-wording check exits 0.
 
 **Evidence location**: `evidence/web-prefs-favourites/step-4-redo.md`.
 
-- [ ] Implemented
-- [ ] Tested — evidence: (date)
-- [ ] Best practices met — evidence: (date)
-- [ ] Matches locked requirements — evidence: (date)
-- [ ] No scope drift — evidence: (date)
+- [x] Implemented — App.tsx hidden-wrapper PrefsScreen keyed by user_id, onSaved/onReady as specified; DeckScreen commute_failed button (2026-10-25)
+- [x] Tested — typecheck 0, npm test 0, build 0 re-run by reviewer; before/after browser reproductions in evidence/web-prefs-favourites/step-4-redo.md for Path A, Path B, ready-on-Favourites (2026-10-25)
+- [x] Best practices met — check-process-refs.sh exit 0; hidden-prefs polling stops on unmount/key change/save; no spurious bump on ready-at-mount; tradeoffs logged (2026-10-25)
+- [x] Matches locked requirements — matches AMENDMENTS 2026-10-25 items (1),(3),(4); FavouritesScreen still tab-only (2026-10-25)
+- [x] No scope drift — only App.tsx (4+/3-), DeckScreen.tsx (2+/1-), evidence file; smoke.test.ts unchanged (2026-10-25)
 
 ---
 
@@ -282,8 +282,9 @@ process-wording check exits 0.
 - Step 2 | The parsed result is shown only when it has at least one hard limit or soft preference, and a failed load shows the error with empty fields | nothing useful to show otherwise | none needed unless the eye test finds it confusing
 - Step 3 | After a successful removal focus is not moved anywhere (the Remove button is gone) | no next target was specified | move focus to the next entry's Remove button or the screen heading
 - Step 3 | The thumbnail shows only the first photo, with no handling for an image that fails to load | brief asks for the first photo only | add an onError fallback to the placeholder
-- Step 4 | Saving preferences remounts the deck, so a feedback screen left pending (including compulsory onboarding feedback) is dropped and that card's feedback is lost | the contract says to discard the local deck after a re-save, and a remount is the simplest way to do it | persist pending feedback in App or the API, or only remount once no feedback is pending
+- Step 4 | Saving preferences discards the deck at save time (onSaved remounts it), and again when `onReady` fires (including from polling on the hidden Preferences screen), so a feedback screen left pending (including compulsory onboarding feedback) is dropped and that card's feedback is lost | the contract says to discard the local deck after a re-save, and a remount is the simplest way to do it | persist pending feedback in App or the API, or only remount once no feedback is pending
 - Step 4 | The deck is kept mounted while hidden, so a prefs_missing redirect and its Set preferences button fire from a hidden screen, and the onNeedPrefs effect ignores callback changes | needed to keep the local deck and pending feedback across tab switches | none needed unless the hidden deck causes trouble
+- Redo of Step 4 | On a failed commute the deck shows its blocked state and needs Retry or a re-save; no onFailed callback | kept minimal | add onFailed to refresh the deck on failure
 
 ---
 
@@ -293,7 +294,7 @@ process-wording check exits 0.
 - `web/src/deck/useDeck.ts` | `swipeBusy` ref race on a rapid user switch mid-swipe (from F2) | low
 - `web/src/feedback/ChipDialog.tsx`, `FeedbackScreen.tsx` | strength labels written out in both files (from F3, logged by the human's choice) | low
 - `web/src/deck/deck.css` | orphaned `.deck-feedback` rules after the stub was deleted (from F3) | low
-- `web/src/prefs/PrefsScreen.tsx` | form, parsed and status are not reset on a userId change; needs `key={userId}` or a reset when wired | low
+- `web/src/prefs/PrefsScreen.tsx` | form, parsed and status are not reset on a userId change; needs `key={userId}` or a reset when wired | low — resolved: PrefsScreen is now keyed by user_id (Redo of Step 4)
 
 ---
 
