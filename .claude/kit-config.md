@@ -36,6 +36,14 @@ Leave blank if the repo has none. Never invent one.
 - **Test framework**: vitest (web)
 - **Where tests live**: alongside source as `*.test.ts` in `web/src/`
 
+## Dependencies
+
+- **Approved dependencies**: fastapi, google-genai, pytest
+  <!-- Applies only in full automation. These may be added without asking. Any other
+       dependency escalates. In default mode every new dependency is a question for
+       the human. -->
+
+
 ## Brief notes
 
 <!-- Things every step brief in this repo must carry, e.g. files that pin figures and

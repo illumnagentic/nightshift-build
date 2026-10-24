@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# stub: fixture tree per "oid" under $GIT_FIX/<oid>/
+case "$1" in
+  rev-parse|fetch) exit 0 ;;
+  cat-file) [ -d "$GIT_FIX/${3%%^*}" ] ;;
+  ls-tree) (cd "$GIT_FIX/$4" 2>/dev/null && find .claude/progress -name "*.md" 2>/dev/null) ;;
+  show) o="${2%%:*}"; cat "$GIT_FIX/$o/${2#*:}" ;;
+  log) if [[ "$*" == *-G* ]]; then f=pass; else f=code; fi
+       for a; do [ "$a" != . ] && [ -d "$GIT_FIX/$a" ] && o="$a"; done
+       cat "$GIT_FIX/$o/.$f" 2>/dev/null || echo c1 ;;
+  merge-base) [[ "$3" < "$4" || "$3" == "$4" ]] ;;
+  *) exit 9 ;;
+esac

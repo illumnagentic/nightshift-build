@@ -71,3 +71,19 @@ body. Listing every changed file — the diff does that. "Comprehensive", "robus
 about performance, security or correctness the diff does not evidence.
 
 If the honest description is three lines, it is three lines. Length is not quality.
+
+## In full automation
+
+Run `.claude/scripts/autonomy.sh status`. If it prints `on`, step 3 does not wait to be
+asked. Write the body to a file in the session scratchpad (with the Write tool), push,
+then open the PR as drafted, with no attribution:
+
+```
+git push -u origin <branch>
+gh pr create --base main --title "<title>" --body-file <path>
+```
+
+The title is one line in double quotes, with no `$(...)`, backticks or newlines. The
+guard only auto-allows this exact shape; a multi-line `--body` stalls on a prompt.
+
+Never push to `main`. Any ESCALATE: stop, write the reason, tell the human.

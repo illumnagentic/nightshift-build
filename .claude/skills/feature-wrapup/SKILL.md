@@ -90,3 +90,28 @@ Once both sign-offs are in:
 - Ask whether they want a retro. Do not run one uninvited.
 
 Do not congratulate anyone. Say what is done and what is next.
+
+## In full automation
+
+Run `.claude/scripts/autonomy.sh status`. If it prints `on`, see `## Modes` in
+`.claude/CLAUDE.md`. Otherwise ignore this section. The sign-offs in section 5 are replaced as follows.
+
+- **Before the gate.** Send unsigned TRADEOFFS and SPOTTED entries to the `arbiter`. It
+  marks ACCEPT entries. Run FIX_NOW briefs through `implementer` and `step-reviewer`.
+- **Section 3, on FAIL.** Send the findings to the `arbiter`. Run its FIX_NOW briefs
+  through `implementer` and `step-reviewer`, then run `qa-gate` again.
+- **VERIFICATION.** The ledger line becomes `signed by arbiter (full automation)`. The
+  eye-test line is `qa-gate`'s not-human-verified smoke line. Tick neither as human.
+- **Section 4.** Write the handover to the progress file only. Do not wait.
+- **Section 6, close-out.**
+  1. Set `Status: complete` with the date, and tick the feature in `docs/plan.md`. That
+     edit belongs in this PR.
+  2. Commit through `commit-workflow`, then push.
+  3. Open the PR through `pr-description`.
+  4. Run `.claude/scripts/safe-merge.sh <pr-number>`. It refuses unless every PLAN step
+     box is ticked and `QA-GATE: PASS` is in VERIFICATION.
+  5. After the merge: `git switch main && git pull --ff-only`.
+  6. No retro offer.
+- **Report to the human:** PR link, merge commit, arbiter ACCEPTs (one line each), and
+  anything ESCALATED.
+- Any ESCALATE: stop, write the reason, tell the human. Do not route around it.

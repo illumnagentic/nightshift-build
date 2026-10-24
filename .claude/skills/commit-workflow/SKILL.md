@@ -101,3 +101,15 @@ A changed public signature, a removed or renamed export, a changed response shap
 changed config key, a non-additive schema change, or altered default behaviour that
 would break an existing caller. Internal refactoring is not breaking. When it is
 genuinely borderline, say so and let the human decide rather than quietly picking.
+
+## In full automation
+
+Run `.claude/scripts/autonomy.sh status`. If it prints `on`:
+
+- Step 3 (ask) is skipped. Still delegate to `commit-composer`, and still commit only
+  through `safe-commit.sh`.
+- CONCERNS are judged by the orchestrator. A secret in the diff, a deleted test or an
+  unapproved dependency: do not commit, send it to the `arbiter`.
+- `COHERENT: No`: split as suggested. Do not commit a mixed bag.
+- Commit after each step passes review.
+- Any ESCALATE: stop, write the reason, tell the human. Do not route around it.
