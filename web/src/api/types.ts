@@ -173,9 +173,14 @@ export type SwipeResponse = {
 
 export type ChipStrength = "must_have" | "nice_to_have" | "would_prefer_not" | "deal_breaker";
 export type ChipFeedback = { chip_id: ChipId; strength: ChipStrength; text: string | null };
-export type FeedbackRequest = { chips: ChipFeedback[]; free_text: string | null };
-export type FeedbackResponse = FeedbackRequest & {
+export type FeedbackRequest = {
+  chips: ChipFeedback[];
+  free_text: string | null;
+  skipped?: boolean;
+};
+export type FeedbackResponse = Omit<FeedbackRequest, "skipped"> & {
   decision_id: string;
+  skipped: boolean;
   profile_version: number;
 };
 

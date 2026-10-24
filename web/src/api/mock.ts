@@ -30,6 +30,7 @@ type Decision = {
   feedback: {
     chips: ChipFeedback[];
     free_text: string | null;
+    skipped: boolean;
     seq: number;
   } | null;
 };
@@ -343,6 +344,8 @@ export function createMockClient(): ApiClient {
         invalid("chips and free_text are required.");
       if (req.free_text !== null && typeof req.free_text !== "string")
         invalid("free_text must be text or null.");
+      if (req.skipped !== undefined && typeof req.skipped !== "boolean")
+        invalid("skipped must be true or false.");
       const seen = new Set<string>();
       for (const c of req.chips) {
         if (!isText(c?.chip_id) || !STRENGTHS.includes(c.strength))
@@ -364,12 +367,16 @@ export function createMockClient(): ApiClient {
         text: c.text?.trim() || null,
       }));
       const free_text = req.free_text?.trim() || null;
-      d.feedback = { chips, free_text, seq: ++feedbackSeq };
+      const skipped = req.skipped === true;
+      if (skipped && (chips.length > 0 || free_text !== null))
+        invalid("A skip carries no chips and no free_text.");
+      d.feedback = { chips, free_text, skipped, seq: ++feedbackSeq };
       const profile_version = bump(u, "feedback", { decision_id: decisionId });
       return structuredClone({
         decision_id: decisionId,
         chips,
         free_text,
+        skipped,
         profile_version,
       });
     },
@@ -411,7 +418,7 @@ export function createMockClient(): ApiClient {
     async getProfile(userId) {
       const u = user(userId);
       // One factor per chip the user has answered. Direction is the latest answer, weight is
-      // answered over offered. This is not the learning model.
+      // answered over offered, leaving out skipped screens. This is not the learning model.
       const mine = userDecisions(userId);
       const answers = mine
         .flatMap((d) =>
@@ -424,8 +431,10 @@ export function createMockClient(): ApiClient {
       const factors = ids.map((factor) => {
         const mineAnswers = answers.filter((a) => a.chip_id === factor);
         const latest = mineAnswers[mineAnswers.length - 1];
-        const offered = mine.filter((d) =>
-          d.card.chips.some((c) => c.chip_id === factor),
+        const offered = mine.filter(
+          (d) =>
+            !d.feedback?.skipped &&
+            d.card.chips.some((c) => c.chip_id === factor),
         ).length;
         return {
           factor,
