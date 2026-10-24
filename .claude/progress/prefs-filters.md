@@ -88,11 +88,7 @@ Quoted above. Contract: `docs/api-contract.md` on `main` at `0755bcb`. Plan by t
   the full suite passes in test mode; README's unit-only line lists the new module.
 - **Evidence location**: `evidence/prefs-filters/step-5.md`
 
-- [ ] Implemented
-- [ ] Tested — evidence: (date)
-- [ ] Best practices met — evidence: (date)
-- [ ] Matches locked requirements — evidence: (date)
-- [ ] No scope drift — evidence: (date)
+  Tracked as `### Step 5` in PLAN, where its boxes live (the step-order hook reads PLAN headings).
 
 ---
 
@@ -246,6 +242,27 @@ HOOKS note (NULL-lease exception per Q4). Done when the process-reference check 
 
 - [x] Redo implemented — evidence line reworded, B4 HOOKS NULL-lease exception added; diff read (2026-10-24)
 - [x] Redo reviewed — evidence: check-process-refs exit 0; no .claude path in evidence file; HOOKS matches _lease_ok (filters.py:9-14) (2026-10-24)
+
+### Step 5 — Move the pure tfl.py unit tests to a server-less module (arbiter amendment)
+
+See AMENDMENTS, 2026-10-24.
+
+- **Goal**: `test_classify_answers` and `test_url_and_next_tuesday` run without a dev
+  server, so the unit-only run covers `tfl.py`.
+- **Files**: `worker/tests/test_tfl_unit.py` (new), `worker/tests/test_commute.py`,
+  `worker/README.md` (only the unit-only test line, to list the new module).
+- **Done when**: the two tests live in `test_tfl_unit.py` unchanged (no assertion
+  removed or loosened) and are gone from `test_commute.py`; `test_commute.py` keeps
+  `pytestmark = pytest.mark.usefixtures("fake")`; the unit-only run (`test_filters.py`,
+  `test_prefs_unit.py`, `test_mubit.py`, `test_tfl_unit.py`) passes with no server;
+  the full suite passes in test mode; README's unit-only line lists the new module.
+- **Evidence location**: `evidence/prefs-filters/step-5.md`
+
+- [x] Implemented — test_tfl_unit.py new, two tests moved byte-identical, removed from test_commute.py; README line updated (2026-10-24)
+- [x] Tested — evidence: server-less run 99 passed exit 0; full suite on :8790 171 passed exit 0 (2026-10-24)
+- [x] Best practices met — evidence: pure move, no code added; check-process-refs exit 0 (2026-10-24)
+- [x] Matches locked requirements — evidence: unit-only run now covers tfl.py; REQUIREMENTS block untouched in diff (2026-10-24)
+- [x] No scope drift — evidence: diff touches only declared files plus progress/evidence (2026-10-24)
 
 ---
 

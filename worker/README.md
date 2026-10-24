@@ -97,11 +97,12 @@ running, the run stops with exit code 3 and prints the command above. The guard 
 `test_prefs.py` and `test_commute.py`.
 
 These modules need no server and no network, and run with a plain
-`uv run --group dev pytest tests/test_filters.py tests/test_prefs_unit.py tests/test_mubit.py -q`:
+`uv run --group dev pytest tests/test_filters.py tests/test_prefs_unit.py tests/test_mubit.py tests/test_tfl_unit.py -q`:
 
 - `tests/test_filters.py`: the hard filters, including a check over the real listings.
 - `tests/test_prefs_unit.py`: parsing and checking of the model's reply.
 - `tests/test_mubit.py`: the Mubit client.
+- `tests/test_tfl_unit.py`: reading TfL answers and building the journey URL.
 
 `tests/test_users.py`, `tests/test_prefs.py` and `tests/test_commute.py` call the API and
 need the seeded test-mode server. Each run adds users to the local D1. The fake answers
