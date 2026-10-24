@@ -73,7 +73,49 @@ This session's conversation, quoted above. `.claude/` kit and `docs/decisions.md
 
 ## AMENDMENTS
 
-_None._
+**2026-10-24 — human, in session.**
+
+> "we need to build in a very important thing. We need a mode for the kit. By default
+> it should work as it worked before. If the human asks for full automation, then we
+> need double confirmation, and then it can run. To switch back to default mode, it's
+> enough to do single confirmation"
+
+Answers to the follow-up, human, 2026-10-24 (each asked as its own yes/no):
+
+1. Mode scope: "Per laptop" — gitignored file `.claude/.autonomy`; absent means default
+   mode. One machine never affects another.
+2. New hook: "Yes" — `autonomy-guard` (a) blocks any direct write to the switch file,
+   (b) forces a harness permission prompt on `autonomy.sh on` as the second
+   confirmation, (c) auto-allows feature-branch push, `gh pr create`, `gh pr view` and
+   `safe-merge.sh` only while full automation is on.
+
+Effect on the plan (orchestrator, same date):
+
+- The committed `Autonomy: on` line from step 1 is replaced: the switch moves to
+  `.claude/.autonomy` (steps 6 and 7). Default mode is the kit as it was before this
+  feature.
+- Step 4: `settings.json` gains deny rules only; no static allow rules (they would
+  change default mode). Mode-dependent allowing moves to step 6. safe-merge's allowlist
+  also includes backticked paths on `**Evidence location**:` lines, so a feature's
+  evidence files do not fail its own merge.
+- New steps 6 and 7 below.
+
+**2026-10-24 — (arbiter).** Extra done-when for step 6, same files
+(`.claude/hooks/autonomy-guard.sh`, `.claude/settings.json`), reviewed with step 6.
+
+- **Goal**: close the prefix-rule bypasses of the step 4 deny rules in the Bash hook
+  step 6 already adds and already uses to parse `git push`.
+- **Files**: `.claude/hooks/autonomy-guard.sh`, `.claude/settings.json`; evidence in
+  `evidence/kit-autonomy/autonomy-guard-checks.md`.
+- **Done when**: in both modes (switch file present or absent) the hook returns
+  `deny` for a Bash command that, anywhere in it (after `&&`, `;`, `|`, in a subshell,
+  with `git -C <dir>` or leading env assignments): pushes to `main` (`main`,
+  `+main`, `x:main`, `HEAD:refs/heads/main`, `:main`, `--delete main`, or a bare
+  `git push` while the current branch is `main`); force-pushes (`-f`, `--force`,
+  `--force-with-lease`, `--mirror`, a `+` refspec); runs `gh pr merge`; or runs
+  `gh api` on a path ending `/merge` or `/merges`. `.claude/scripts/safe-merge.sh`
+  and a feature-branch push are not denied. Each listed spelling exercised by feeding
+  the hook JSON on stdin, results in the evidence file.
 
 ---
 
@@ -165,17 +207,17 @@ is replaced and by what; feature-wrapup ends by pushing, opening the PR and call
 unticked box in the branch's progress file, no qa-gate PASS recorded, a bad PR title,
 a changed file outside the allowed paths, a PR not targeting `main`; otherwise
 squash-merges with the PR title as subject and an empty body and deletes the branch.
-`bash -n` passes and each refusal path is exercised. settings.json allows
-`git push -u origin <feature branch>`, `gh pr create`, `gh pr view` and the script;
-denies push to `main` and force pushes.
+`bash -n` passes and each refusal path is exercised. settings.json denies push to
+`main`, force pushes and direct `gh pr merge`; no allow rules (see AMENDMENTS
+2026-10-24). The allowlist includes `**Evidence location**:` paths.
 
 **Evidence location**: `evidence/kit-autonomy/safe-merge-checks.md`
 
-- [ ] Implemented
-- [ ] Tested — evidence: (date)
-- [ ] Best practices met — evidence: (date)
-- [ ] Matches locked requirements — evidence: (date)
-- [ ] No scope drift — evidence: (date)
+- [x] Implemented — evidence: .claude/scripts/safe-merge.sh present, bash -n exit 0; settings.json 8 deny rules, no allow (2026-10-24)
+- [x] Tested — evidence: scratchpad sm/run.sh exit 0, every refusal path plus merge argv in evidence/kit-autonomy/safe-merge-checks.md (2026-10-24)
+- [x] Best practices met — evidence: all untested paths fail closed; 6 process-ref hits are verbatim script output, waived and arbiter-accepted (2026-10-24)
+- [x] Matches locked requirements — evidence: done-when refusals, squash/empty body/delete-branch argv and evidence-path allowlist exercised in run.sh (2026-10-24)
+- [x] No scope drift — evidence: git status shows only safe-merge.sh, settings.json, evidence/kit-autonomy and progress file (2026-10-24)
 
 ### Step 5 — GitHub repo settings
 
@@ -197,11 +239,69 @@ branch deletion on merge.
 - [ ] Matches locked requirements — evidence: (date)
 - [ ] No scope drift — evidence: (date)
 
+### Step 6 — Mode switch with double confirmation
+
+**Goal**: A per-laptop mode switch, off by default, that takes two confirmations to turn
+on and one to turn off, with mode-dependent permissions.
+
+**Files in scope**: `.claude/scripts/autonomy.sh`, `.claude/hooks/autonomy-guard.sh`,
+`.claude/settings.json`, `.claude/.gitignore`
+
+**Done when**: `autonomy.sh status|on|off` reads, creates (with date) and removes
+`.claude/.autonomy`, which is gitignored; the guard hook is registered for Bash, Edit
+and Write and (a) blocks any tool call that writes or deletes `.claude/.autonomy`
+other than through `autonomy.sh`, (b) returns a permission `ask` for
+`autonomy.sh on` whatever the permission mode, (c) returns `allow` for feature-branch
+push, `gh pr create`, `gh pr view` and `safe-merge.sh` only when `.claude/.autonomy`
+exists, and otherwise makes no decision; each behaviour exercised by feeding the hook
+JSON on stdin.
+
+**Evidence location**: `evidence/kit-autonomy/autonomy-guard-checks.md`
+
+- [ ] Implemented
+- [ ] Tested — evidence: (date)
+- [ ] Best practices met — evidence: (date)
+- [ ] Matches locked requirements — evidence: (date)
+- [ ] No scope drift — evidence: (date)
+
+### Step 7 — Point the kit text at the mode switch
+
+**Goal**: Every kit file that reads the switch reads `.claude/.autonomy` (via
+`autonomy.sh status`), and CLAUDE.md states the confirmation protocol.
+
+**Files in scope**: `.claude/kit-config.md`, `.claude/CLAUDE.md`,
+`.claude/agents/arbiter.md`, `.claude/agents/qa-gate.md`,
+`.claude/skills/feature-kickoff/SKILL.md`, `.claude/skills/commit-workflow/SKILL.md`,
+`.claude/skills/pr-description/SKILL.md`, `.claude/skills/feature-wrapup/SKILL.md`
+
+**Done when**: no kit file refers to an `Autonomy` setting in kit-config (approved
+dependencies stay there); CLAUDE.md says default mode is the kit as before, full
+automation is switched on only when the human asks, after a chat confirmation and the
+harness prompt, never on an agent's own initiative or a subagent's request, and
+switched off after one confirmation; "owner's paths" wording matches what safe-merge
+checks (declared scopes).
+
+**Evidence location**: the diff
+
+- [ ] Implemented
+- [ ] Tested — evidence: (date)
+- [ ] Best practices met — evidence: (date)
+- [ ] Matches locked requirements — evidence: (date)
+- [ ] No scope drift — evidence: (date)
+
 ---
 
 ## TRADEOFFS
 
 2026-10-24 | 3 | The old human-gate text in feature-kickoff, commit-workflow, pr-description and feature-wrapup is left in place and overridden by each new `## When autonomy is on` section | The brief said to edit existing text only where a sentence would now be false, and each section states it takes precedence | Reword those steps conditionally on `Autonomy`, which touches more existing text — accepted by arbiter 2026-10-24: each override names the exact section or step it replaces, CLAUDE.md `## Autonomous mode` (always loaded) states the same, and if an agent stops at an old gate it fails safe by asking the human; no later step or checkpoint is blocked
+
+2026-10-24 | 4 | safe-merge.sh tested with stub `gh` and `git`; the real fetch, ls-tree and show paths and exit 3 were not run against GitHub | no real PR existed and a fixture repo needs commits | the first real run on this feature's own PR exercises them — accepted by arbiter 2026-10-24: every untested path fails closed (refuse or exit 3, no merge), every refusal path and the merge argv were exercised, and running `--check-only` on this feature's own PR before the real merge tests the real paths at no cost
+
+2026-10-24 | 4 | Deny rules in settings.json are prefix patterns and can be bypassed by unusual spellings (`git push origin +main`, `git -C . push`, `gh api` merges) | Claude Code `Bash(...)` rules match prefixes | a parsing PreToolUse hook, or branch protection on `main` (out of scope)
+
+2026-10-24 | 4 | A `*` in a scope entry is a bash glob, so it also matches `/` | simplest reading of "shell glob" | none planned — accepted by arbiter 2026-10-24: no progress file uses a glob entry today, a directory entry (`lib/`) already matches at any depth by design so this is the same width, and step-reviewer's scope-drift check runs independently of safe-merge
+
+2026-10-24 | 4 | `check-process-refs.sh` reports 6 hits in `evidence/kit-autonomy/safe-merge-checks.md`; they are verbatim script output (`.claude/`, "progress file") | rewording would falsify the record; excluding `evidence/` from the checker is a kit change outside every step | a checker change, for the human — accepted by arbiter 2026-10-24: evidence metadata, not code; rewording would falsify the record
 
 ---
 
@@ -210,6 +310,9 @@ branch deletion on merge.
 - PR #7 (`feat/web-shell`) merged as a merge commit "Merge pull request #7", against
   the squash decision in `docs/decisions.md`. Already on `main`; not rewritten. Step 5
   stops it recurring. | low
+- `.claude/scripts/safe-merge.sh` | allows progress-file changes made after the
+  `QA-GATE: PASS` line was written; it checks the line exists, not that it is newer
+  than the last code change | low — FIXED 2026-10-24: safe-merge's post-PASS check refuses non-progress/plan changes after the PASS commit (test: 'code commit after PASS')
 
 ---
 
