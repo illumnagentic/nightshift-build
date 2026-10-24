@@ -6,8 +6,7 @@ Method: `gh` and `git` are stubs on PATH. The `gh` stub returns a canned
 `gh pr view` JSON per case and logs `gh pr merge` arguments. The `git` stub answers
 `fetch`, `rev-parse` and `cat-file` with success, serves `log` and `merge-base` from per-fixture `.pass` / `.code` commit names (c1 is older than c2), and serves `ls-tree` / `show` from a
 fixture tree, one directory per head commit. Progress-file fixtures declare
-`**Files in scope**: src/a.txt, lib/, t/*.sh` (continued over two lines) and `**Evidence location**: evidence/f/x.md`. Harness and
-fixtures were kept in the session scratchpad and are not committed.
+`**Files in scope**: src/a.txt, lib/, t/*.sh` (continued over two lines) and `**Evidence location**: evidence/f/x.md`.
 
 `bash -n` on the script : exit 0.
 `python3 -m json.tool` on settings.json : exit 0.

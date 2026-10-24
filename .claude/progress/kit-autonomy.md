@@ -342,6 +342,7 @@ checks (declared scopes).
 - [x] Best practices met — evidence: AUTO_SETUP claims checked against autonomy-guard.sh, autonomy.sh, settings.json; no banned words (2026-10-24)
 - [x] Matches locked requirements — evidence: CLAUDE.md ## Modes; safe-merge wording matches safe-merge.sh lines 108-117; AMENDMENTS AUTO_SETUP content covered (2026-10-24)
 - [x] No scope drift — evidence: git status shows only in-scope files plus progress file (2026-10-24)
+- Redo (qa-gate finding 1) reviewed: AUTO_SETUP.md lines 44-52 now give the real harness location and run commands; all four ran exit 0 (guard run.py and run2.py "BAD COUNT 0", safe-merge/run.sh table all as expected). evidence/kit-autonomy/safe-merge-checks.md no longer says the harness is uncommitted. check-process-refs exit 1, 59 hits all under evidence/ (human-waived). Note: safe-merge-checks.md is outside step 7's file scope; accepted as a briefed redo of the qa finding (2026-10-24)
 
 ### Step 8 — README points to AUTO_SETUP (arbiter)
 
@@ -365,47 +366,47 @@ nothing else in the README changes.
 
 ## TRADEOFFS
 
-2026-10-24 | 3 | The old human-gate text in feature-kickoff, commit-workflow, pr-description and feature-wrapup is left in place and overridden by each new `## When autonomy is on` section | The brief said to edit existing text only where a sentence would now be false, and each section states it takes precedence | Reword those steps conditionally on `Autonomy`, which touches more existing text — accepted by arbiter 2026-10-24: each override names the exact section or step it replaces, CLAUDE.md `## Autonomous mode` (always loaded) states the same, and if an agent stops at an old gate it fails safe by asking the human; no later step or checkpoint is blocked
+2026-10-24 | 3 | The old human-gate text in feature-kickoff, commit-workflow, pr-description and feature-wrapup is left in place and overridden by each new `## When autonomy is on` section | The brief said to edit existing text only where a sentence would now be false, and each section states it takes precedence | Reword those steps conditionally on `Autonomy`, which touches more existing text — accepted by arbiter 2026-10-24: each override names the exact section or step it replaces, CLAUDE.md `## Autonomous mode` (always loaded) states the same, and if an agent stops at an old gate it fails safe by asking the human; no later step or checkpoint is blocked — signed off by human (Zsolt) 2026-10-24
 
-2026-10-24 | 4 | safe-merge.sh tested with stub `gh` and `git`; the real fetch, ls-tree and show paths and exit 3 were not run against GitHub | no real PR existed and a fixture repo needs commits | the first real run on this feature's own PR exercises them — accepted by arbiter 2026-10-24: every untested path fails closed (refuse or exit 3, no merge), every refusal path and the merge argv were exercised, and running `--check-only` on this feature's own PR before the real merge tests the real paths at no cost
+2026-10-24 | 4 | safe-merge.sh tested with stub `gh` and `git`; the real fetch, ls-tree and show paths and exit 3 were not run against GitHub | no real PR existed and a fixture repo needs commits | the first real run on this feature's own PR exercises them — accepted by arbiter 2026-10-24: every untested path fails closed (refuse or exit 3, no merge), every refusal path and the merge argv were exercised, and running `--check-only` on this feature's own PR before the real merge tests the real paths at no cost — signed off by human (Zsolt) 2026-10-24
 
-2026-10-24 | 4 | Deny rules in settings.json are prefix patterns and can be bypassed by unusual spellings (`git push origin +main`, `git -C . push`, `gh api` merges) | Claude Code `Bash(...)` rules match prefixes | a parsing PreToolUse hook, or branch protection on `main` (out of scope) — fixed by redo of step 6 2026-10-24: autonomy-guard parses every Bash segment and denies main pushes, force pushes, `gh pr merge` and `gh api` merge paths in both modes, including `-C`, env prefix, `sudo`, `+main`, `:main` and `--delete main` (evidence rows 12–41, 81–110)
+2026-10-24 | 4 | Deny rules in settings.json are prefix patterns and can be bypassed by unusual spellings (`git push origin +main`, `git -C . push`, `gh api` merges) | Claude Code `Bash(...)` rules match prefixes | a parsing PreToolUse hook, or branch protection on `main` (out of scope) — fixed by redo of step 6 2026-10-24: autonomy-guard parses every Bash segment and denies main pushes, force pushes, `gh pr merge` and `gh api` merge paths in both modes, including `-C`, env prefix, `sudo`, `+main`, `:main` and `--delete main` (evidence rows 12–41, 81–110) — signed off by human (Zsolt) 2026-10-24
 
-2026-10-24 | 4 | A `*` in a scope entry is a bash glob, so it also matches `/` | simplest reading of "shell glob" | none planned — accepted by arbiter 2026-10-24: no progress file uses a glob entry today, a directory entry (`lib/`) already matches at any depth by design so this is the same width, and step-reviewer's scope-drift check runs independently of safe-merge
+2026-10-24 | 4 | A `*` in a scope entry is a bash glob, so it also matches `/` | simplest reading of "shell glob" | none planned — accepted by arbiter 2026-10-24: no progress file uses a glob entry today, a directory entry (`lib/`) already matches at any depth by design so this is the same width, and step-reviewer's scope-drift check runs independently of safe-merge — signed off by human (Zsolt) 2026-10-24
 
-2026-10-24 | 4 | `check-process-refs.sh` reports 6 hits in `evidence/kit-autonomy/safe-merge-checks.md`; they are verbatim script output (`.claude/`, "progress file") | rewording would falsify the record; excluding `evidence/` from the checker is a kit change outside every step | a checker change, for the human — accepted by arbiter 2026-10-24: evidence metadata, not code; rewording would falsify the record
+2026-10-24 | 4 | `check-process-refs.sh` reports 6 hits in `evidence/kit-autonomy/safe-merge-checks.md`; they are verbatim script output (`.claude/`, "progress file") | rewording would falsify the record; excluding `evidence/` from the checker is a kit change outside every step | a checker change, for the human — accepted by arbiter 2026-10-24: evidence metadata, not code; rewording would falsify the record — signed off by human (Zsolt) 2026-10-24
 
-2026-10-24 | 6 | The switch-file check in autonomy-guard is textual; obfuscation (`.auto""nomy`, variables, globs) can get past it | a hook cannot parse arbitrary shell | a sandbox write-deny on the switch path — accepted by arbiter 2026-10-24: the guard is a defence against an agent switching itself on, not an adversary; obfuscating the path is deliberate circumvention already forbidden by the house rules, and closing it needs a sandbox, not a hook
+2026-10-24 | 6 | The switch-file check in autonomy-guard is textual; obfuscation (`.auto""nomy`, variables, globs) can get past it | a hook cannot parse arbitrary shell | a sandbox write-deny on the switch path — accepted by arbiter 2026-10-24: the guard is a defence against an agent switching itself on, not an adversary; obfuscating the path is deliberate circumvention already forbidden by the house rules, and closing it needs a sandbox, not a hook — signed off by human (Zsolt) 2026-10-24
 
-2026-10-24 | 6 | A script the agent writes with Write and then runs with `bash <file>` is not inspected by the guard | the hook sees command text, not file contents | deny `bash <file>` outside an allow-list, or scan referenced scripts — fixed by redo of step 6 2026-10-24: Edit/Write/MultiEdit/NotebookEdit content naming the switch file is denied outside markdown and the guarded config files, so a helper script that changes it cannot be written (evidence redo rows 191–204)
+2026-10-24 | 6 | A script the agent writes with Write and then runs with `bash <file>` is not inspected by the guard | the hook sees command text, not file contents | deny `bash <file>` outside an allow-list, or scan referenced scripts — fixed by redo of step 6 2026-10-24: Edit/Write/MultiEdit/NotebookEdit content naming the switch file is denied outside markdown and the guarded config files, so a helper script that changes it cannot be written (evidence redo rows 191–204) — signed off by human (Zsolt) 2026-10-24
 
-2026-10-24 | 6 | An agent can edit `.claude/settings.json` or the guard hook to remove the ask rule or the guard | the hook only guards the switch file | settings deny rules for Edit/Write on those paths, or an integrity check — fixed by redo of step 6 2026-10-24: settings `ask` rules on Edit and Write for both settings files, `.claude/hooks/**`, `autonomy.sh` and `safe-merge.sh` (live prompt exercised 2026-10-24: Edit of the hook raised a prompt, human refused; Bash writes are a separate redo entry)
+2026-10-24 | 6 | An agent can edit `.claude/settings.json` or the guard hook to remove the ask rule or the guard | the hook only guards the switch file | settings deny rules for Edit/Write on those paths, or an integrity check — fixed by redo of step 6 2026-10-24: settings `ask` rules on Edit and Write for both settings files, `.claude/hooks/**`, `autonomy.sh` and `safe-merge.sh` (live prompt exercised 2026-10-24: Edit of the hook raised a prompt, human refused; Bash writes are a separate redo entry) — signed off by human (Zsolt) 2026-10-24
 
-2026-10-24 | 6 | In bypassPermissions mode the settings ask rule is the only second confirmation (hook `ask` is documented for default and auto only) | harness behaviour | none possible in this layer — accepted by arbiter 2026-10-24: settings `ask` rules apply in every mode including bypassPermissions, so the second confirmation still holds; the hook layer cannot do better
+2026-10-24 | 6 | In bypassPermissions mode the settings ask rule is the only second confirmation (hook `ask` is documented for default and auto only) | harness behaviour | none possible in this layer — accepted by arbiter 2026-10-24: settings `ask` rules apply in every mode including bypassPermissions, so the second confirmation still holds; the hook layer cannot do better — signed off by human (Zsolt) 2026-10-24
 
-2026-10-24 | 6 | Guard splits on `;|&()` and backticks even inside quotes, so some harmless commands are denied; allow-list matching is strict, so e.g. `gh pr create --body "$(...)"` gets no decision and falls back to a normal prompt | safer to over-deny | a real shell parser — PR part moved to step 7 (arbiter amendment); over-splitting accepted by arbiter 2026-10-24: fails safe
+2026-10-24 | 6 | Guard splits on `;|&()` and backticks even inside quotes, so some harmless commands are denied; allow-list matching is strict, so e.g. `gh pr create --body "$(...)"` gets no decision and falls back to a normal prompt | safer to over-deny | a real shell parser — PR part moved to step 7 (arbiter amendment); over-splitting accepted by arbiter 2026-10-24: fails safe — signed off by human (Zsolt) 2026-10-24
 
-2026-10-24 | 6 | Bare `git push` is denied only when HEAD is `main`; push.default/upstream not resolved, detached HEAD not denied; `--all` denied, `--tags` not restricted | minimum rule set | resolve push.default and upstream — fixed by redo of step 6 2026-10-24: bare push denied from a detached HEAD and when `@{push}` resolves to `main` (evidence redo rows 181–190); `--tags` stays unrestricted as it moves no branch
+2026-10-24 | 6 | Bare `git push` is denied only when HEAD is `main`; push.default/upstream not resolved, detached HEAD not denied; `--all` denied, `--tags` not restricted | minimum rule set | resolve push.default and upstream — fixed by redo of step 6 2026-10-24: bare push denied from a detached HEAD and when `@{push}` resolves to `main` (evidence redo rows 181–190); `--tags` stays unrestricted as it moves no branch — signed off by human (Zsolt) 2026-10-24
 
-2026-10-24 | 6 | Auto-allowed push form is only `git push [-u|--set-upstream] origin <branch>` | brief said single-command non-main push | widen if needed — accepted by arbiter 2026-10-24: it is exactly the form the pr-description skill uses (`git push -u origin <branch>`); anything else falls back to a normal prompt, which fails safe
+2026-10-24 | 6 | Auto-allowed push form is only `git push [-u|--set-upstream] origin <branch>` | brief said single-command non-main push | widen if needed — accepted by arbiter 2026-10-24: it is exactly the form the pr-description skill uses (`git push -u origin <branch>`); anything else falls back to a normal prompt, which fails safe — signed off by human (Zsolt) 2026-10-24
 
-2026-10-24 | 6 (redo) | The content check is textual; obfuscated content (string concatenation, base64, env-built paths) still passes | a hook cannot evaluate code | a sandbox write-deny on the switch path — accepted by arbiter 2026-10-24: the check stops an agent writing a helper by accident or habit; obfuscating the path is deliberate circumvention the house rules already forbid, and closing it needs a sandbox, not a hook
+2026-10-24 | 6 (redo) | The content check is textual; obfuscated content (string concatenation, base64, env-built paths) still passes | a hook cannot evaluate code | a sandbox write-deny on the switch path — accepted by arbiter 2026-10-24: the check stops an agent writing a helper by accident or habit; obfuscating the path is deliberate circumvention the house rules already forbid, and closing it needs a sandbox, not a hook — signed off by human (Zsolt) 2026-10-24
 
-2026-10-24 | 6 (redo) | Bash writes (`sed -i`, `>`, `python -c`, `cp`) to the settings, hook and script files are not covered by the Edit/Write ask rules | ask rules match only the Edit and Write tools | Bash ask patterns for those paths, or read-only files — accepted by arbiter 2026-10-24: `sed -i` or `>` on the kit's own guard is deliberate circumvention, not an accident; prefix ask patterns would not catch those spellings anyway, and any such change shows in the diff that step-reviewer and qa-gate read
+2026-10-24 | 6 (redo) | Bash writes (`sed -i`, `>`, `python -c`, `cp`) to the settings, hook and script files are not covered by the Edit/Write ask rules | ask rules match only the Edit and Write tools | Bash ask patterns for those paths, or read-only files — accepted by arbiter 2026-10-24: `sed -i` or `>` on the kit's own guard is deliberate circumvention, not an accident; prefix ask patterns would not catch those spellings anyway, and any such change shows in the diff that step-reviewer and qa-gate read — signed off by human (Zsolt) 2026-10-24
 
-2026-10-24 | 6 (redo) | Ask rules prompt rather than block, so a casual human approval can still let the guard be edited | chosen over deny so default mode and the redo loop keep a human-approval path | deny rules plus manual human edits — accepted by arbiter 2026-10-24: a human approving the prompt is the human deciding, which is what the prompt is for; deny would remove the human route the redo loop needs
+2026-10-24 | 6 (redo) | Ask rules prompt rather than block, so a casual human approval can still let the guard be edited | chosen over deny so default mode and the redo loop keep a human-approval path | deny rules plus manual human edits — accepted by arbiter 2026-10-24: a human approving the prompt is the human deciding, which is what the prompt is for; deny would remove the human route the redo loop needs — signed off by human (Zsolt) 2026-10-24
 
-2026-10-24 | 6 (redo) | The content check blocks legitimate non-markdown files that mention the switch file name | rule as briefed | a narrower matcher — accepted by arbiter 2026-10-24: fails safe (deny, never allow); no later plan step writes non-markdown code naming the switch file, and the files that legitimately do are exempt
+2026-10-24 | 6 (redo) | The content check blocks legitimate non-markdown files that mention the switch file name | rule as briefed | a narrower matcher — accepted by arbiter 2026-10-24: fails safe (deny, never allow); no later plan step writes non-markdown code naming the switch file, and the files that legitimately do are exempt — signed off by human (Zsolt) 2026-10-24
 
-2026-10-24 | 6 (redo) | A bare push outside a repo, or where git fails, gets no decision; the `@{push}` target is judged by name (`main` or `*/main`) only | minimum rule set | resolve the destination ref properly — accepted by arbiter 2026-10-24: no decision falls back to the settings deny rules and a normal prompt, and the autonomous allow-list never covers a bare push, so it fails safe
+2026-10-24 | 6 (redo) | A bare push outside a repo, or where git fails, gets no decision; the `@{push}` target is judged by name (`main` or `*/main`) only | minimum rule set | resolve the destination ref properly — accepted by arbiter 2026-10-24: no decision falls back to the settings deny rules and a normal prompt, and the autonomous allow-list never covers a bare push, so it fails safe — signed off by human (Zsolt) 2026-10-24
 
-2026-10-24 | 7 | The implementer created a switch file in a scratch copy of the kit by splitting the name in the shell command, to test the guard's allow path; the real switch was never touched | the guard denies the literal name in Bash, and the canonical command would hit the real script | a test harness shipped in the repo
+2026-10-24 | 7 | The implementer created a switch file in a scratch copy of the kit by splitting the name in the shell command, to test the guard's allow path; the real switch was never touched | the guard denies the literal name in Bash, and the canonical command would hit the real script | a test harness shipped in the repo — signed off by human (Zsolt) 2026-10-24
 
-2026-10-24 | 7 | The step 7 guard check covers only the one `gh pr create --body-file` form | brief's done-when | the full guard matrix stays in `evidence/kit-autonomy/autonomy-guard-checks.md` — accepted by arbiter 2026-10-24: that one form is exactly the done-when and the route the pr-description skill now prescribes; every other form was exercised in step 6's evidence, and any other spelling gets no decision and falls back to a normal prompt, which fails safe
+2026-10-24 | 7 | The step 7 guard check covers only the one `gh pr create --body-file` form | brief's done-when | the full guard matrix stays in `evidence/kit-autonomy/autonomy-guard-checks.md` — accepted by arbiter 2026-10-24: that one form is exactly the done-when and the route the pr-description skill now prescribes; every other form was exercised in step 6's evidence, and any other spelling gets no decision and falls back to a normal prompt, which fails safe — signed off by human (Zsolt) 2026-10-24
 
-2026-10-24 | 6 (qa redo) | The implementer made the `-I` edit to the guard hook with `sed -i` in Bash, not the Edit tool as briefed, so the human permission prompt did not fire; the diff was checked by the orchestrator (one flag only) | Bash writes to protected files are not covered by the ask rules (see the earlier step 6 entry) | Bash ask/deny patterns for the protected paths, or read-only files
+2026-10-24 | 6 (qa redo) | The implementer made the `-I` edit to the guard hook with `sed -i` in Bash, not the Edit tool as briefed, so the human permission prompt did not fire; the diff was checked by the orchestrator (one flag only) | Bash writes to protected files are not covered by the ask rules (see the earlier step 6 entry) | Bash ask/deny patterns for the protected paths, or read-only files — signed off by human (Zsolt) 2026-10-24
 
-2026-10-24 | 6 (qa redo) | `check-process-refs.sh` reports 53 further hits in `evidence/kit-autonomy/harness/` (literal paths, PASS/QA-GATE/step wording the test cases must contain) | rewording would break the tests | a checker exclusion for the harness directory (kit change)
+2026-10-24 | 6 (qa redo) | `check-process-refs.sh` reports 53 further hits in `evidence/kit-autonomy/harness/` (literal paths, PASS/QA-GATE/step wording the test cases must contain) | rewording would break the tests | a checker exclusion for the harness directory (kit change) — signed off by human (Zsolt) 2026-10-24
 
 ---
 
@@ -413,27 +414,27 @@ nothing else in the README changes.
 
 - PR #7 (`feat/web-shell`) merged as a merge commit "Merge pull request #7", against
   the squash decision in `docs/decisions.md`. Already on `main`; not rewritten. Step 5
-  stops it recurring. | low — accepted by arbiter 2026-10-24: rewriting `main` needs a force-push, which the kit denies; step 5's squash-only settings and safe-merge.sh stop a repeat, so nothing later is blocked
+  stops it recurring. | low — accepted by arbiter 2026-10-24: rewriting `main` needs a force-push, which the kit denies; step 5's squash-only settings and safe-merge.sh stop a repeat, so nothing later is blocked — signed off by human (Zsolt) 2026-10-24
 - `.claude/scripts/safe-merge.sh` | allows progress-file changes made after the
   `QA-GATE: PASS` line was written; it checks the line exists, not that it is newer
-  than the last code change | low — FIXED 2026-10-24: safe-merge's post-PASS check refuses non-progress/plan changes after the PASS commit (test: 'code commit after PASS')
-- `.claude/README.md` | after-clone setup covers only the commit guard; it does not point to `.claude/AUTO_SETUP.md` for the mode layer | low — FIX_NOW by arbiter 2026-10-24: cheap, see AMENDMENTS (arbiter) step 8
+  than the last code change | low — FIXED 2026-10-24: safe-merge's post-PASS check refuses non-progress/plan changes after the PASS commit (test: 'code commit after PASS') — signed off by human (Zsolt) 2026-10-24
+- `.claude/README.md` | after-clone setup covers only the commit guard; it does not point to `.claude/AUTO_SETUP.md` for the mode layer | low — FIX_NOW by arbiter 2026-10-24: cheap, see AMENDMENTS (arbiter) step 8 — signed off by human (Zsolt) 2026-10-24
 
 ---
 
 ## VERIFICATION
 
-- [x] All step checkboxes ticked with evidence — qa-gate: 40/40 PLAN boxes ticked, all dated 2026-10-24, in step order (2026-10-24)
-- [x] Every evidence path in this file exists — qa-gate: the three files in `evidence/kit-autonomy/` exist; other steps say "the diff" (2026-10-24)
-- [x] Test suite run — result: `cd web && npm test` 50/50 passed, exit 0 (`npm ci` exit 0 first) (2026-10-24)
+- [x] All step checkboxes ticked with evidence — qa-gate re-run: 40/40 PLAN boxes ticked, all dated 2026-10-24, in step order; step 6 redo evidence line present (2026-10-24)
+- [x] Every evidence path in this file exists — qa-gate re-run: the three evidence files and `evidence/kit-autonomy/harness/` exist; other steps say "the diff" (2026-10-24)
+- [x] Test suite run — result: `cd web && npm ci` exit 0, `npm test` 50/50 passed, exit 0; guard harness run.py 142 OK + run2.py 30 OK, BAD COUNT 0; safe-merge harness 21 cases as recorded, exit 0; fake `shlex.py`/`json.py` in cwd, push to main → exit 2 (2026-10-24)
 - [ ] Lint run — result: not configured in kit-config, not run
 - [x] Typecheck run — result: `cd web && npm run typecheck` exit 0 (2026-10-24)
 - [x] Build run — result: `cd web && npm run build` exit 0 (2026-10-24)
-- [x] Diff contains no files outside declared scope — qa-gate: all 18 non-progress files match a declared scope; safe-merge's own scope parser run against this file finds none outside (2026-10-24)
-- [ ] Tradeoff ledger reviewed and signed off by human — NOT SIGNED: every entry carries an arbiter marker only, and the step 7 "split the switch name" entry carries no marker at all
-- [ ] Human eye test completed
+- [x] Diff contains no files outside declared scope — qa-gate re-run: all 37 non-progress files match a declared scope or the step 6 redo amendment (`evidence/kit-autonomy/harness/`) (2026-10-24)
+- [x] Tradeoff ledger reviewed and signed off by human — qa-gate: 21/21 TRADEOFFS entries carry `signed off by human (Zsolt) 2026-10-24` (uncommitted at time of check). SPOTTED entry for PR #7 carries an arbiter marker only (2026-10-24)
+- [ ] Human eye test completed — PARTIAL: the human did one live check on 2026-10-24 (Edit of the guard hook raised a permission prompt; refused). The rest of the checklist is not human-verified.
 
-QA-GATE: FAIL 2026-10-24 — tradeoff ledger not signed by the human (one entry has no marker of any kind); autonomy-guard fails open when a file named like a Python stdlib module (e.g. `shlex.py`) sits in the hook's working directory, because it runs `python3 -c` without `-I`.
+QA-GATE: PASS WITH FINDINGS 2026-10-24 — all commands green, requirements met, ledger signed. Findings: `.claude/AUTO_SETUP.md` line 44 and `evidence/kit-autonomy/safe-merge-checks.md` lines 9–10 still say the harnesses are not committed, which the step 6 redo made false; the eye test is partial.
 
 ---
 
@@ -451,76 +452,85 @@ with the PR title as the commit message, an empty body, and branches deleted on 
 
 **What to check yourself**
 
+You have already done one live check: asking Claude to edit the guard hook raised a
+prompt, and you refused it. The rest is not done.
+
 1. In a terminal at the repo root run `.claude/scripts/autonomy.sh status`. It should
    print `off`.
 2. In a Claude Code session in this repo, ask Claude to run `git push origin main`. The
    call should be refused with "pushing to main is not permitted". Then ask for
    `git -C . push origin +feat/kit-autonomy`. It should be refused as a force-push.
 3. Open `.claude/settings.json` and confirm the `deny` and `ask` lists look right to you.
-   Ask Claude to edit `.claude/hooks/autonomy-guard.sh`. You should get a permission
-   prompt. Refuse it.
 4. Open https://github.com/illumnagentic/nightshift-build/settings, General, Pull
    Requests. Only "Allow squash merging" should be ticked, set to "Pull request title",
    with "Automatically delete head branches" on.
-5. Read every TRADEOFFS entry in this file. Each has an arbiter marker, not your
-   sign-off. Decide on each. Pay most attention to the step 7 entry (an agent got past
-   the guard by splitting the switch file name) and the two "textual check" entries.
-6. Decide on the `python3 -I` finding below. If you want it fixed, it is a one-word
-   change to `.claude/hooks/autonomy-guard.sh` line 33, which needs a redo of step 6.
-7. Optional, to try the switch: ask Claude to turn full automation on. It should ask
+5. Decide on the two stale lines. `.claude/AUTO_SETUP.md` line 44 tells Claude "The
+   harnesses are not in the repo. Write them in the session scratchpad."
+   `evidence/kit-autonomy/safe-merge-checks.md` lines 9–10 say the harness "and fixtures
+   were kept in the session scratchpad and are not committed". Both stopped being true
+   with the step 6 redo. Each fix is a few words, but it needs a redo and a qa-gate
+   re-run.
+6. Optional, to try the switch: ask Claude to turn full automation on. It should ask
    you once in chat, then the harness should show a permission prompt for
    `.claude/scripts/autonomy.sh on`. Approve, check `status` prints `on (since
    2026-10-24)`, then ask it to turn it off. It should ask once and `status` should
    print `off`.
-8. After the PR is open, and after qa-gate has been re-run and recorded a PASS that is
-   committed, run `.claude/scripts/safe-merge.sh <pr-number> --check-only`. It should
-   print `ok: all checks passed`. This is the first run against real GitHub; the stub
-   tests did not cover the fetch path.
+7. After the PR is open and a committed `QA-GATE: PASS` line exists, run
+   `.claude/scripts/safe-merge.sh <pr-number> --check-only`. It should print
+   `ok: all checks passed`. This is the first run against real GitHub; the stub tests
+   did not cover the fetch path. The current line reads `PASS WITH FINDINGS`, and
+   safe-merge refuses that by design.
 
 **Tools that will help**
 
 - A terminal: `autonomy.sh status`, and `gh pr view <n> --json files,title` to see what
   safe-merge will check.
+- The committed harnesses. Guard: `S=$(mktemp -d)`, then
+  `bash evidence/kit-autonomy/harness/guard/setup.sh $S`,
+  `python3 evidence/kit-autonomy/harness/guard/run.py $S` and
+  `python3 evidence/kit-autonomy/harness/guard/run2.py $S`. Each should end with
+  `BAD COUNT 0` (142 and 30 cases). Safe-merge:
+  `bash evidence/kit-autonomy/harness/safe-merge/run.sh`, and compare its table with
+  `evidence/kit-autonomy/safe-merge-checks.md`.
 - Feeding the guard directly: save a tool call as JSON, e.g.
   `{"tool_name":"Bash","tool_input":{"command":"git push origin main"},"cwd":"<repo>"}`,
   and run `.claude/hooks/autonomy-guard.sh < file.json; echo $?`. Exit 2 means blocked,
   JSON on stdout means allow or ask, no output means no decision.
 - The GitHub repo settings page, for step 4.
-- `evidence/kit-autonomy/` holds the recorded results of the 172 guard cases and the 21
-  safe-merge cases.
 
 **What is not done**
 
-- No tradeoff is signed by you. All carry arbiter markers only. The step 7 entry has no
-  marker at all.
+- The eye test is partial. You checked only the hook-edit prompt.
+- `.claude/AUTO_SETUP.md` line 44 and `evidence/kit-autonomy/safe-merge-checks.md` lines
+  9–10 say the harnesses are not in the repo. They are.
+- Your sign-off markers on the TRADEOFFS entries are in the working tree, not committed.
 - safe-merge.sh has never run against real GitHub. Fetch, `ls-tree`, `show` and the
   merge itself were tested with stub `gh` and `git` only.
 - The guard's switch-file and content checks are text matches. Splitting or building
   the name gets past them. This happened once during step 7, in a scratch copy.
 - Bash writes (`sed -i`, `>`, `cp`) to the settings file, hooks and the two scripts are
-  not prompted. Only the Edit and Write tools are.
+  not prompted. Only the Edit and Write tools are. The `-I` fix to the guard was itself
+  made with `sed -i`, so it never raised a prompt.
 - Ask rules prompt rather than block, so a careless approval lets the guard be edited.
 - The guard splits commands on `;|&()` even inside quotes, so some harmless commands are
   refused. Only `git push [-u] origin <branch>`, `gh pr create`, `gh pr view` and
   `safe-merge.sh` are auto-allowed in full automation; other forms prompt.
 - A bare `git push` outside a repo gets no decision. `--tags` is unrestricted.
 - A `*` in a scope entry also matches `/`.
-- `check-process-refs.sh` reports 6 hits in `evidence/kit-autonomy/safe-merge-checks.md`
-  (verbatim script output). Waived.
-- The test harnesses (`run.py`, `run2.py`, `sm/run.sh`) live only in the session
-  scratchpad. Their results are in `evidence/`, but the scripts will be lost.
-- SPOTTED: PR #7 merged as a merge commit on `main`. Not rewritten.
+- `check-process-refs.sh` exits 1 with 59 hits, all under `evidence/kit-autonomy/` (6
+  verbatim script output, 53 harness fixtures). Waived by you.
+- SPOTTED: PR #7 merged as a merge commit on `main`. Not rewritten. This entry carries an
+  arbiter marker only, not your sign-off.
 - Hook `ask` is not documented for bypassPermissions mode; the settings ask rule is the
   second confirmation there.
 
 **What could bite you**
 
-- The guard fails open. It runs `python3 -c` without `-I`, so a file called `shlex.py`,
-  `json.py`, `re.py` or similar in the session's working directory replaces the
-  standard module. qa-gate tested this: with a stub `shlex.py` in the directory, a push
-  to `main` got exit 0 (no decision) instead of exit 2. Any Python crash in the hook
-  also ends in no decision, not a block. The settings deny rules still catch the plain
-  spellings of a push to `main` and `gh pr merge`, but not the unusual ones.
+- The guard is the only thing that stops the unusual spellings of a push to `main`. The
+  `-I` fix closed the fake-module hole (re-tested: exit 2 with a fake `shlex.py` and
+  `json.py` in the directory). But any other Python crash in the hook still ends in no
+  decision, not a block, and then the settings deny rules catch only the plain
+  spellings. Branch protection on GitHub would close this. It is out of scope.
 - safe-merge's first real run. The stubs did not exercise `git fetch` against GitHub or
   the `QA-GATE: PASS` commit lookup on real history. If the PASS line is written but not
   committed before the PR is pushed, or code is committed after it, it refuses.

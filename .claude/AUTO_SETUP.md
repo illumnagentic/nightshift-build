@@ -41,9 +41,15 @@ Re-testing after a change:
 - `safe-merge.sh`: put stub `gh` and `git` executables first on `PATH` that print canned
   JSON, then run it with `--check-only` against each refusal path (unticked box, no
   `QA-GATE: PASS`, bad title, file outside scope, base not `main`).
-- The harnesses are not in the repo. Write them in the session scratchpad. Keep the
-  results (commands, inputs, decisions) in `evidence/<slug>/`, as in
-  `evidence/kit-autonomy/`.
+- The harnesses live in `evidence/kit-autonomy/harness/` (`guard/` and `safe-merge/`).
+  Run them with:
+  `S=$(mktemp -d)`; `bash evidence/kit-autonomy/harness/guard/setup.sh $S`;
+  `python3 evidence/kit-autonomy/harness/guard/run.py $S`;
+  `python3 evidence/kit-autonomy/harness/guard/run2.py $S`;
+  `bash evidence/kit-autonomy/harness/safe-merge/run.sh`.
+  Extend them when the guard or `safe-merge.sh` changes. Keep results (commands, inputs,
+  decisions) in `evidence/<slug>/`, as in `evidence/kit-autonomy/`, never only in the
+  scratchpad.
 
 ## B. Using it on another machine
 
