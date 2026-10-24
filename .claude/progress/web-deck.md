@@ -5,7 +5,7 @@
 - **Started**: 2026-10-24
 - **Branch**: feat/web-deck
 - **BASE_SHA**: 628a2c711b4095d4f342a03dfc50b9244e6960ed
-- **Status**: in progress
+- **Status**: complete (2026-10-24)
 
 ---
 
@@ -315,26 +315,29 @@ still work and do not start a drag; typecheck, tests and build exit 0.
 
 ## TRADEOFFS
 
-- Step 2 | `useDeck.ts` has no automated test (node env, no jsdom or hook renderer, both out of scope). Typecheck and build only; exercised by eye in step 4. | Proper cover needs a DOM test environment.
-- Step 2 | A failed swipe (for example 404 `decision_not_found` after a prefs re-save) leaves the same card on top, so Retry repeats the failing call. No handling for discarding stale cards. | Needs the contract's re-save flow, which belongs with the prefs form (F4).
-- Step 2 | When a fetch adds no new cards the deck is marked `exhausted` even if the server gave no `empty_reason`, to avoid a refetch loop. | Would need the server to say when it has nothing further.
-- Step 2 | Responses for a previous user are dropped, but the in-flight request itself is not aborted (the client has no abort support). | Add `AbortSignal` to `ApiClient`.
-- Step 3 | `PropertyCard` has no component test (node env, no jsdom; out of scope). Only `format.ts` is tested; the card is checked by eye. | Needs a DOM test environment.
-- Step 3 | Photo position is local state, so the parent must give the card `key={card.decision_id}` or the next card keeps the previous index (it is clamped, not wrong, but not reset). | Lift the index into deck state or reset in an effect.
-- Step 4 | `DeckScreen` and `FeedbackStub` have no component test (node env, no jsdom; out of scope). Checked by eye. | Needs a DOM test environment.
-- Step 4 | `commute_pending` Retry refetches once per click; there is no polling. | Polling belongs with the prefs/commute UI (F4).
-- Step 4 | Arrow keys are listened for on `window`, so they also fire when focus is on a button such as Switch user or a photo arrow. Only text inputs are exempt, as briefed. | Scope the listener to the deck root, which needs focus management.
-- Step 3 redo | `addressLine` treats the postcode as present if its whitespace-stripped form appears anywhere in the stripped address, so it could in theory match inside a longer run of characters. | Needs a word-boundary check on the stripped form; unlikely in real addresses.
-- Step 3 redo | `floorLevelLabel` only appends " floor" to ordinals ("22nd floor"); it does not reword them ("22nd" stays an ordinal). | Fine for every value in the dataset.
-- Step 4 redo | The Love button is an inline SVG heart with `aria-label` and `title`; it is checked by eye only (no DOM test environment, out of scope). | Needs a DOM test environment.
-- Step 4 redo | The light page is fixed: `color-scheme: light` with a white background and dark text, so there is no dark mode. Other deck colours were already fixed. | Add a dark theme when styling is done.
+- Step 2 | `useDeck.ts` has no automated test (node env, no jsdom or hook renderer, both out of scope). Typecheck and build only; exercised by eye in step 4. | Proper cover needs a DOM test environment. | accepted by human 2026-10-24
+- Step 2 | A failed swipe (for example 404 `decision_not_found` after a prefs re-save) leaves the same card on top, so Retry repeats the failing call. No handling for discarding stale cards. | Needs the contract's re-save flow, which belongs with the prefs form (F4). | accepted by human 2026-10-24
+- Step 2 | When a fetch adds no new cards the deck is marked `exhausted` even if the server gave no `empty_reason`, to avoid a refetch loop. | Would need the server to say when it has nothing further. | accepted by human 2026-10-24
+- Step 2 | Responses for a previous user are dropped, but the in-flight request itself is not aborted (the client has no abort support). | Add `AbortSignal` to `ApiClient`. | accepted by human 2026-10-24
+- Step 3 | `PropertyCard` has no component test (node env, no jsdom; out of scope). Only `format.ts` is tested; the card is checked by eye. | Needs a DOM test environment. | accepted by human 2026-10-24
+- Step 3 | Photo position is local state, so the parent must give the card `key={card.decision_id}` or the next card keeps the previous index (it is clamped, not wrong, but not reset). | Lift the index into deck state or reset in an effect. | accepted by human 2026-10-24
+- Step 4 | `DeckScreen` and `FeedbackStub` have no component test (node env, no jsdom; out of scope). Checked by eye. | Needs a DOM test environment. | accepted by human 2026-10-24
+- Step 4 | `commute_pending` Retry refetches once per click; there is no polling. | Polling belongs with the prefs/commute UI (F4). | accepted by human 2026-10-24
+- Step 4 | Arrow keys are listened for on `window`, so they also fire when focus is on a button such as Switch user or a photo arrow. Only text inputs are exempt, as briefed. | Scope the listener to the deck root, which needs focus management. | accepted by human 2026-10-24
+- Step 3 redo | `addressLine` treats the postcode as present if its whitespace-stripped form appears anywhere in the stripped address, so it could in theory match inside a longer run of characters. | Needs a word-boundary check on the stripped form; unlikely in real addresses. | accepted by human 2026-10-24
+- Step 3 redo | `floorLevelLabel` only appends " floor" to ordinals ("22nd floor"); it does not reword them ("22nd" stays an ordinal). | Fine for every value in the dataset. | accepted by human 2026-10-24
+- Step 4 redo | The Love button is an inline SVG heart with `aria-label` and `title`; it is checked by eye only (no DOM test environment, out of scope). | Needs a DOM test environment. | accepted by human 2026-10-24
+- Step 4 redo | The light page is fixed: `color-scheme: light` with a white background and dark text, so there is no dark mode. Other deck colours were already fixed. | Add a dark theme when styling is done. | accepted by human 2026-10-24
+- Step 5 | Drag has no automated test (node env, no jsdom; out of scope). Drag, spring-back and photo-button behaviour are checked by eye only. | Needs a DOM test environment. | accepted by human 2026-10-24
+- Step 5 | The card always springs back to centre on release, including when it triggers a swipe; there is no fly-off animation. The next card replaces it once the swipe response arrives. | Animate the card off screen, which needs exit handling around the deck key. | accepted by human 2026-10-24
+- Step 5 | Distance threshold is 30% of card width or 600 px/s release velocity; both are untuned guesses. | Tune by hand on a real touch device. | accepted by human 2026-10-24
+- Step 5 | Arrow keys are ignored only when the event target is a button inside `.deck-card`. Focus on other buttons (Switch user, action buttons) still lets arrows swipe. | Scope the listener to the deck root, with focus management. | accepted by human 2026-10-24
+- Step 5 | Reduced motion removes only the rotation; the drag offset and the Like / Dislike cue fade remain, since the drag itself must still work. | Hide the cue when reduced, if wanted. | accepted by human 2026-10-24
+- Step 5 redo | `touch-action: none` on the card, so a touch that starts on the card no longer scrolls the page; the page scrolls only from outside the card. Vertical drag needs this. | Scroll from the card would need a drag-direction lock before claiming the gesture. | accepted by human 2026-10-24
+- Step 5 redo | Up threshold is 25% of card height or 600 px/s upward, untuned; direction is the dominant axis at release (ties go horizontal). Drag up has no automated test (node env, no jsdom). Checked by eye only. | Tune on a real touch device; needs a DOM test environment. | accepted by human 2026-10-24
+- Step 5 redo | The Love cue follows upward y alone, so a diagonal drag can show the Love cue with Like or Dislike while only the dominant axis fires. | Fade each cue by its dominance over the other axis. | accepted by human 2026-10-24
 
 ---
-- Step 5 | Drag has no automated test (node env, no jsdom; out of scope). Drag, spring-back and photo-button behaviour are checked by eye only. | Needs a DOM test environment.
-- Step 5 | The card always springs back to centre on release, including when it triggers a swipe; there is no fly-off animation. The next card replaces it once the swipe response arrives. | Animate the card off screen, which needs exit handling around the deck key.
-- Step 5 | Distance threshold is 30% of card width or 600 px/s release velocity; both are untuned guesses. | Tune by hand on a real touch device.
-- Step 5 | Arrow keys are ignored only when the event target is a button inside `.deck-card`. Focus on other buttons (Switch user, action buttons) still lets arrows swipe. | Scope the listener to the deck root, with focus management.
-- Step 5 | Reduced motion removes only the rotation; the drag offset and the Like / Dislike cue fade remain, since the drag itself must still work. | Hide the cue when reduced, if wanted.
 
 ## SPOTTED, NOT FIXED
 
@@ -347,15 +350,15 @@ still work and do not start a drag; typecheck, tests and build exit 0.
 
 ## VERIFICATION
 
-- [x] All step checkboxes ticked with evidence (35 of 35 across Steps 1-5 and both redos, 2026-10-24)
+- [x] All step checkboxes ticked with evidence (35 of 35 across Steps 1-5 and both redos at gate time; plus 5 of 5 for the later Redo of Step 5, 2026-10-24)
 - [x] Every evidence path in this file exists (`evidence/web-deck/` holds step-1, step-2, step-3, step-3-redo, step-4, step-4-redo, step-5)
 - [x] Test suite run — result: `cd web && npm test` exit 0, 5 files, 121 passed (2026-10-24)
 - [x] Lint run — result: not configured in `.claude/kit-config.md`, not run
 - [x] Typecheck run — result: `cd web && npm run typecheck` exit 0 (2026-10-24)
 - [x] Build run — result: `cd web && npm run build` exit 0, 449 modules, JS 416.02 kB (2026-10-24)
 - [x] Diff contains no files outside declared scope (checked file by file against steps and redos; `check-process-refs.sh` exit 0)
-- [ ] Tradeoff ledger reviewed and signed off by human (18 entries, none signed)
-- [ ] Human eye test completed
+- [x] Tradeoff ledger reviewed and signed off by human — all 21 entries (18 at gate time plus 3 from the Redo of Step 5) accepted, "accept all" (2026-10-24)
+- [x] Human eye test completed — human ran the eight checks and passed seven (incl. slow short drag springs back, photo buttons, arrow keys, feedback stub, prefs_missing message); check 6 led to the drag-up amendment. Drag up was then checked by the orchestrator in the built-in browser (card loved, "Added to favourites"), not by the human. Human noted only the photo buttons take focus, not the card, and chose "leave as is" (2026-10-24)
 
 ---
 
@@ -403,6 +406,3 @@ Not ticked: `docs/plan.md` (done in the merging PR).
 3. Arrow keys listen on the whole window. Focus on Switch user or Retry plus an arrow key still swipes. A keyboard user tabbing around can swipe by accident.
 
 The feature is not complete until the human has done the eye test and signed the tradeoff ledger.
-- Step 5 redo | `touch-action: none` on the card, so a touch that starts on the card no longer scrolls the page; the page scrolls only from outside the card. Vertical drag needs this. | Scroll from the card would need a drag-direction lock before claiming the gesture.
-- Step 5 redo | Up threshold is 25% of card height or 600 px/s upward, untuned; direction is the dominant axis at release (ties go horizontal). Drag up has no automated test (node env, no jsdom). Checked by eye only. | Tune on a real touch device; needs a DOM test environment.
-- Step 5 redo | The Love cue follows upward y alone, so a diagonal drag can show the Love cue with Like or Dislike while only the dominant axis fires. | Fade each cue by its dominance over the other axis.
