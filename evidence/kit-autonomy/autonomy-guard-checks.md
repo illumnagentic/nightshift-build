@@ -222,3 +222,15 @@ Doc line relied on (permissions page, Read and Edit rules, table of where a patt
 | case | action | result |
 | ---- | ------ | ------ |
 | ask rule on the guard hook | Edit tool on `hooks/autonomy-guard.sh` (adds one comment line), auto mode | permission prompt raised; human refused; file unchanged |
+
+## Isolated interpreter (redo)
+
+The hook runs its embedded Python as `python3 -I`, so a `shlex.py` or `json.py` in the working directory cannot replace the standard library.
+
+| case | before (`python3 -c`) | after (`python3 -I -c`) |
+| ---- | ---- | ---- |
+| working directory holds a `shlex.py` that raises; push-to-main JSON on stdin | Python traceback, exit 1, no decision | `BLOCKED: pushing to main is not permitted...`, exit 2 |
+
+Re-run of the earlier cases with the changed hook from the harness location: 142 OK, 0 differences; 30 OK, 0 differences. With the new case, 142 + 30 + 1.
+
+Harness: `evidence/kit-autonomy/harness/guard/`. Run: `S=$(mktemp -d); bash evidence/kit-autonomy/harness/guard/setup.sh $S; python3 evidence/kit-autonomy/harness/guard/run.py $S; python3 evidence/kit-autonomy/harness/guard/run2.py $S` (`sh.sh $S` exercises the switch script).

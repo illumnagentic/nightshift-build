@@ -43,3 +43,5 @@ Merge case: the stub received exactly:
 Note: the stub log joins arguments with spaces, so the empty `--body ""` shows as two spaces.
 The PASS commit is found with `git log -G` and a pattern that rejects PASS followed by WITH, so a findings-only verdict never counts; the stub for that case returns no commit.
 Not exercised: the real `git log -S` and `git merge-base` calls (stubbed), a real `gh pr merge` failure (exit 3) and a failed `git fetch`.
+
+Harness: `evidence/kit-autonomy/harness/safe-merge/` (stub `gh` and `git` in `bin/`, fixture trees in `fix/`). Run: `bash evidence/kit-autonomy/harness/safe-merge/run.sh`. Re-run from there: 21 cases, same results as above.

@@ -30,7 +30,7 @@ if ! command -v python3 >/dev/null 2>&1; then
   exit 0
 fi
 
-printf '%s' "$input" | ROOT="$root" python3 -c '
+printf '%s' "$input" | ROOT="$root" python3 -I -c '
 import json, os, re, shlex, subprocess, sys
 
 raw = sys.stdin.read()

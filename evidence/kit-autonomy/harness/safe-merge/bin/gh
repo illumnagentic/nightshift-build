@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+if [ "$2" = view ] && [[ "$*" == *state,baseRefName* ]]; then cat "$GH_JSON"; exit 0; fi
+if [ "$2" = merge ]; then printf 'gh %s\n' "$*" >> "$GH_LOG"; exit 0; fi
+if [ "$2" = view ]; then echo '{"mergeCommit":{"oid":"abc"},"state":"MERGED"}'; exit 0; fi
+exit 9
