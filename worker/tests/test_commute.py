@@ -267,3 +267,24 @@ def test_rate_limited_control_call_never_fails_the_commute(fake, failing_starts,
     start_status.clear()
     failing_starts.add(control)
     assert poll_n(user, 1) == ["failed"]
+
+
+def test_empty_200_answers_are_not_cached_and_are_asked_again(fake, destination_status):
+    postcode, user = fresh_postcode("EC1A"), new_user()
+    save(user, postcode)
+    rows = pool_rows(GOOD)
+    assert poll_n(user, 1) == ["pending"]
+    first_batch = starts_asked(fake, postcode)
+    assert sorted(first_batch) == sorted(r[1:] for r in rows[:tfl.BATCH_SIZE])
+    destination_status[postcode.replace(" ", "")] = 200  # every journey answers 200 with body {}
+    assert poll_n(user, 3) == ["pending", "pending", "failed"]
+    during = starts_asked(fake, postcode)[len(first_batch):]
+    assert during
+    destination_status.clear()
+    save(user, postcode)
+    assert poll(user)[-1] == "ready"
+    after = starts_asked(fake, postcode)[len(first_batch) + len(during):]
+    # The control call during the outage re-asks one cached listing; every other one asked was uncached.
+    assert set(during) - set(first_batch) <= set(after)  # never cached, so asked again
+    assert set(during) - set(first_batch)
+    assert not set(first_batch) & set(after)  # cached, so not asked again

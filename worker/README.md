@@ -52,7 +52,8 @@ Do not run the API tests against it.
 
 Saving prefs starts the commute lookup for the postcode. Each `GET /api/prefs` while
 `commute_status` is `pending` runs one batch of TfL calls; the status becomes `ready`
-when every listing has a cached time. Times are cached per (listing, postcode) in
+once every listing has a cached time or TfL was asked and could not route it, so a few
+listings can be left unknown. Times are cached per (listing, postcode) in
 `commute_cache`, so a second user with the same postcode needs no TfL calls.
 
 - Anonymous TfL is slow. A new postcode takes minutes to reach `ready`. TfL throttles

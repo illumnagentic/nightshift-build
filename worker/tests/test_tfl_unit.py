@@ -9,7 +9,9 @@ def test_classify_answers():
     assert tfl.classify(200, '{"journeys": [{"duration": 41}, {"duration": 33}, {"duration": 50}]}') == ("ok", 33)
     assert tfl.classify(404, "{}") == ("no_journey", None)
     assert tfl.classify(200, '{"journeys": []}') == ("no_journey", None)
-    assert tfl.classify(200, '{}') == ("no_journey", None)
+    assert tfl.classify(200, '{}') == ("transient", None)
+    assert tfl.classify(200, '{"journeys": null}') == ("transient", None)
+    assert tfl.classify(200, '{"message": "x"}') == ("transient", None)
     for status in (400, 429, 500, 503, 300):
         assert tfl.classify(status, "{}") == ("transient", None)
     assert tfl.classify(200, "<html>") == ("transient", None)

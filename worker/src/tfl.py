@@ -54,6 +54,9 @@ def classify(status: int, body: str) -> tuple[str, int | None]:
     if not isinstance(data, dict):
         return "transient", None
     journeys = data.get("journeys")
+    if not isinstance(journeys, list):
+        # A 200 without a journeys list (e.g. an empty object) says nothing about the route: retry, do not cache.
+        return "transient", None
     if not journeys:
         # A 200 that offers place candidates instead of journeys is a disambiguation, not an answer.
         return ("transient", None) if data.get("toLocationDisambiguation") or data.get("fromLocationDisambiguation") else ("no_journey", None)
