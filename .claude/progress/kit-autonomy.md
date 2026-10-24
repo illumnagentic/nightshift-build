@@ -330,6 +330,24 @@ checks (declared scopes).
 - [x] Matches locked requirements — evidence: CLAUDE.md ## Modes; safe-merge wording matches safe-merge.sh lines 108-117; AMENDMENTS AUTO_SETUP content covered (2026-10-24)
 - [x] No scope drift — evidence: git status shows only in-scope files plus progress file (2026-10-24)
 
+### Step 8 — README points to AUTO_SETUP (arbiter)
+
+**Goal**: Someone setting up a clone from the README finds the mode-layer setup.
+
+**Files in scope**: `.claude/README.md`
+
+**Done when**: one line or short paragraph after the commit-guard install block points
+to `.claude/AUTO_SETUP.md` for full automation (another machine, updating the kit);
+nothing else in the README changes.
+
+**Evidence location**: the diff
+
+- [x] Implemented — evidence: README.md +3 lines after install block (2026-10-24)
+- [x] Tested — evidence: docs-only; diff checked, pointer matches AUTO_SETUP sections A and B (2026-10-24)
+- [x] Best practices met — evidence: path exists, British English, no filler (2026-10-24)
+- [x] Matches locked requirements — evidence: AUTO_SETUP.md covers another machine (B) and kit updates (A); off-by-default per B.5 (2026-10-24)
+- [x] No scope drift — evidence: git diff only .claude/README.md (2026-10-24)
+
 ---
 
 ## TRADEOFFS
