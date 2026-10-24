@@ -1,0 +1,7 @@
+.wrangler/
+python_modules/
+.venv/
+node_modules/
+.dev.vars
+__pycache__/
+pylock.toml

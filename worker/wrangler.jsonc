@@ -1,0 +1,10 @@
+{
+  "name": "haka",
+  "main": "src/entry.py",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["python_workers"],
+  // Local only. The database_id is a placeholder: nothing is deployed.
+  "d1_databases": [
+    { "binding": "DB", "database_name": "haka", "database_id": "00000000-0000-0000-0000-000000000000" }
+  ]
+}
