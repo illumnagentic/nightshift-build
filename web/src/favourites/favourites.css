@@ -1,0 +1,234 @@
+.favourites-screen {
+  --fv-bg: #ffffff;
+  --fv-text: #1a1f24;
+  --fv-muted: #4a5560;
+  --fv-accent: #0b5cad;
+  --fv-pill-bg: #e8eff6;
+  --fv-border: #b9c4cf;
+  --fv-danger: #b42318;
+
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 400px;
+  padding: 20px;
+  border-radius: 16px;
+  background: var(--fv-bg);
+  color: var(--fv-text);
+  box-shadow: 0 8px 28px rgba(20, 30, 40, 0.14);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.4;
+}
+
+.favourites-screen *,
+.favourites-screen *::before,
+.favourites-screen *::after {
+  box-sizing: border-box;
+}
+
+.favourites-screen__title {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.favourites-screen__state {
+  margin: 0;
+  color: var(--fv-muted);
+}
+
+.favourites-screen__error {
+  margin: 0 0 8px;
+  color: var(--fv-danger);
+}
+
+.favourites-screen__list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.favourites-screen__item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--fv-border);
+}
+
+.favourites-screen__thumb {
+  flex: none;
+  width: 88px;
+  height: 66px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.favourites-screen__thumb--empty {
+  background: var(--fv-pill-bg);
+}
+
+.favourites-screen__info {
+  flex: 1 1 140px;
+  min-width: 0;
+}
+
+.favourites-screen__info p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.favourites-screen__price {
+  font-weight: 700;
+}
+
+.favourites-screen__meta {
+  color: var(--fv-muted);
+  font-size: 0.875rem;
+}
+
+.favourites-screen__button {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 4px 16px;
+  border: 1px solid var(--fv-border);
+  border-radius: 8px;
+  background: var(--fv-bg);
+  color: var(--fv-text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.favourites-screen__button:hover {
+  background: var(--fv-pill-bg);
+}
+
+.favourites-screen__remove {
+  flex: none;
+}
+
+.favourites-screen__button:focus-visible,
+.favourites-dialog__button:focus-visible,
+.favourites-dialog__text:focus-visible {
+  outline: 3px solid var(--fv-accent);
+  outline-offset: 2px;
+}
+
+.favourites-dialog {
+  --fv-bg: #ffffff;
+  --fv-text: #1a1f24;
+  --fv-muted: #4a5560;
+  --fv-accent: #0b5cad;
+  --fv-border: #b9c4cf;
+  --fv-danger: #b42318;
+
+  box-sizing: border-box;
+  width: calc(100% - 32px);
+  max-width: 400px;
+  max-height: calc(100% - 32px);
+  padding: 20px;
+  overflow: auto;
+  border: 0;
+  border-radius: 16px;
+  background: var(--fv-bg);
+  color: var(--fv-text);
+  box-shadow: 0 8px 28px rgba(20, 30, 40, 0.14);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.4;
+}
+
+.favourites-dialog::backdrop {
+  background: rgba(20, 25, 30, 0.6);
+}
+
+.favourites-dialog *,
+.favourites-dialog *::before,
+.favourites-dialog *::after {
+  box-sizing: border-box;
+}
+
+.favourites-dialog__form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.favourites-dialog__title {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.favourites-dialog__summary {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.favourites-dialog__summary span {
+  color: var(--fv-muted);
+  font-size: 0.875rem;
+}
+
+.favourites-dialog__label {
+  font-weight: 600;
+}
+
+.favourites-dialog__text {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--fv-border);
+  border-radius: 8px;
+  font: inherit;
+  resize: vertical;
+}
+
+.favourites-dialog__error {
+  margin: 0;
+  color: var(--fv-danger);
+}
+
+.favourites-dialog__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.favourites-dialog__button {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 4px 16px;
+  border: 1px solid var(--fv-border);
+  border-radius: 8px;
+  background: var(--fv-bg);
+  color: var(--fv-text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.favourites-dialog__button--primary {
+  border-color: var(--fv-accent);
+  background: var(--fv-accent);
+  color: #ffffff;
+}
+
+.favourites-dialog__button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .favourites-screen__button,
+  .favourites-dialog__button {
+    transition: none;
+  }
+}

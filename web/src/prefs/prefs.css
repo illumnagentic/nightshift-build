@@ -1,0 +1,116 @@
+.prefs-screen {
+  --pf-bg: #ffffff;
+  --pf-text: #1a1f24;
+  --pf-muted: #4a5560;
+  --pf-accent: #0b5cad;
+  --pf-pill-bg: #e8eff6;
+  --pf-border: #b9c4cf;
+  --pf-danger: #b42318;
+
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 400px;
+  padding: 20px;
+  border-radius: 16px;
+  background: var(--pf-bg);
+  color: var(--pf-text);
+  box-shadow: 0 8px 28px rgba(20, 30, 40, 0.14);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.4;
+}
+
+.prefs-screen *,
+.prefs-screen *::before,
+.prefs-screen *::after {
+  box-sizing: border-box;
+}
+
+.prefs-screen__title {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.prefs-screen__subtitle {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.prefs-screen__label {
+  font-weight: 600;
+}
+
+.prefs-screen__input {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--pf-border);
+  border-radius: 8px;
+  font: inherit;
+}
+
+textarea.prefs-screen__input {
+  resize: vertical;
+}
+
+.prefs-screen__error {
+  margin: 0;
+  color: var(--pf-danger);
+  font-weight: 600;
+}
+
+.prefs-screen__status {
+  margin: 0;
+  color: var(--pf-muted);
+}
+
+.prefs-screen__button {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 2px solid var(--pf-accent);
+  border-radius: 999px;
+  background: var(--pf-accent);
+  color: #ffffff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.prefs-screen__button:hover:not(:disabled) {
+  background: #094a8b;
+}
+
+.prefs-screen__button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.prefs-screen__parsed {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--pf-pill-bg);
+}
+
+.prefs-screen__list {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.prefs-screen__input:focus-visible,
+.prefs-screen__button:focus-visible {
+  outline: 3px solid var(--pf-accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .prefs-screen__button {
+    transition: none;
+  }
+}
