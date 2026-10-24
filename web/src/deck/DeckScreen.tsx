@@ -1,6 +1,6 @@
 import { useEffect } from "react";
+import FeedbackScreen from "../feedback/FeedbackScreen";
 import type { BlockedCode } from "./deckState";
-import FeedbackStub from "./FeedbackStub";
 import { PropertyCard } from "./PropertyCard";
 import { SwipeableCard } from "./SwipeableCard";
 import { useDeck } from "./useDeck";
@@ -118,11 +118,13 @@ export default function DeckScreen({ userId }: { userId: string }) {
         </>
       )}
 
-      {phase === "feedback" && (
-        <>
-          {state.pendingFeedback?.response.favourited && FAVOURITES_NOTE}
-          <FeedbackStub onContinue={continueAfterFeedback} />
-        </>
+      {phase === "feedback" && state.pendingFeedback && (
+        <FeedbackScreen
+          key={state.pendingFeedback.card.decision_id}
+          userId={userId}
+          pending={state.pendingFeedback}
+          onDone={continueAfterFeedback}
+        />
       )}
 
       {phase === "empty" && (

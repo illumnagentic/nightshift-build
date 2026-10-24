@@ -255,11 +255,11 @@ check exits 0.
 
 **Evidence location**: `evidence/web-feedback/step-5.md`.
 
-- [ ] Implemented
-- [ ] Tested — evidence: (date)
-- [ ] Best practices met — evidence: (date)
-- [ ] Matches locked requirements — evidence: (date)
-- [ ] No scope drift — evidence: (date)
+- [x] Implemented — evidence: FeedbackScreen.tsx added, FeedbackStub.tsx deleted, DeckScreen renders it keyed by decision_id (2026-10-24)
+- [x] Tested — evidence: typecheck 0, npm test 0 (160 pass), build 0, check-process-refs 0; request builders covered by feedbackForm tests; screen wiring has no component test, logged as tradeoff, eye test at wrap-up (2026-10-24)
+- [x] Best practices met — evidence: error.message shown with role=alert, answers kept, controls disabled while sending, heading focus, aria-pressed, chips limited to card.chips via toRequest (2026-10-24)
+- [x] Matches locked requirements — evidence: compulsory: no Skip, Done gated by canSubmit; optional: Skip sends skipRequest(); blank to null via toRequest; source unread (2026-10-24)
+- [x] No scope drift — evidence: diff limited to declared files plus progress tradeoffs; ChipDialog, useDeck, deckState, feedbackForm untouched (2026-10-24)
 
 ---
 
@@ -276,11 +276,16 @@ check exits 0.
 - Step 4 | Focus return is done by hand in an effect (stored opener, `.focus()` after `close()`) rather than relying on the browser's own restore. If the opener is removed from the page it is silently skipped. | None needed unless the screen unmounts chips on save.
 - Step 4 | Backdrop click does not close the dialog; only Cancel and Escape do. | Add a click-outside handler if wanted.
 - Step 4 | Saved text is passed to `onSave` untrimmed (the form trims on build); Save is allowed with empty text. | None needed.
+- Step 5 | Not browser-tested and no component test for the screen (node test env, no jsdom), so heading focus, the dialog hand-off and error display are unverified until the eye test. | A jsdom or browser test setup, which needs a dependency.
+- Step 5 | The "Added to favourites" note moved from DeckScreen into the feedback screen for that phase; the card-phase note in DeckScreen is unchanged. | None.
+- Step 5 | On a failed send the chips and text box are disabled only while sending, then re-enabled; the typed answers stay in screen state. A user switch or unmount mid-send drops them. | None needed.
+- Step 5 | The compulsory hint shows only while nothing is answered and is linked to Done with `aria-describedby`; no other validation text. | None.
 
 ---
 
 ## SPOTTED, NOT FIXED
 
+- `web/src/deck/deck.css` | `.deck-feedback` rules now orphaned after FeedbackStub removal (step 5) | low
 - `.claude/worktrees/` | untracked and not gitignored on `main` | low
 - `.claude/kit-config.md` Project type | still says "No code yet" | low
 - `web/src/deck/useDeck.ts` | `swipeBusy` ref race on a rapid user switch mid-swipe (from F2) | low
