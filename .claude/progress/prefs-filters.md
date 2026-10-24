@@ -233,11 +233,19 @@ from a clean state and passes; the B4 hooks are written down: the
 
 **Evidence location**: `evidence/prefs-filters/step-4.md`
 
-- [ ] Implemented
-- [ ] Tested — evidence: (date)
-- [ ] Best practices met — evidence: (date)
-- [ ] Matches locked requirements — evidence: (date)
-- [ ] No scope drift — evidence: (date)
+- [x] Implemented — worker/README.md rewritten, kit-config Test line, B4 HOOKS in this file; diff read (2026-10-24)
+- [x] Tested — evidence: README sequence in fresh worktree, 171 passed twice, server-less 97 passed, guard exit 3 (evidence/prefs-filters/step-4.md) (2026-10-24)
+- [x] Best practices met — evidence: no banned words, guard documented, check-process-refs exit 0 (2026-10-24)
+- [x] Matches locked requirements — evidence: README sequence passes clean; B4 HOOKS has matching_listing_ids signatures and PUT /prefs delete note (2026-10-24)
+- [x] No scope drift — evidence: diff touches only README, kit-config Test line, progress file, evidence file (2026-10-24)
+
+**Redo (arbiter FIX_NOW, 2026-10-24)**: step-reviewer FAIL. Files:
+`evidence/prefs-filters/step-4.md` (reword the line naming the kit script) and the B4
+HOOKS note (NULL-lease exception per Q4). Done when the process-reference check exits
+0 and the B4 HOOKS sentence matches `_lease_ok` in `worker/src/filters.py`.
+
+- [x] Redo implemented — evidence line reworded, B4 HOOKS NULL-lease exception added; diff read (2026-10-24)
+- [x] Redo reviewed — evidence: check-process-refs exit 0; no .claude path in evidence file; HOOKS matches _lease_ok (filters.py:9-14) (2026-10-24)
 
 ---
 
@@ -311,3 +319,31 @@ Q13: Optional Worker vars `GEMINI_BASE` / `TFL_BASE` overriding the upstream hos
 ---
 
 ## HANDOVER
+
+### B4 HOOKS
+
+All in `worker/src/filters.py`. `hard` is the `hard` dict from
+`json.loads(prefs_row["parsed_json"])["hard"]`; keys are `max_price_gbp`, `min_bedrooms`,
+`property_types`, `min_epc`, `tenure`, `min_lease_years`, `max_commute_min`, each null
+when unset. A null limit is ignored. A listing field that is NULL fails a set limit, with one exception: under `min_lease_years`, a NULL lease passes for `freehold` and `share_of_freehold` (ruling Q4). It is still excluded for `leasehold` or unknown tenure, and a known lease below the minimum fails whatever the tenure.
+
+- `async matching_listing_ids_for_postcode(db, hard, postcode) -> list[str]`: the call B4
+  makes. `db` is `env.DB`, `postcode` is the normalised `prefs.commute_postcode`. It loads
+  the cached minutes for that postcode and applies every limit including
+  `max_commute_min`. A listing with no cache row, or a cached null, is excluded when
+  `max_commute_min` is set. Ids come back in `id` order.
+- `async matching_listing_ids(db, hard, commutes=None) -> list[str]`: the same without
+  the cache lookup. `commutes` maps listing id to minutes. `None` switches the commute
+  limit off (the TfL batch uses this). A dict applies it, a missing id counting as unknown.
+- `passes(listing, hard, commute_minutes) -> bool`: the pure predicate. `listing` needs
+  the filter columns (`FILTER_COLUMNS`); `commute_minutes` is an int or None.
+
+B4 must also:
+
+- Check `prefs.commute_status` before serving a deck: 409 `prefs_missing` (no prefs row),
+  `commute_pending`, `commute_failed`, as `docs/api-contract.md` says. The filters do not
+  check it; a pending postcode simply has an incomplete cache.
+- Put the delete of the user's unswiped served cards in `PUT /prefs`, in the same handler
+  that stores the new prefs, once B4 creates the decisions table (kickoff ruling Q10).
+- Poll cap: a permanent TfL 429 leaves a user `pending` for ever (see SPOTTED).
+

@@ -19,7 +19,7 @@ Agents and skills read this file. Leave a value as `auto` to let the kit work it
 Leave blank if the repo has none. Never invent one.
 
 - **Install**: `cd web && npm ci`; backend: `cd worker && uv sync --group dev`
-- **Test**: `cd web && npm test`; backend: `cd worker && uv run --group dev pytest tests -q` (needs a seeded, running dev server, see worker/README.md)
+- **Test**: `cd web && npm test`; backend: `cd worker && BASE_URL=http://localhost:8788 uv run --group dev pytest tests -q` (needs a seeded dev server in test mode on :8788, see worker/README.md; the run stops if the server is not in test mode)
 - **Test (single file)**: `cd web && npx vitest run <path>`; backend: `cd worker && uv run --group dev pytest <path> -q`
 - **Lint**: <!-- e.g. npm run lint -->
 - **Typecheck**: `cd web && npm run typecheck`
