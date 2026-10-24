@@ -71,6 +71,10 @@ export default function DeckScreen({ userId }: { userId: string }) {
       {phase === "card" && card && (
         <>
           {state.favourited && FAVOURITES_NOTE}
+          {import.meta.env.VITE_API_MODE === "mock" &&
+            card.source === "exploration" && (
+              <p className="deck-screen__test-tag">Exploration (test only)</p>
+            )}
           <SwipeableCard
             key={card.decision_id}
             disabled={busy}

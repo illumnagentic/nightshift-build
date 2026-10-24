@@ -311,3 +311,12 @@
   translate: -50% 0;
   color: #c2185b;
 }
+
+.deck-screen .deck-screen__test-tag {
+  margin: 0;
+  padding: 2px 8px;
+  border: 1px dashed #6b7280;
+  border-radius: 4px;
+  color: #6b7280;
+  font: 0.75rem system-ui, sans-serif;
+}

@@ -339,11 +339,11 @@ check exits 0.
 
 **Evidence location**: `evidence/web-feedback/step-7.md`.
 
-- [ ] Implemented
-- [ ] Tested — evidence: (date)
-- [ ] Best practices met — evidence: (date)
-- [ ] Matches locked requirements — evidence: (date)
-- [ ] No scope drift — evidence: (date)
+- [x] Implemented — diff: DeckScreen.tsx +4, deck.css +9; tag gated on mock + exploration, outside SwipeableCard (2026-10-24)
+- [x] Tested — typecheck 0, test 0, build 0; bundle grep: mock 1 file, http 0, plain 0; refs 0; evidence/web-feedback/step-7.md (2026-10-24)
+- [x] Best practices met — scoped css, no reformatting, build-time gate tree-shaken, tradeoff logged in TRADEOFFS (2026-10-24)
+- [x] Matches locked requirements — Step 7 done-when and AMENDMENTS 'Mock mode only'; orchestrator browser check: tag on cards 5,10,15,20 only (2026-10-24)
+- [x] No scope drift — only DeckScreen.tsx, deck.css, step-7 evidence, progress file changed; PropertyCard/SwipeableCard untouched (2026-10-24)
 
 ---
 
@@ -367,6 +367,7 @@ check exits 0.
 - Redo of Step 5 | No component test for the empty-Done skip branch; it relies on the tested `canSubmit` and `skipRequest`. | Needs a DOM test environment.
 - Step 6 | The exhausted rule now fires only when the queue is at or below the refetch threshold; a batch with nothing new while more cards are queued is ignored rather than ending the deck. Reported by the implementer, not written by it (omission repeated; added by reviewer). | None; a refetch only starts at or below the threshold, so no loop.
 - Step 6 | The generation guard in `useDeck` has no automated test (node test env, no hook or DOM setup); only the reducer change is unit tested. Reported by the implementer, not written by it (added by reviewer). | A jsdom or browser test setup, which needs a dependency.
+- Step 7 | The tag is gated on a build-time env value and `card.source`; there is no automated test for it (no browser check by the implementer), so only the bundle grep and the human eye test cover it. | A DeckScreen render test under mock mode, if the human wants one.
 
 ---
 
