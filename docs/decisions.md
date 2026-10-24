@@ -337,6 +337,29 @@ fallback (A–D under Headline metric) applies.
   every flag. Observation, source photo and uncertainty kept as separate fields. The
   per-listing feature chips are generated from these flags.
 
+- [x] **Image textualisation workflow.** How photos and floorplans become text.
+  Decided: 2026-10-24.
+  - **Scope:** photos and floorplans both. Floorplans give room count and layout
+    for the curator. Current dump: 635 listings, 6,169 photos, 672 floorplans.
+  - **Download first.** Images fetched once from the Rightmove CDN with stdlib
+    `urllib`, a small thread pool, skip-if-exists so it can resume. Stored gitignored
+    under `dataset/photos/`; a committed manifest records path, URL, sha256, bytes.
+    Freezes the dump and makes re-runs cost only Gemini, not Rightmove.
+  - **Route:** plain HTTP to `https://api.mubit.ai/gemini` with `MUBIT_API_KEY`. No
+    `google-genai`. The Gemini key stays in the Mubit console. Not trained.
+  - **Call shape:** one request per listing, all its images with index numbers,
+    returning one JSON entry per image. Results still stored per image, with source
+    image and confidence. About 635 calls instead of about 6,800.
+  - **Cost:** Gemini media-resolution option set low or medium, not local resizing
+    (that would need Pillow). Exact per-image cost measured in the pilot.
+  - **Order:** one test call, then a pilot on about 10 listings read by eye with cost
+    checked, then the full run in the background.
+  - **Output:** its own file (e.g. `dataset/photo_flags.jsonl`), read by
+    `build_d1.py` into a flags table in `seed.sql`. Never written straight into
+    `listings.sqlite`: it is binary and cannot be merged across branches.
+  - **Branching:** own branch, may run in a separate git worktree. A new worktree
+    needs `.env` copied by hand.
+
 ## Team workflow
 
 - [x] **Ownership.** A: backend + Mubit. B: frontend + demo. Who is A, who is B?
