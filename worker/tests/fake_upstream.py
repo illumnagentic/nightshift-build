@@ -3,7 +3,9 @@
 TfL behaviour is chosen by the outward code of the destination postcode: E1 has no journey (404),
 N1, EC2N and SW1A always answer 500, N7 always answers 300 (what TfL says for a postcode that does not exist),
 a journey from any start in FAILING_STARTS answers 500, W1 always answers 429, SE1 answers 503 and SW1 answers 429 once per journey and then succeeds,
-anything else gets a journey. EC2N and SW1A are the postcodes the prefs tests save: failing them keeps their
+anything else gets a journey.
+DESTINATION_STATUS maps a compact destination postcode (e.g. "EC1A1BB") to a status that every journey to it
+answers with body {}; it is checked first, so a test can start and end an outage on a postcode it chose. EC2N and SW1A are the postcodes the prefs tests save: failing them keeps their
 commute pending, and caches nothing, however often the suite is run against one database.
 Both routes are served on one port.
 
@@ -24,6 +26,8 @@ GOOD = {
 }
 # (lat, lon) of listings whose journeys always answer 500, whatever the postcode. Tests fill and clear it.
 FAILING_STARTS: set[tuple[float, float]] = set()
+# Compact destination postcode to the status every journey to it answers with. Tests fill and clear it.
+DESTINATION_STATUS: dict[str, int] = {}
 BAD_VALUES = {
     "hard": {"max_price_gbp": 5, "min_bedrooms": True, "property_types": ["flat", "castle", "flat"],
              "min_epc": "H", "tenure": "commonhold", "min_lease_years": "99"},
@@ -76,6 +80,8 @@ def tfl_answer(path: str, first_time: bool) -> tuple[int, str]:
     """(status, body) for a TfL journey request. Minutes come from the start latitude, so they are stable."""
     start, destination = path.split("?")[0].split("/JourneyResults/")[1].split("/to/")
     outward = destination[:-3]
+    if destination in DESTINATION_STATUS:
+        return DESTINATION_STATUS[destination], "{}"
     if outward == "E1":
         return 404, json.dumps({"message": "no journey"})
     if outward in ("N1", "EC2N", "SW1A"):

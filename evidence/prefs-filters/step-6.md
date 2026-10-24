@@ -30,3 +30,21 @@ the postcode, else `failed`. A 429-only batch still does not count. No schema ch
   overground, walking (all within the list). TfL accepted the list first time, no retry.
 - Results with the mode list: full suite in test mode (server 8790, inspector 9241, fake upstream 8801) 174 passed;
   server-less modules (filters, prefs_unit, mubit, tfl_unit) 99 passed. The commute test now expects the exact mode suffix.
+
+## Commute status after an outage (supersedes the "any cached row ends ready" rule above)
+- Rule in `tfl.run_batch`: after a fully failed, non-rate-limited batch at `FAIL_STREAK_LIMIT`: no cache row for the
+  postcode gives `failed`. Otherwise one control `fetch_journey` re-asks the cached listing picked by
+  `ORDER BY minutes IS NULL, listing_id LIMIT 1`: HTTP 429 gives `pending` (streak kept); a transient failure gives
+  `failed`; an answer (journey or no journey) gives `ready` (streak 0) when `streak * BATCH_SIZE >= len(todo)`, else
+  `pending` (streak kept, rotation goes on). The control answer is not cached. No schema change.
+- The fake gains `DESTINATION_STATUS` (compact postcode to status, body `{}`, checked first). New tests: outage after one
+  poll (`pending, pending, failed`, no TfL calls on a further GET, re-save after recovery asks only pool minus 12),
+  outage with the last batch left, and a 429 after progress (five polls, all pending).
+- One ruled change to an existing assertion: in `check_unknown_listings_left` the expected list is now
+  `sorted(good + [good[0]])`, because the control re-asks the lowest-id good listing; the tests with a failing
+  listing pass with it (good[0] is the lowest-id cached listing, the one the SQL picks).
+- Server-less modules (filters, prefs_unit, mubit, tfl_unit): 99 passed, exit 0.
+- Full suite in test mode (server 8790, inspector 9241, fake upstream 8801): 177 passed, exit 0.
+- Smoke script against the same server (fake only, no real TfL or Mubit): one failing listing ends `ready`
+  (`pending, pending, ready`, 104 TfL calls); outage after the first poll now ends
+  `pending, pending, pending, failed` (earlier result: `ready` with 12 of 96 cached). The fake saw only the fake key.

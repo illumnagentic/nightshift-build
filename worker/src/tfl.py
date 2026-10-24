@@ -86,7 +86,11 @@ async def missing_listings(db, hard: dict, postcode: str) -> list[tuple[str, flo
 
 
 async def run_batch(db, base: str, hard: dict, postcode: str, streak: int) -> tuple[str, int]:
-    """One bounded batch for a pending commute. Returns the new (commute_status, fail streak)."""
+    """One bounded batch for a pending commute. Returns the new (commute_status, fail streak).
+
+    After a fully failed, non-rate-limited batch at the streak limit, a postcode with cached rows gets one control call
+    for an already-cached listing: TfL still failing means an outage (failed); TfL answering means the failing listings
+    are unroutable (ready once all have been tried)."""
     todo = await missing_listings(db, hard, postcode)
     if not todo:
         return "ready", 0
@@ -124,6 +128,19 @@ async def run_batch(db, base: str, hard: dict, postcode: str, streak: int) -> tu
     streak += 1
     if streak < FAIL_STREAK_LIMIT:
         return "pending", streak
-    # Any cached row shows TfL resolves this postcode, so what is left are listings it cannot route: they stay unknown.
-    row = (await db.prepare("SELECT 1 AS found FROM commute_cache WHERE postcode = ? LIMIT 1").bind(postcode).all()).results
-    return ("ready", 0) if row else ("failed", streak)
+    # Every listing in this batch failed, FAIL_STREAK_LIMIT batches running. A cached row alone does not show TfL is up
+    # (an outage after progress looks the same), so ask TfL once more about a listing it has already answered.
+    row = (await db.prepare(
+        "SELECT c.listing_id, l.lat, l.lon FROM commute_cache c JOIN listings l ON l.id = c.listing_id "
+        "WHERE c.postcode = ? ORDER BY c.minutes IS NULL, c.listing_id LIMIT 1"
+    ).bind(postcode).all()).results
+    if not row:
+        return "failed", streak
+    kind, _, status = await fetch_journey(base, row[0]["lat"], row[0]["lon"], postcode, on)  # not written to the cache
+    if status == 429:
+        return "pending", streak
+    if kind == "transient":
+        return "failed", streak
+    # TfL answers again, so these listings are ones it cannot route. Ready only once every listing still uncached has
+    # been in a failing batch; until then the rotation goes on.
+    return ("ready", 0) if streak * BATCH_SIZE >= len(todo) else ("pending", streak)

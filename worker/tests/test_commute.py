@@ -156,6 +156,13 @@ def failing_starts():
     fake_upstream.FAILING_STARTS.clear()
 
 
+@pytest.fixture
+def destination_status():
+    fake_upstream.DESTINATION_STATUS.clear()
+    yield fake_upstream.DESTINATION_STATUS
+    fake_upstream.DESTINATION_STATUS.clear()
+
+
 def starts_asked(fake, postcode) -> list[tuple[float, float]]:
     """The start coordinates of every TfL call for this postcode, in order."""
     marker = f"/to/{postcode.replace(' ', '')}?"
@@ -168,7 +175,7 @@ def check_unknown_listings_left(fake, postcode, bad, polls):
     assert polls[-1] == "ready" and "failed" not in polls
     asked = starts_asked(fake, postcode)
     good = [(lat, lon) for _, lat, lon in pool_rows(GOOD) if (lat, lon) not in bad]
-    assert sorted(a for a in asked if a not in bad) == sorted(good)
+    assert sorted(a for a in asked if a not in bad) == sorted(good + [good[0]])
     assert any(a in bad for a in asked)
 
 
@@ -195,3 +202,42 @@ def test_postcode_tfl_cannot_resolve_ends_failed(fake):
     postcode, user = fresh_postcode("N7"), new_user()
     save(user, postcode, "[[tight]]")
     assert poll(user) == ["pending", "pending", "failed"]
+
+
+def poll_n(user, n) -> list[str]:
+    return [call("GET", "/api/prefs", user_id=user)[1]["commute_status"] for _ in range(n)]
+
+
+def test_outage_after_progress_ends_failed(fake, destination_status):
+    postcode, user = fresh_postcode("EC1A"), new_user()
+    compact = postcode.replace(" ", "")
+    save(user, postcode)
+    pool = pool_size(GOOD)
+    assert poll_n(user, 1) == ["pending"]
+    destination_status[compact] = 500
+    assert poll_n(user, 3) == ["pending", "pending", "failed"]
+    calls = tfl_calls(fake, postcode)
+    assert poll_n(user, 1) == ["failed"]
+    assert tfl_calls(fake, postcode) == calls
+    destination_status.clear()
+    save(user, postcode)
+    before = tfl_calls(fake, postcode)
+    assert poll(user)[-1] == "ready"
+    assert tfl_calls(fake, postcode) - before == pool - tfl.BATCH_SIZE  # cached listings are not asked again
+
+
+def test_outage_with_a_last_batch_left_ends_failed(fake, destination_status):
+    postcode, user = fresh_postcode("EC1A"), new_user()
+    save(user, postcode)
+    pool = pool_size(GOOD)
+    assert poll_n(user, math.ceil(pool / tfl.BATCH_SIZE) - 1) == ["pending"] * (math.ceil(pool / tfl.BATCH_SIZE) - 1)
+    destination_status[postcode.replace(" ", "")] = 500
+    assert poll_n(user, 3) == ["pending", "pending", "failed"]
+
+
+def test_rate_limit_after_progress_never_fails_the_commute(fake, destination_status):
+    postcode, user = fresh_postcode("EC1A"), new_user()
+    save(user, postcode)
+    assert poll_n(user, 1) == ["pending"]
+    destination_status[postcode.replace(" ", "")] = 429
+    assert poll_n(user, tfl.FAIL_STREAK_LIMIT + 2) == ["pending"] * (tfl.FAIL_STREAK_LIMIT + 2)
