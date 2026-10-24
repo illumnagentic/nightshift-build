@@ -133,7 +133,7 @@ export default function FeedbackScreen({ userId, pending, onDone }: Props) {
           className="feedback-screen__button feedback-screen__button--primary"
           disabled={!ready || sending}
           aria-describedby={compulsory && !ready ? noteId : undefined}
-          onClick={() => send(toRequest(form, card.chips))}
+          onClick={() => send(!compulsory && !canSubmit(form, true) ? skipRequest() : toRequest(form, card.chips))}
         >
           Done
         </button>

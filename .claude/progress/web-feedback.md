@@ -295,11 +295,11 @@ check exits 0.
 
 **Evidence location**: `evidence/web-feedback/step-5-redo.md`.
 
-- [ ] Implemented
-- [ ] Tested — evidence: (date)
-- [ ] Best practices met — evidence: (date)
-- [ ] Matches locked requirements — evidence: (date)
-- [ ] No scope drift — evidence: (date)
+- [x] Implemented — evidence: FeedbackScreen.tsx Done onClick sends skipRequest() when !compulsory && !canSubmit(form,true) (2026-10-24)
+- [x] Tested — evidence: typecheck 0, npm test 0 (162 passed), build 0, check-process-refs 0; pure canSubmit/skipRequest tested in feedbackForm.test.ts (2026-10-24)
+- [x] Best practices met — evidence: single-line change, error handling/sending state/onDone untouched, compulsory Done still disabled (2026-10-24)
+- [x] Matches locked requirements — evidence: AMENDMENTS 2026-10-24 item 1; RULES IN FORCE skip sent as skipped: true (2026-10-24)
+- [x] No scope drift — evidence: git diff is one hunk in FeedbackScreen.tsx plus new step-5-redo.md; feedbackForm.ts untouched (2026-10-24)
 
 ---
 
@@ -320,6 +320,7 @@ check exits 0.
 - Step 5 | The "Added to favourites" note moved from DeckScreen into the feedback screen for that phase; the card-phase note in DeckScreen is unchanged. | None.
 - Step 5 | On a failed send the chips and text box are disabled only while sending, then re-enabled; the typed answers stay in screen state. A user switch or unmount mid-send drops them. | None needed.
 - Step 5 | The compulsory hint shows only while nothing is answered and is linked to Done with `aria-describedby`; no other validation text. | None.
+- Redo of Step 5 | No component test for the empty-Done skip branch; it relies on the tested `canSubmit` and `skipRequest`. | Needs a DOM test environment.
 
 ---
 
