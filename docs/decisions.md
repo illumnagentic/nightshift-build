@@ -28,8 +28,17 @@ docs suggest, not a decision.
      answer can be edited.
   4. Done closes the screen and the next card appears.
   The feedback screen is compulsory for roughly the first 15–20 cards, as onboarding
-  (the Spotify genre-picker pattern), then optional on right swipes. It is what gives
-  the agent enough signal to learn preferences from a cold start.
+  (the Spotify genre-picker pattern), with no skip, on every card including exploration
+  ones. It is what gives the agent enough signal to learn preferences from a cold start.
+  After onboarding the screen is optional, with a Skip button, by card type: a ranked
+  card gets it on any swipe; an exploration card gets none on a left swipe (the curator
+  was right) and gets it on a right swipe or superlike (a false exclude). A skip is
+  recorded as a skip (`skipped: true`) and left out of the offered counts, so it never
+  lowers a factor's weight. Known leak: a sharp user could spot exploration cards because
+  left swipes on them never ask for feedback; it shows only after the swipe, so it does
+  not bias that swipe. Accepted for the recording.
+  Re-decided: 2026-10-24 — post-onboarding rule and skip, agreed by Yewen and the backend
+  side; replaces "then optional on right swipes".
   Chip lists are **filtered per listing** from the photo flags and listing fields. A
   garden chip is not shown on a third-floor flat with no garden.
   A chip answer is about **this property's** version of that feature, phrased as how
