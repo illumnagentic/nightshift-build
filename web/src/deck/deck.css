@@ -273,7 +273,7 @@
   position: relative;
   width: calc(100% - 32px);
   max-width: 400px;
-  touch-action: pan-y;
+  touch-action: none;
   user-select: none;
 }
 
@@ -302,4 +302,12 @@
 .swipeable-card__cue--dislike {
   right: 16px;
   color: #b42318;
+}
+
+.swipeable-card__cue--love {
+  top: auto;
+  bottom: 16px;
+  left: 50%;
+  translate: -50% 0;
+  color: #c2185b;
 }

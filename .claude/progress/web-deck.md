@@ -108,6 +108,10 @@ This session's conversation, quoted above. `docs/plan.md`, `docs/decisions.md`,
   Decision (a) is taken. It replaces the "arrow keys are fine" reading in point 1 above
   for the photo-button overlap only; left = dislike, right = like stay as built. Done
   in Step 5.
+- 2026-10-24, human, eye test at wrap-up, check 6: "drag left and right works but there
+  should be a drag up for favorite. add to amendment". Dragging the card up past a
+  threshold loves it (API action `superlike`, which adds the favourite), through the
+  same code path as the Love button. Done as a redo of Step 5.
 
 ---
 
@@ -291,6 +295,22 @@ still work and do not start a drag; typecheck, tests and build exit 0.
 - [x] Matches locked requirements — evidence: onSwipe={swipe} same fn as buttons; isPhotoButton guard in keydown; source unread; only motion added (lock shows motion, framer-motion, motion-dom, motion-utils, tslib) (2026-10-24)
 - [x] No scope drift — evidence: diff limited to declared files plus progress file; PropertyCard/useDeck/deckState untouched (2026-10-24)
 
+#### Redo of Step 5 — drag up to love
+
+**Goal**: Dragging the top card up past a threshold loves it, using the same `swipe("superlike")` call as the Love button.
+
+**Files in scope**: `web/src/deck/SwipeableCard.tsx`, `web/src/deck/DeckScreen.tsx`, `web/src/deck/deck.css`, `evidence/web-deck/step-5-redo.md`.
+
+**Done when**: an upward drag past a threshold (or a clear upward flick) calls the same swipe function with `superlike`; left and right drags behave as before; a downward or short drag springs back; the drag direction is decided by the dominant axis so a diagonal drag does not fire two actions; a faint "Love" cue appears while dragging up (aria-hidden), consistent with the existing Like/Dislike cues; drag still never starts from a button inside the card; reduced motion still removes rotation; vertical page scrolling on touch is considered and any loss is logged as a tradeoff; no new dependency; typecheck, tests and build exit 0; the process-wording check exits 0.
+
+**Evidence location**: `evidence/web-deck/step-5-redo.md`.
+
+- [x] Implemented — evidence: SwipeableCard.tsx drag on both axes, dominant-axis onDragEnd, superlike past 25% height or 600 px/s up; Love cue aria-hidden (2026-10-24)
+- [x] Tested — evidence: typecheck exit 0, npm test exit 0, build exit 0, check-process-refs.sh exit 0; drag has no automated test, logged tradeoff (2026-10-24)
+- [x] Best practices met — evidence: disabled-while-busy and button-drag guard kept, reduced-motion rotation kept, no new dependency, css scoped, cue aria-hidden (2026-10-24)
+- [x] Matches locked requirements — evidence: AMENDMENTS 2026-10-24 drag up = superlike via same onSwipe/swipe; card.source untouched (2026-10-24)
+- [x] No scope drift — evidence: diff limited to SwipeableCard.tsx, deck.css, step-5-redo.md, progress file; DeckScreen.tsx and package files unchanged (2026-10-24)
+
 ---
 
 ## TRADEOFFS
@@ -327,16 +347,62 @@ still work and do not start a drag; typecheck, tests and build exit 0.
 
 ## VERIFICATION
 
-- [ ] All step checkboxes ticked with evidence
-- [ ] Every evidence path in this file exists
-- [ ] Test suite run — result:
-- [ ] Lint run — result:
-- [ ] Typecheck run — result:
-- [ ] Build run — result:
-- [ ] Diff contains no files outside declared scope
-- [ ] Tradeoff ledger reviewed and signed off by human
+- [x] All step checkboxes ticked with evidence (35 of 35 across Steps 1-5 and both redos, 2026-10-24)
+- [x] Every evidence path in this file exists (`evidence/web-deck/` holds step-1, step-2, step-3, step-3-redo, step-4, step-4-redo, step-5)
+- [x] Test suite run — result: `cd web && npm test` exit 0, 5 files, 121 passed (2026-10-24)
+- [x] Lint run — result: not configured in `.claude/kit-config.md`, not run
+- [x] Typecheck run — result: `cd web && npm run typecheck` exit 0 (2026-10-24)
+- [x] Build run — result: `cd web && npm run build` exit 0, 449 modules, JS 416.02 kB (2026-10-24)
+- [x] Diff contains no files outside declared scope (checked file by file against steps and redos; `check-process-refs.sh` exit 0)
+- [ ] Tradeoff ledger reviewed and signed off by human (18 entries, none signed)
 - [ ] Human eye test completed
 
 ---
 
 ## HANDOVER
+
+**What was built.** After signing in as alex or jordan in mock mode, you now see a deck of property cards. Each card shows photos you can step through, price, key facts, EPC, tenure, floor and commute time. You can Dislike, Love (heart) or Like a card by button, by arrow key, or by dragging the card left or right. When the swipe response says feedback is needed, a placeholder panel with a Continue button appears before the next card. Empty and blocked states show plain messages.
+
+**What to check yourself.**
+
+1. In `web/`, run `npm run dev` (serves http://localhost:5173). If the orchestrator's server is still on :5173, use that one.
+2. Pick alex. A card should appear with no prefs form. The page should be light even if your system is in dark mode.
+3. Read the card. Floor should read like "First floor". The postcode should appear once in the address. No source or "exploration" label should appear anywhere.
+4. Click Next photo: the photo changes ("2 of 4"). With focus still on it, press the right arrow key: nothing happens, no swipe and no photo change (AMENDMENTS decision (a); corrected by the orchestrator, the gate's first wording said the photo would change).
+5. Click on the page body, then press Left arrow. The card should be disliked and the next one appear. Press Up arrow: a "Added to favourites" note should appear.
+6. Click Like. If the stub panel appears, press Continue and check the next card appears only then.
+7. Drag a card slowly about 40 px right and release. It should spring back with no swipe. This was not tested. The browser tool drags instantly, so the speed rule fired on a short drag.
+8. Drag slowly past about a third of the card width. It should swipe. Do the same left.
+9. Press the mouse down on Next photo and drag. Nothing should move.
+10. On a touch device or touch emulation, repeat steps 7 to 9. The thresholds are untuned.
+11. Create a new user. You should see the `prefs_missing` message, not a crash.
+12. Switch user. The deck should reset for the new user.
+
+**Tools that will help.** Browser devtools network tab: each swipe should be one `POST` to the swipe route with `action` of `left`, `right` or `superlike`, and the deck should refetch with `GET /deck` when 3 or fewer cards remain. Device emulation in devtools for touch drags. In mock mode no network calls leave the page, so use the console and React behaviour only. Against the real backend, check the logs for the `source` flag, not the UI.
+
+**What is not done.**
+
+All 18 ledger entries are unsigned:
+- Step 2 (4): `useDeck` has no test; a failed swipe leaves the same card and Retry repeats it; an empty fetch with no `empty_reason` is treated as exhausted; stale-user responses are dropped but requests are not aborted.
+- Step 3 (2): `PropertyCard` has no component test; photo index relies on the parent setting `key`.
+- Step 4 (3): `DeckScreen` and `FeedbackStub` have no component test; `commute_pending` Retry is one refetch per click, no polling; arrow keys listen on `window`.
+- Step 3 redo (2): `addressLine` could match the postcode inside a longer character run; `floorLevelLabel` appends "floor" to ordinals only.
+- Step 4 redo (2): heart button checked by eye only; the page is light only, no dark mode.
+- Step 5 (5): drag has no automated test; the card springs back instead of flying off; thresholds (30% width, 600 px/s) are guesses; arrows still swipe when focus is on buttons outside the card; reduced motion removes rotation only.
+
+Other limits: the feedback panel is a stub (F3). No prefs form, no favourites screen (F4). No undo. `motion` pulled in four more packages (`framer-motion`, `motion-dom`, `motion-utils`, `tslib`). The tradeoff ledger has a stray `---` rule in the middle, splitting the Step 5 entries from the rest.
+
+SPOTTED, NOT FIXED: `.claude/worktrees/` is untracked and not gitignored; `kit-config.md` Project type still says "No code yet"; `useDeck` swipe callback can reset the shared busy flag on a rapid user switch; every photo `alt` is the address.
+
+Not ticked: `docs/plan.md` (done in the merging PR).
+
+**What could bite you.**
+
+1. Drag release speed. A 600 px/s velocity alone triggers a swipe, with no distance needed. A quick flick or a jittery trackpad could swipe by accident, and there is no undo.
+2. The card does not fly off. It springs to centre while the request is in flight, then the next card replaces it. On a slow backend this looks like a failed swipe, and the user may swipe again. Buttons are disabled while busy, but a second drag is also blocked, so it only looks wrong, not double-counted.
+3. Arrow keys listen on the whole window. Focus on Switch user or Retry plus an arrow key still swipes. A keyboard user tabbing around can swipe by accident.
+
+The feature is not complete until the human has done the eye test and signed the tradeoff ledger.
+- Step 5 redo | `touch-action: none` on the card, so a touch that starts on the card no longer scrolls the page; the page scrolls only from outside the card. Vertical drag needs this. | Scroll from the card would need a drag-direction lock before claiming the gesture.
+- Step 5 redo | Up threshold is 25% of card height or 600 px/s upward, untuned; direction is the dominant axis at release (ties go horizontal). Drag up has no automated test (node env, no jsdom). Checked by eye only. | Tune on a real touch device; needs a DOM test environment.
+- Step 5 redo | The Love cue follows upward y alone, so a diagonal drag can show the Love cue with Like or Dislike while only the dominant axis fires. | Fade each cue by its dominance over the other axis.
