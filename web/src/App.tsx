@@ -92,6 +92,7 @@ export default function App() {
           {tab === "prefs" && (
             <PrefsScreen
               userId={user.user_id}
+              onSaved={() => {}}
               onReady={() => {
                 setDeckKey((k) => k + 1);
                 setTab("deck");

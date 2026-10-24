@@ -94,7 +94,17 @@ BASE_SHA will stop being an ancestor.
 
 ## AMENDMENTS
 
-_None._
+- 2026-10-25, orchestrator with the advisor, under the human's F4 delegation, after the
+  first QA gate (FAIL): the contract line "discard its local deck and fetch a new one once
+  `commute_status` is `ready`" was only met while the user stayed on Preferences. Leaving
+  the tab mid-calculation left the deck stuck (new user) or stale (re-save → 404 on swipe).
+  Decision: (1) PrefsScreen stays mounted for a signed-in user, hidden when another tab is
+  open, keyed by user, so polling continues; (2) PrefsScreen gains `onSaved()`, called
+  once per successful PUT; (3) App discards the local deck on `onSaved` (deckKey bump) and
+  again on `onReady`, and `onReady` changes tab only when the user is on Preferences;
+  (4) DeckScreen's `commute_failed` block gets a "Set preferences" button. This replaces
+  Step 4's "PrefsScreen and FavouritesScreen rendered only when their tab is active" for
+  PrefsScreen only. Done as a redo of Step 2, then a redo of Step 4.
 
 ---
 
@@ -178,6 +188,22 @@ exits 0. Not wired into the app yet.
 - [x] Matches locked requirements — evidence: 1500 ms poll, pending/failed on open handled, onReady once, no postcode check, no source (2026-10-24)
 - [x] No scope drift — evidence: only prefs/PrefsScreen.tsx, prefs.css, evidence/step-2.md new; progress file edits only (2026-10-24)
 
+#### Redo of Step 2 — onSaved callback
+
+**Goal**: PrefsScreen tells its parent each time a save succeeds.
+
+**Files in scope**: `web/src/prefs/PrefsScreen.tsx`, `evidence/web-prefs-favourites/step-2-redo.md`.
+
+**Done when**: PrefsScreen takes a required `onSaved: () => void` prop, called exactly once per successful `putPrefs`, after the generation guard passes and before `applyStatus`; polling, the unmount guard and all other behaviour unchanged; shell edit, diff contains only intended hunks; typecheck, tests and build exit 0 (App may need a temporary no-op `onSaved` only if typecheck requires it — if so, declare and limit it to that one prop); the process-wording check exits 0.
+
+**Evidence location**: `evidence/web-prefs-favourites/step-2-redo.md`.
+
+- [x] Implemented — PrefsScreen.tsx save(): onSaved() after generation guard, before applyStatus; required prop (2026-10-25)
+- [x] Tested — npm run typecheck 0, npm test 0 (178 passed), npm run build 0; no component-test harness in repo, call order verified by code read (2026-10-25)
+- [x] Best practices met — check-process-refs.sh exit 0; guard and error paths untouched (2026-10-25)
+- [x] Matches locked requirements — matches AMENDMENTS 2026-10-25 item (2): once per successful PUT (2026-10-25)
+- [x] No scope drift — diff is the prop, one call, and App onSaved={() => {}} only; evidence/web-prefs-favourites/step-2-redo.md present (2026-10-25)
+
 ### Step 3 — Favourites screen
 
 **Goal**: The Favourites screen lists favourites and removes one with a reason.
@@ -231,6 +257,22 @@ process-wording check exits 0.
 - [x] Matches locked requirements — evidence: onReady bumps deckKey and sets Deck tab; switchUser resets tab; Prefs/Favourites mount only when active; no source shown (2026-10-24)
 - [x] No scope drift — evidence: only App.tsx, DeckScreen.tsx, nav.css, evidence/step-4.md plus progress file; minimal hunks (2026-10-24)
 
+#### Redo of Step 4 — deck refresh wherever the user is
+
+**Goal**: The local deck is discarded at save and refreshed on ready whichever tab is open; the tab changes only from Preferences.
+
+**Files in scope**: `web/src/App.tsx`, `web/src/deck/DeckScreen.tsx`, `evidence/web-prefs-favourites/step-4-redo.md`.
+
+**Done when**: PrefsScreen is rendered for a signed-in user at all times, hidden when its tab is not active, keyed by `user_id` (FavouritesScreen still renders only on its tab); App's `onSaved` bumps `deckKey`; App's `onReady` bumps `deckKey` and calls `setTab(t => t === "prefs" ? "deck" : t)`; DeckScreen's `commute_failed` block shows a "Set preferences" button calling `onNeedPrefs`; restated rule: the local deck is discarded at save, refreshed on ready wherever the user is, and the tab changes only from Preferences; browser reproductions by the orchestrator, before and after — Path A (new user, save, open Deck at once: "still being worked out", then cards appear with no action), Path B (alex with a loaded deck saves `FAIL 1AA`, opens Deck: no stale card, no 404; then saves `EC2N 2DB`: a fresh deck appears), ready while on Favourites leaves the user on Favourites; shell edits, diffs contain only intended hunks; typecheck, tests and build exit 0; the process-wording check exits 0.
+
+**Evidence location**: `evidence/web-prefs-favourites/step-4-redo.md`.
+
+- [ ] Implemented
+- [ ] Tested — evidence: (date)
+- [ ] Best practices met — evidence: (date)
+- [ ] Matches locked requirements — evidence: (date)
+- [ ] No scope drift — evidence: (date)
+
 ---
 
 ## TRADEOFFS
@@ -257,16 +299,136 @@ process-wording check exits 0.
 
 ## VERIFICATION
 
-- [ ] All step checkboxes ticked with evidence
-- [ ] Every evidence path in this file exists
-- [ ] Test suite run — result:
-- [ ] Lint run — result:
-- [ ] Typecheck run — result:
-- [ ] Build run — result:
-- [ ] Diff contains no files outside declared scope
+- [x] All step checkboxes ticked with evidence — 20 of 20, all dated 2026-10-24, in step order (2026-10-25)
+- [x] Every evidence path in this file exists — evidence/web-prefs-favourites/step-1.md to step-4.md present (2026-10-25)
+- [x] Test suite run — result: `npm test` in a clean copy of HEAD, 7 files, 178 passed, exit 0 (2026-10-25)
+- [ ] Lint run — result: not configured in kit-config, not run (2026-10-25)
+- [x] Typecheck run — result: `npm run typecheck`, exit 0 (2026-10-25)
+- [x] Build run — result: `npm run build`, exit 0 (2026-10-25)
+- [ ] Diff contains no files outside declared scope — every code and evidence file is declared; this progress file is in no step's scope (waiver proposed: it is the tracking file, and kit-config commits progress files) — left for the human (2026-10-25)
 - [ ] Tradeoff ledger reviewed and signed off by human
 - [ ] Human eye test completed
+
+QA-GATE: FAIL 2026-10-25 — the local deck is not discarded when the user leaves Preferences before commute times are ready (see HANDOVER, What could bite you); tradeoff ledger unsigned (7 entries)
 
 ---
 
 ## HANDOVER
+
+Written 2026-10-25. Verdict: FAIL. Tests, typecheck and build pass. One requirement
+is not fully met (the stale deck, below), and the 7 tradeoffs are unsigned.
+
+### What was built
+
+A signed-in user now sees three tabs: Deck, Preferences and Favourites. Preferences
+holds a free-text description, a workplace postcode and an optional maximum commute in
+minutes. Saving shows what was understood and waits for commute times, then opens a
+fresh deck. A new user with no preferences is sent to Preferences on its own.
+Favourites lists saved properties, and each one can be removed with a written reason.
+It all runs against the mock API. Nothing talks to the real backend yet.
+
+### What to check yourself
+
+The mock dev server may already be on http://localhost:5183. If not, start one with
+`cd web && VITE_API_MODE=mock npm run dev` and open the port it prints. Plain
+`npm run dev` talks to the real backend on :8787 instead. Mock data lives in the page,
+so reloading the page wipes users, swipes and favourites.
+
+1. Create a new user. You should land on Preferences, not Deck.
+2. Leave the text box or the postcode empty. Save should stay disabled. Type `abc` in
+   "Maximum commute". You should see "Enter a whole number of minutes." and Save stays
+   disabled.
+3. Enter some text, postcode `EC2N 2DB`, no limit. Press Save. You should see "What we
+   understood", then the Deck tab with cards.
+Steps 4 and 5 were traced from the code, not clicked in a browser. The mock half was
+run: after a re-save, swiping an old card returns 404 `decision_not_found`, and the
+first preferences read after a save already reports ready (or failed for `FAIL 1AA`).
+
+4. Known bug, path A. Create another new user. Fill in Preferences, press Save, then
+   press the Deck tab straight away, within about a second and a half. The deck still
+   says to save your preferences. Press "Set preferences" and then Deck again. It will
+   stay blocked until you save once more and wait on Preferences.
+5. Known bug, path B. With a user who has cards on the deck, open Preferences, change
+   the postcode to `FAIL 1AA` and save. You should see "Commute times could not be
+   worked out. Check the postcode and save again." That part is correct. Now open
+   Deck. The old cards are still there. Swipe one. You should get "No decision with
+   that id." and Retry. Retry only clears the message: you stay on the same old card,
+   and swiping it fails again. Only once 3 or fewer cards are queued does Retry fetch,
+   and then the deck shows the correct "commute failed" block.
+6. Superlike (Love) a card. Open Favourites. The property should be listed with
+   photo, price, address and "Added <today>".
+7. Press Remove. A dialog asks "Why are you removing it?". Confirm should stay
+   disabled while the box is empty. Press Cancel: the dialog closes and focus returns
+   to that Remove button. Open it again and press Escape: same result.
+8. Open Remove again, type a reason, press Confirm. The entry should disappear.
+   Reopen the Favourites tab: it should still be gone.
+9. With a new user, swipe any of the first cards (the first 15 are compulsory). The
+   feedback screen opens. Switch to
+   Favourites and back. The feedback screen should still be there. On Favourites,
+   the arrow keys should not swipe the deck card.
+10. While on Preferences or Favourites, press "Switch user" and pick a user. You
+    should land on Deck.
+11. Narrow the browser to phone width (about 375 px) in devtools. Check that the three
+    tabs, the Preferences form and the Favourites list are usable without sideways
+    scrolling.
+
+### Tools that will help
+
+- Browser devtools, Elements panel: the current tab button carries
+  `aria-current="page"`. The deck sits inside a `hidden` div while another tab is open.
+  It is hidden, not removed.
+- Browser devtools, device toolbar: for the narrow-width check in step 11.
+- The Network panel shows no API calls in mock mode: `VITE_API_MODE=mock` swaps in an
+  in-memory client (`web/src/api/index.ts`). Once the real backend is connected, watch
+  `PUT /prefs`, the repeated `GET /prefs` every 1.5 seconds, and
+  `DELETE /favourites/{listing_id}` with its `reason` body.
+
+### What is not done
+
+Bug, not logged as a tradeoff: the contract says the frontend discards its local deck
+and fetches a new one once commute times are ready. That only happens if the user
+stays on Preferences until then. Leaving early stops the polling, and nothing else
+refreshes the deck (paths A and B above).
+
+Tradeoffs, all unsigned:
+
+1. Step 1: zero and negative commute limits are accepted, and "+5" is rejected. The
+   backend owns range checks.
+2. Step 2: polling has no time limit and keeps retrying after any error, including a
+   4xx, while the status is pending.
+3. Step 2: "What we understood" only appears when there is at least one limit or soft
+   preference. A failed load shows the error with empty fields.
+4. Step 3: after a removal, focus goes nowhere, because the Remove button has gone.
+5. Step 3: the thumbnail uses the first photo only, with no fallback if it fails to
+   load.
+6. Step 4: saving preferences rebuilds the deck. A pending feedback screen, including
+   compulsory onboarding feedback, is dropped and that card's feedback is lost.
+7. Step 4: the deck stays mounted while hidden. The "go to Preferences" redirect can
+   fire from a hidden screen, and that effect ignores changes to its callback.
+
+Spotted, not fixed:
+
+- `.claude/worktrees/` is untracked and not gitignored.
+- `useDeck.ts`: the `swipeBusy` race on a fast user switch mid-swipe (from F2).
+- Strength labels are written out in both `ChipDialog.tsx` and `FeedbackScreen.tsx`
+  (from F3).
+- `deck.css` has orphaned `.deck-feedback` rules (from F3).
+- `PrefsScreen.tsx` does not reset on a user change. As wired, this cannot happen:
+  Switch user unmounts the screen. The entry can be closed.
+
+Also not done: there is no lint command configured, so lint was not run. There are no
+component tests, because no DOM test setup is in scope. The real API is not connected.
+The deck's "commute failed" message has no button to open Preferences. Only "prefs
+missing" has one.
+
+### What could bite you
+
+- The stale deck. On the real backend, commute times take as long as the TfL calls
+  take, not one mock read. Users will leave Preferences before it finishes. They will
+  then be stuck on a blocked deck, or on an old card the backend has already thrown
+  away, with a Retry that does not move them on.
+- Lost onboarding feedback. Re-saving preferences while a compulsory feedback screen
+  is open drops it. During the persona or recording runs this means a missing
+  feedback row, with no error shown.
+- Endless polling. If the backend never leaves `pending`, the screen says "Working out
+  commute times…" for ever, with no message to say something is wrong.

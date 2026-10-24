@@ -27,7 +27,15 @@ function hardLimits(hard: ParsedPrefs["hard"]): string[] {
   return lines;
 }
 
-export function PrefsScreen({ userId, onReady }: { userId: string; onReady: () => void }) {
+export function PrefsScreen({
+  userId,
+  onReady,
+  onSaved,
+}: {
+  userId: string;
+  onReady: () => void;
+  onSaved: () => void;
+}) {
   const [form, setForm] = useState<PrefsForm>({ text: "", postcode: "", maxCommute: "" });
   const [parsed, setParsed] = useState<ParsedPrefs | null>(null);
   const [status, setStatus] = useState<CommuteStatus | null>(null);
@@ -114,6 +122,7 @@ export function PrefsScreen({ userId, onReady }: { userId: string; onReady: () =
       const res = await api.putPrefs(userId, toRequest(form));
       if (id !== pollId.current) return;
       setParsed(res.parsed);
+      onSaved();
       applyStatus(res.commute_status);
     } catch (err) {
       if (id !== pollId.current) return;
