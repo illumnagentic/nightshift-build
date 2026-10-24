@@ -9,7 +9,7 @@ Agents and skills read this file. Leave a value as `auto` to let the kit work it
   <!-- The branch PRs merge into. `auto` detects it from origin/HEAD, falling back to
        main, then master, then develop. Set explicitly if your repo is unusual. -->
 
-- **Project type**: Planned: Cloudflare Python Worker (FastAPI) in /worker, Vite + React in /web, D1 database. No code yet.
+- **Project type**: Cloudflare Python Worker (FastAPI) in /worker, Vite + React in /web, local D1 database.
 
 - **Has a frontend**: yes
   <!-- yes/no. Drives whether qa-gate asks for a browser eye test. -->
@@ -18,13 +18,13 @@ Agents and skills read this file. Leave a value as `auto` to let the kit work it
 
 Leave blank if the repo has none. Never invent one.
 
-- **Install**: `cd web && npm ci`
-- **Test**: `cd web && npm test`
-- **Test (single file)**: `cd web && npx vitest run <path>`
+- **Install**: `cd web && npm ci`; backend: `cd worker && uv sync --group dev`
+- **Test**: `cd web && npm test`; backend: `cd worker && uv run --group dev pytest tests -q` (needs a seeded, running dev server, see worker/README.md)
+- **Test (single file)**: `cd web && npx vitest run <path>`; backend: `cd worker && uv run --group dev pytest tests/test_mubit.py -q`
 - **Lint**: <!-- e.g. npm run lint -->
 - **Typecheck**: `cd web && npm run typecheck`
 - **Build**: `cd web && npm run build`
-- **Run locally**: `cd web && npm run dev` (serves http://localhost:5173, proxies `/api` to :8787)
+- **Run locally**: `cd web && npm run dev` (serves http://localhost:5173, proxies `/api` to :8787); backend: `worker/scripts/seed.sh` once, then `cd worker && uvx --from workers-py pywrangler dev` (serves http://localhost:8787/api)
 
 ## Conventions
 
