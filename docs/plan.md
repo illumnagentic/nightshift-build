@@ -24,7 +24,7 @@ Branch names are proposals; set them at feature-kickoff.
 
 ## Backend — Zsolt
 
-- [ ] **B1 Scaffold** — `feat/backend-scaffold` — Python Worker + FastAPI, local D1
+- [x] **B1 Scaffold** — `feat/backend-scaffold` — Python Worker + FastAPI, local D1
   schema, seed script, username-only accounts, Mubit gateway client.
 - [ ] **B2 Data prep** — `feat/data-prep` — RapidAPI dump (500+ rich for-sale
   listings), photo flags via Gemini Flash-Lite through Mubit, listing train/eval split.

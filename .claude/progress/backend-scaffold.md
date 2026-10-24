@@ -5,7 +5,7 @@
 - **Started**: 2026-10-24
 - **Branch**: feat/backend-scaffold
 - **BASE_SHA**: cb7cd3b010a8a492b741039a02e5a9d725d260dd
-- **Status**: in progress
+- **Status**: complete (2026-10-24)
 - **Mode**: full automation (on since 2026-10-24)
 
 ---
@@ -292,17 +292,17 @@ other file changes, `.claude/scripts/check-process-refs.sh` exits 0, no banned w
 
 ## VERIFICATION
 
-- [x] All step checkboxes ticked with evidence — qa-gate: 4 steps x 5 boxes plus 2 redos x 2 boxes, all dated 2026-10-24 (2026-10-24)
+- [x] All step checkboxes ticked with evidence — qa-gate: 4 steps x 5 boxes, plus 5 redos x 2 boxes (Step 1 once, Step 2 once, Step 4 three times), all dated 2026-10-24; REQUIREMENTS (LOCKED) block byte-identical in every commit since bcc34d6 (2026-10-24)
 - [x] Every evidence path in this file exists — qa-gate: evidence/backend-scaffold/step-1.md to step-4.md present (2026-10-24)
-- [x] Test suite run — result: backend `uv run --group dev pytest tests -q` 34 passed, exit 0 (after seed.sh exit 0, listings 635, users 0); web `npm test` 121 passed, exit 0 (2026-10-24)
+- [x] Test suite run — result: backend `uv sync --group dev` exit 0; `worker/scripts/seed.sh` exit 0 (listings 635, users 0); `uv run --group dev pytest tests -q` 36 passed, exit 0, against a fresh `pywrangler dev`; web `npm ci` exit 0, `npm test` 121 passed (5 files), exit 0 (2026-10-24)
 - [ ] Lint run — result: not configured in kit-config (no lint command for web or backend); not run
 - [x] Typecheck run — result: web `npm run typecheck` exit 0; no backend typecheck configured (2026-10-24)
 - [x] Build run — result: web `npm run build` exit 0; no backend build configured (2026-10-24)
 - [x] Diff contains no files outside declared scope — qa-gate: all 18 files map to a step's Files in scope, an Evidence location or this file (2026-10-24)
-- [x] Tradeoff ledger reviewed — signed by arbiter (full automation): all 9 TRADEOFFS and 3 SPOTTED entries carry an arbiter verdict (2026-10-24)
-- [ ] Human eye test completed — not human-verified (full automation) — smoke check: seeded D1, `pywrangler dev` and Vite dev server started; curl GET/POST /api/users gave 200, 201, 409 `username_taken` (case variant), 422 `invalid_request` (bad char, malformed JSON); GET via the Vite proxy on :5173 gave 200 with the new user. Unknown route gave 404 `{"detail":"Not Found"}` and wrong method 405 `{"detail":"Method Not Allowed"}`, not the contract error shape. Both servers stopped by process group.
+- [x] Tradeoff ledger reviewed — signed by arbiter (full automation): all 11 TRADEOFFS entries carry `accepted by arbiter`; all 6 SPOTTED, NOT FIXED entries carry an arbiter verdict or a resolved marker (2026-10-24)
+- [ ] Human eye test completed — not human-verified (full automation) — smoke check: seed.sh exit 0, `pywrangler dev` on :8787. curl: GET /api/users 200; GET /docs 200; POST new user 201 `{user_id: "u_…", username}`; same name upper-cased 409 `username_taken`; `"al ex"` 422 `invalid_request`; malformed JSON 422 `invalid_request`; GET /api/nope 404 `{"error":{"code":"not_found","message":"No such endpoint."}}`; DELETE /api/users 405 `{"error":{"code":"method_not_allowed","message":"Request not allowed."}}` with `Allow: GET`. Vite dev server on :5173: GET /api/users through the proxy 200 with the new user, GET /api/nope 404 in contract shape. Both servers stopped by process group; local D1 re-seeded afterwards (users empty). Mubit not called.
 
-QA-GATE: PASS WITH FINDINGS 2026-10-24 — 404, 405 and unhandled 500 responses do not use the contract's `{"error": {"code", "message"}}` shape (contract General: "Errors always have this shape"). Needs an arbiter ruling before merge.
+QA-GATE: PASS 2026-10-24
 
 ---
 
@@ -313,75 +313,88 @@ QA-GATE: PASS WITH FINDINGS 2026-10-24 — 404, 405 and unhandled 500 responses 
 There is now a backend in `worker/`. It runs on your laptop as a Cloudflare Python
 Worker with FastAPI, against a local D1 database. A seed script fills that database
 with the 635 listings and an empty users table. You can list users and create a user
-by username alone, and the web app's dev server reaches it through its `/api` proxy.
-There is also a small client for calling Gemini through Mubit, which later features
-(curator, photo flags) will use. Nothing calls it yet in the running app.
+by username alone, and every error, including unknown paths and wrong methods, comes
+back in the contract's `{"error": {"code", "message"}}` shape. There is also a small
+client for calling Gemini through Mubit, which the curator and photo flags will use.
+Nothing in the running app calls it yet.
 
 **What to check yourself**
 
-1. From the repo root, run `worker/scripts/seed.sh`. It should end with exit 0. The
+1. Make sure no `pywrangler dev` or `wrangler dev` is running: `ss -ltn | grep 8787`
+   should print nothing. Stop any you find first.
+2. From the repo root, run `worker/scripts/seed.sh`. It should end with exit 0. The
    first run downloads wrangler, so it needs network.
-2. Check the counts: `cd worker && npx wrangler d1 execute haka --local --command "SELECT (SELECT count(*) FROM listings), (SELECT count(*) FROM users)"`.
+3. Check the counts: `cd worker && npx wrangler d1 execute haka --local --command "SELECT (SELECT count(*) FROM listings), (SELECT count(*) FROM users)"`.
    You should see 635 and 0.
-3. Create `worker/.dev.vars` with `MUBIT_API_KEY=...` if it is not there. It is
+4. Create `worker/.dev.vars` with `MUBIT_API_KEY=...` if it is not there. It is
    gitignored.
-4. In `worker/`, run `uvx --from workers-py pywrangler dev`. Wait for "Ready on
+5. In `worker/`, run `uvx --from workers-py pywrangler dev`. Wait for "Ready on
    http://localhost:8787".
-5. `curl -s http://localhost:8787/api/users` should return `{"users":[]}`.
-6. `curl -s -X POST -H 'Content-Type: application/json' -d '{"username":"alex"}' http://localhost:8787/api/users`
+6. `curl -s http://localhost:8787/api/users` should return `{"users":[]}`.
+7. `curl -si -X POST -H 'Content-Type: application/json' -d '{"username":"alex"}' http://localhost:8787/api/users`
    should return 201 and `{"user_id":"u_…","username":"alex"}`.
-7. Send the same request with `"ALEX"`. You should get 409 and
+8. Send the same request with `"ALEX"`. You should get 409 and
    `{"error":{"code":"username_taken",…}}`.
-8. Send `{"username":"al ex"}`. You should get 422 and `invalid_request`.
-9. In a second terminal, `cd worker && uv run --group dev pytest tests -q`. Expect 34
-   passed. This adds test users (`t_…`) to the local D1; re-seed to clear them.
-10. Start the web app with `cd web && npm run dev` (make sure `VITE_API_MODE` is not
-    `mock` in `web/.env`; anything else uses the real API). Open
-    http://localhost:5173. The user picker should list `alex`, and creating a user
-    there should work. The deck screen will fail after that, because `/prefs` and
-    `/deck` do not exist yet.
-11. Do not run `worker/scripts/mubit_ping.py` unless you mean to: it makes a paid call.
+9. Send `{"username":"al ex"}`. You should get 422 and `invalid_request`.
+10. `curl -si http://localhost:8787/api/nope` should give 404 and
+    `{"error":{"code":"not_found","message":"No such endpoint."}}`.
+    `curl -si -X DELETE http://localhost:8787/api/users` should give 405 and
+    `{"error":{"code":"method_not_allowed",…}}`.
+11. In a second terminal, `cd worker && uv run --group dev pytest tests -q`. Expect 36
+    passed. This adds test users (`t_…`) to the local D1. To clear them, stop the dev
+    server, re-seed, then start it again.
+12. Start the web app with `cd web && npm run dev` (leave `VITE_API_MODE` unset or not
+    `mock`). Open http://localhost:5173. The user picker should list `alex`, and
+    creating a user there should work. The deck screen will fail after that, because
+    `/prefs` and `/deck` do not exist yet.
+13. Do not run `worker/scripts/mubit_ping.py` unless you mean to: it makes a paid call.
 
 **Tools that will help**
 
-- curl or Postman for the two endpoints. Look at the status code as well as the body.
+- curl or Postman for the endpoints. Look at the status code as well as the body; every
+  non-2xx body should have exactly `error.code` and `error.message`.
 - Browser devtools, Network tab, on http://localhost:5173: requests to `/api/users`
   should go to the same origin and come back 200 or 201, with no CORS errors.
 - `npx wrangler d1 execute haka --local --command "SELECT * FROM users"` in `worker/`
-  to see what is actually stored.
-- The `pywrangler dev` terminal: Python tracebacks from the Worker appear there.
+  to see what is stored.
+- The `pywrangler dev` terminal: Python tracebacks from the Worker appear there. A 500
+  body says only "Something went wrong on the server."; the cause is in this log.
 
 **What is not done**
 
-- Requests to an unknown path return 404 `{"detail":"Not Found"}`, a wrong method
-  returns 405 `{"detail":"Method Not Allowed"}`, and an unexpected D1 failure returns a
-  plain 500. None use the contract's error shape. The web client falls back to a
-  generic "Request failed" message, so nothing crashes, but the contract says errors
-  always have that shape.
 - The Mubit client's real call path (`generate_content`, using the Workers `fetch`) has
-  never run. Only the request building and response parsing are tested, and the one
-  live call used Python's `urllib`. B4's first curator call is its first real test.
+  never run. Only request building and response parsing are tested, and the one live
+  call used Python's `urllib`. B4's first curator call is its first real test.
 - How the client tells a Mubit gateway refusal from a Gemini error is a guess. No real
   refusal body has been seen.
 - Only `x-middleware-request-id` is read from Mubit responses; retry headers are not.
 - A duplicate username is detected by matching the text "UNIQUE constraint failed" in
-  the D1 error. If D1 ever words it differently, a duplicate becomes a 500, not a 409.
+  the D1 error. If D1 words it differently, a duplicate becomes a 500, not a 409.
 - All bad-body 422s share one generic message, not one per field.
+- The 405 `Allow` header for `/api/users` says `GET` only, though POST is allowed too.
+- Any HTTP error other than 404 or 405 from routing gets code `http_error` and the
+  message "Request not allowed.", which may be wrong. No route raises one today.
+- The 500 guard is middleware; the alternative exception-handler route was not tried.
 - The API tests need a seeded, running dev server. There is no in-process test.
 - `seed.sh` needs Node and `npx`, and network on first run, to fetch wrangler.
 - The README was run from a clean clone, but with warm caches. A truly cold first run
   is unobserved.
+- `mubit_ping.py` does not read `export KEY=...` lines in `.env`. It reads repo-root
+  `.env`; the dev server reads `worker/.dev.vars`. The key lives in both.
 - No lint, backend typecheck or backend build commands exist.
-- The X-User-Id check and 401 `unknown_user` are not built; B3 builds them.
+- The `X-User-Id` check and 401 `unknown_user` are not built; B3 builds them.
+- No human has looked at this. The checks above were run by the QA agent in full
+  automation.
 
 **What could bite you**
 
 - The Mubit client in the Worker. It is written against the Workers `fetch` API from
   the SDK source, not from a run. If the response object differs, B4's first curator
   call fails, and that is on the critical path to Sat 13:00. Test it early in B4.
-- Stray dev servers. During this check a second `wrangler dev` (started 16:52, not by
-  this check) was already running and holding the inspector port. Two servers fighting
-  over :8787 means you may be testing an old build. Check with `ss -ltnp | grep 8787`.
+- Stray dev servers. A `wrangler dev` tree started at 16:52 in `worker/` is still
+  running (not on :8787 at the time of this check). A second server, or one left
+  running across a re-seed, serves a stale D1 and returns 500. Check with
+  `ss -ltn | grep 8787` before testing.
 - `seed.sh` deletes all local D1 state, including users, every time. Once B3 to B5
   write prefs, swipes and feedback, re-seeding wipes them too. Do not re-seed during
   the persona batch.
