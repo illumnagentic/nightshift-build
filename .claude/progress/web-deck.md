@@ -101,6 +101,13 @@ This session's conversation, quoted above. `docs/plan.md`, `docs/decisions.md`,
      only.
   Points 2–3 are a redo of Step 3; points 1 and 4 a redo of Step 4. Both redos are
   reviewed in order before Step 5 is briefed.
+- 2026-10-24, human: "add the amendment: Arrow keys on the photo buttons. Right now, if
+  focus is on the card's Next photo button, pressing → swipes the card instead of
+  changing the photo. The reviewer wants a decision for Step 5: (a) Recommended: arrow
+  keys do nothing while focus is on the photo buttons. Swipe keys work everywhere else."
+  Decision (a) is taken. It replaces the "arrow keys are fine" reading in point 1 above
+  for the photo-button overlap only; left = dislike, right = like stay as built. Done
+  in Step 5.
 
 ---
 
@@ -256,11 +263,11 @@ when low; empty and blocked states show plain messages (`error.message` for erro
 
 **Evidence location**: `evidence/web-deck/step-4-redo.md`.
 
-- [ ] Implemented
-- [ ] Tested — evidence: (date)
-- [ ] Best practices met — evidence: (date)
-- [ ] Matches locked requirements — evidence: (date)
-- [ ] No scope drift — evidence: (date)
+- [x] Implemented — DeckScreen.tsx SVG heart, aria-label "Love", swipe("superlike") unchanged; index.css light scheme (2026-10-24)
+- [x] Tested — evidence: typecheck 0, npm test 0 (smoke.test.ts unchanged), build 0, check-process-refs 0; button checked by eye only, logged in TRADEOFFS (2026-10-24)
+- [x] Best practices met — evidence: svg aria-hidden + focusable=false, button keeps accessible name, disabled while busy (2026-10-24)
+- [x] Matches locked requirements — evidence: heart, no text, name "Love", no remaining user-facing "Superlike" in web/src (2026-10-24)
+- [x] No scope drift — evidence: diff touches only the 3 declared web files plus evidence file; no deps (2026-10-24)
 
 ### Step 5 — Drag to swipe
 
@@ -271,7 +278,7 @@ approved `motion` package, with the same outcome as the buttons.
 `web/src/deck/DeckScreen.tsx`, `web/src/deck/SwipeableCard.tsx`, `web/src/deck/deck.css`,
 `evidence/web-deck/step-5.md`.
 
-**Done when**: only the approved package is added; dragging past a threshold left or
+**Done when**: arrow keys are ignored while focus is on the card's photo buttons (Previous / Next photo) and still swipe everywhere else (AMENDMENTS 2026-10-24, decision (a)); only the approved package is added; dragging past a threshold left or
 right swipes `left` / `right` through the same code path as the buttons; a short drag
 springs back with no swipe; buttons and keys still work; the photo controls on the card
 still work and do not start a drag; typecheck, tests and build exit 0.
@@ -299,6 +306,8 @@ still work and do not start a drag; typecheck, tests and build exit 0.
 - Step 4 | Arrow keys are listened for on `window`, so they also fire when focus is on a button such as Switch user or a photo arrow. Only text inputs are exempt, as briefed. | Scope the listener to the deck root, which needs focus management.
 - Step 3 redo | `addressLine` treats the postcode as present if its whitespace-stripped form appears anywhere in the stripped address, so it could in theory match inside a longer run of characters. | Needs a word-boundary check on the stripped form; unlikely in real addresses.
 - Step 3 redo | `floorLevelLabel` only appends " floor" to ordinals ("22nd floor"); it does not reword them ("22nd" stays an ordinal). | Fine for every value in the dataset.
+- Step 4 redo | The Love button is an inline SVG heart with `aria-label` and `title`; it is checked by eye only (no DOM test environment, out of scope). | Needs a DOM test environment.
+- Step 4 redo | The light page is fixed: `color-scheme: light` with a white background and dark text, so there is no dark mode. Other deck colours were already fixed. | Add a dark theme when styling is done.
 
 ---
 

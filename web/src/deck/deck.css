@@ -220,6 +220,9 @@
 }
 
 .deck-screen .deck-action--superlike {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border-color: var(--screen-superlike);
   background: var(--screen-superlike);
   color: #ffffff;
