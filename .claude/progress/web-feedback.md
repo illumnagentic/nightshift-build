@@ -179,11 +179,11 @@ tests and build exit 0; the process-wording check exits 0.
 
 **Evidence location**: `evidence/web-feedback/step-2.md`.
 
-- [ ] Implemented
-- [ ] Tested — evidence: (date)
-- [ ] Best practices met — evidence: (date)
-- [ ] Matches locked requirements — evidence: (date)
-- [ ] No scope drift — evidence: (date)
+- [x] Implemented — feedbackOutcome + PendingFeedback.compulsory in deckState.ts; source read only at deckState.ts:24 (2026-10-24)
+- [x] Tested — evidence: npm test exit 0, 140 passed; feedbackOutcome describe covers every row (2026-10-24)
+- [x] Best practices met — evidence: typecheck and build exit 0; pure function, no new deps (2026-10-24)
+- [x] Matches locked requirements — evidence: outcome table matches answer 2; check-process-refs.sh exit 0 (2026-10-24)
+- [x] No scope drift — evidence: diff touches only deckState.ts, deckState.test.ts, step-2.md; useDeck.ts untouched (2026-10-24)
 
 ### Step 3 — Feedback form logic
 
@@ -268,6 +268,8 @@ check exits 0.
 - Kickoff | The post-onboarding rule means left swipes on exploration cards never open feedback, so a sharp user could work out which cards are exploration after swiping. Noted and accepted by the human and the backend side for the recording. | Show the same optional screen on every swipe.
 - Step 1 | The mock also returns 422 `invalid_request` for a non-boolean `skipped`. The contract does not yet say this, so it is the mock's own guess. | Match whatever the merged contract says about malformed `skipped`.
 - Step 1 | Mock weights still count every non-skipped decision that offered a chip, including cards never answered; only skipped screens are left out. | The real backend's offered counting rules, once the contract states them.
+- Step 2 | `feedbackOutcome` treats any action other than exploration + `left` as optional, so an unknown future action would open optional feedback rather than none. | A closed action union is already typed; revisit only if the contract adds actions.
+- Step 2 | Four existing deck tests changed expectations or flow because a ranked right swipe now opens optional feedback (listed in the step evidence). Assertions kept; two now call `continue` before the next step. | None.
 
 ---
 
@@ -276,6 +278,7 @@ check exits 0.
 - `.claude/worktrees/` | untracked and not gitignored on `main` | low
 - `.claude/kit-config.md` Project type | still says "No code yet" | low
 - `web/src/deck/useDeck.ts` | `swipeBusy` ref race on a rapid user switch mid-swipe (from F2) | low
+- `web/src/deck/deckState.ts`, `deckState.test.ts` | `npx prettier --check` warns; not known whether pre-existing; prettier is not a configured check (step 2 implementer) | low
 
 ---
 

@@ -14,7 +14,16 @@ export type Failure =
   | { kind: "blocked"; code: BlockedCode; message: string }
   | { kind: "error"; message: string };
 
-export type PendingFeedback = { card: Card; response: SwipeResponse };
+export type FeedbackOutcome = "compulsory" | "optional" | "none";
+
+export type PendingFeedback = { card: Card; response: SwipeResponse; compulsory: boolean };
+
+// A left swipe on an exploration card teaches nothing: the curator was right.
+export function feedbackOutcome(response: SwipeResponse, card: Card): FeedbackOutcome {
+  if (response.feedback_required) return "compulsory";
+  if (card.source === "exploration" && response.action === "left") return "none";
+  return "optional";
+}
 
 export type DeckState = {
   // The first card is the one on show.
@@ -116,13 +125,14 @@ export function deckReducer(state: DeckState, action: DeckAction): DeckState {
 
     case "swipeOk": {
       const { card, response } = action;
+      const outcome = feedbackOutcome(response, card);
       return {
         ...state,
         swiping: false,
         queue: state.queue.filter((c) => c.decision_id !== card.decision_id),
         swipedIds: [...state.swipedIds, card.decision_id],
         favourited: response.favourited,
-        pendingFeedback: response.feedback_required ? { card, response } : null,
+        pendingFeedback: outcome === "none" ? null : { card, response, compulsory: outcome === "compulsory" },
       };
     }
 

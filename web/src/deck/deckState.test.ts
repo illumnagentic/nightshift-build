@@ -6,6 +6,7 @@ import {
   canSwipe,
   currentCard,
   deckReducer,
+  feedbackOutcome,
   initialDeckState,
   needsRefetch,
   phase,
@@ -13,10 +14,10 @@ import {
   type DeckState,
 } from "./deckState";
 
-function card(id: string, feedbackHint = false): Card {
+function card(id: string, feedbackHint = false, source: Card["source"] = "ranked"): Card {
   return {
     decision_id: id,
-    source: "ranked",
+    source,
     feedback_required: feedbackHint,
     listing: {
       id: `l-${id}`,
@@ -209,7 +210,7 @@ describe("swiping", () => {
     expect(deckReducer(initialDeckState, { type: "swipeStart" })).toBe(initialDeckState);
   });
 
-  it("drops the swiped card and shows the next when no feedback is required", () => {
+  it("drops the swiped card and opens optional feedback when none is required", () => {
     const s = run(
       [
         { type: "swipeStart" },
@@ -219,8 +220,23 @@ describe("swiping", () => {
     );
     expect(ids(s)).toEqual(["b", "c", "d", "e"]);
     expect(s.swiping).toBe(false);
+    expect(s.pendingFeedback?.compulsory).toBe(false);
+    expect(phase(s)).toBe("feedback");
+  });
+
+  it("moves to the next card when the outcome is none", () => {
+    const e = card("a", false, "exploration");
+    const s = run(
+      [
+        { type: "swipeStart" },
+        { type: "swipeOk", card: e, response: swipeResponse("a", { action: "left" }) },
+      ],
+      loaded,
+    );
+    expect(ids(s)).toEqual(["b", "c", "d", "e"]);
     expect(s.pendingFeedback).toBeNull();
     expect(phase(s)).toBe("card");
+    expect(currentCard(s)?.decision_id).toBe("b");
   });
 
   it("pauses when the response requires feedback even if the card hint is false", () => {
@@ -235,10 +251,11 @@ describe("swiping", () => {
     expect(phase(s)).toBe("feedback");
     expect(s.pendingFeedback?.card.decision_id).toBe("a");
     expect(s.pendingFeedback?.response.decision_id).toBe("a");
+    expect(s.pendingFeedback?.compulsory).toBe(true);
     expect(canSwipe(s)).toBe(false);
   });
 
-  it("does not pause when the response says false even if the card hint is true", () => {
+  it("does not make feedback compulsory when the response says false even if the card hint is true", () => {
     const a = card("a", true);
     const s = run(
       [
@@ -247,9 +264,8 @@ describe("swiping", () => {
       ],
       loaded,
     );
-    expect(phase(s)).toBe("card");
-    expect(s.pendingFeedback).toBeNull();
-    expect(currentCard(s)?.decision_id).toBe("b");
+    expect(phase(s)).toBe("feedback");
+    expect(s.pendingFeedback?.compulsory).toBe(false);
   });
 
   it("moves to the next card on continue", () => {
@@ -275,7 +291,8 @@ describe("swiping", () => {
       loaded,
     );
     expect(s.favourited).toBe(true);
-    expect(deckReducer(s, { type: "swipeStart" }).favourited).toBe(false);
+    const next = deckReducer(s, { type: "continue" });
+    expect(deckReducer(next, { type: "swipeStart" }).favourited).toBe(false);
   });
 
   it("does not favourite on a right swipe", () => {
@@ -295,8 +312,36 @@ describe("swiping", () => {
       { type: "fetchOk", response: batch([], "exhausted") },
       { type: "swipeStart" },
       { type: "swipeOk", card: card("a"), response: swipeResponse("a") },
+      { type: "continue" },
     ]);
     expect(phase(s)).toBe("empty");
+  });
+});
+
+describe("feedbackOutcome", () => {
+  const ranked = card("r", false, "ranked");
+  const exploration = card("x", false, "exploration");
+  const res = (action: SwipeResponse["action"], feedback_required = false) =>
+    swipeResponse("d", { action, feedback_required });
+
+  it.each(["left", "right", "superlike"] as const)("is compulsory when required, ranked, %s", (a) => {
+    expect(feedbackOutcome(res(a, true), ranked)).toBe("compulsory");
+  });
+
+  it.each(["left", "right", "superlike"] as const)("is compulsory when required, exploration, %s", (a) => {
+    expect(feedbackOutcome(res(a, true), exploration)).toBe("compulsory");
+  });
+
+  it.each(["left", "right", "superlike"] as const)("is optional for ranked, %s", (a) => {
+    expect(feedbackOutcome(res(a), ranked)).toBe("optional");
+  });
+
+  it("is none for exploration, left", () => {
+    expect(feedbackOutcome(res("left"), exploration)).toBe("none");
+  });
+
+  it.each(["right", "superlike"] as const)("is optional for exploration, %s", (a) => {
+    expect(feedbackOutcome(res(a), exploration)).toBe("optional");
   });
 });
 
