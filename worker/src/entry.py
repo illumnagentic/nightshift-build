@@ -1,3 +1,4 @@
+import logging
 import re
 import secrets
 from datetime import datetime, timezone
@@ -6,6 +7,7 @@ from fastapi import APIRouter, FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
+from starlette.exceptions import HTTPException
 from workers import WorkerEntrypoint
 import asgi
 
@@ -34,6 +36,25 @@ async def api_error_handler(request: Request, exc: ApiError):
 @app.exception_handler(RequestValidationError)
 async def validation_error_handler(request: Request, exc: RequestValidationError):
     return error_response(422, "invalid_request", "Request body must be JSON like {\"username\": \"alex\"}.")
+
+
+# Routing 404s and 405s are raised as HTTPException; give them the contract shape, keeping headers like Allow.
+@app.exception_handler(HTTPException)
+async def http_error_handler(request: Request, exc: HTTPException):
+    code = {404: "not_found", 405: "method_not_allowed"}.get(exc.status_code, "http_error")
+    response = error_response(exc.status_code, code, "No such endpoint." if exc.status_code == 404 else "Request not allowed.")
+    response.headers.update(exc.headers or {})
+    return response
+
+
+# Middleware rather than an Exception handler: that route re-raises after responding, which the Workers adapter may not pass on.
+@app.middleware("http")
+async def internal_error_guard(request: Request, call_next):
+    try:
+        return await call_next(request)
+    except Exception:
+        logging.exception("Unhandled error on %s %s", request.method, request.url.path)
+        return error_response(500, "internal_error", "Something went wrong on the server.")
 
 
 class NewUser(BaseModel):

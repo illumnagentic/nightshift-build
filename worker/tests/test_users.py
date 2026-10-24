@@ -111,3 +111,13 @@ def test_malformed_json_is_422(raw):
 def test_length_boundaries_accepted():
     assert call("POST", "/api/users", body={"username": "a" + secrets.token_hex(16)[:31]})[0] == 201
     assert call("POST", "/api/users", body={"username": "A-_" + secrets.token_hex(4)})[0] == 201
+
+
+def test_unknown_path_is_404_contract_shape():
+    status, payload = call("GET", "/api/nope")
+    assert_error(status, payload, 404, "not_found")
+
+
+def test_wrong_method_is_405_contract_shape():
+    status, payload = call("DELETE", "/api/users")
+    assert_error(status, payload, 405, "method_not_allowed")

@@ -163,6 +163,26 @@ opaque random string.
 - [x] Matches locked requirements — evidence: contract 201/409/422 shapes, username rules, opaque u_ ids, username-only, check-process-refs.sh exit 0 (2026-10-24)
 - [x] No scope drift — evidence: diff touches only entry.py, tests/test_users.py, pyproject.toml, uv.lock (Step 1 scope), evidence/step-2.md, progress file (2026-10-24)
 
+**Redo (arbiter FIX_NOW, 2026-10-24)**: qa-gate finding — 404, 405 and unhandled 500
+responses do not use the contract error shape (contract General: "Errors always have
+this shape"). Files: `worker/src/entry.py`, `worker/tests/test_users.py`,
+`evidence/backend-scaffold/step-2.md`. Add a handler for Starlette's `HTTPException`
+mapping 404 to `not_found`, 405 to `method_not_allowed`, any other status to
+`http_error`, keeping the status and any `Allow` header; and an unhandled-exception
+path returning 500 `internal_error` with a fixed message (no exception text, no
+traceback in the body; log it). If Starlette's `Exception` handler re-raises and the
+body is lost under the Workers ASGI adapter, use an `@app.middleware("http")`
+try/except instead. Do not edit `docs/api-contract.md`: the new codes give undefined
+errors the contract's shape, which is not a breaking change. Done when: test_users.py
+covers GET `/api/nope` 404 `not_found` and DELETE `/api/users` 405
+`method_not_allowed`, both in contract shape; full suite passes against a freshly
+seeded `pywrangler dev`; a manual 500 check (drop `users` in local D1, GET
+`/api/users`, expect 500 `{"error":{"code":"internal_error",...}}`, then re-seed) is
+recorded in `evidence/backend-scaffold/step-2.md`.
+
+- [x] Redo implemented — evidence: entry.py http_error_handler + internal_error_guard middleware; test_unknown_path_is_404_contract_shape, test_wrong_method_is_405_contract_shape (2026-10-24)
+- [x] Redo reviewed — evidence: reviewer re-run seed exit 0, pytest 36 passed exit 0, DELETE /api/users 405 method_not_allowed with Allow header, DROP TABLE users gives 500 internal_error with fixed message, re-seeded (users=0), check-process-refs exit 0 (2026-10-24)
+
 ### Step 3 — Mubit gateway client
 
 **Goal**: A small module that sends a native Gemini `generateContent` request through
@@ -221,6 +241,24 @@ run (seed exit 0, 34 passed; only cold-cache downloads unobserved). Done when
 - [x] Redo implemented — heading now subject language, closing note describes clean-clone run (2026-10-24)
 - [x] Redo reviewed — evidence: check-process-refs.sh exit 0, banned-word grep clean (2026-10-24)
 
+**Redo (arbiter FIX_NOW, 2026-10-24)**: qa-gate finding — kit-config backend "Test
+(single file)" names `tests/test_mubit.py` where the web entry uses a `<path>`
+placeholder. File: `.claude/kit-config.md` (that line only). Done when the backend
+part reads `cd worker && uv run --group dev pytest <path> -q` and no other line in
+kit-config changed.
+
+- [x] Redo implemented — evidence: kit-config.md line 23 backend part now `pytest <path> -q`, diff is that single line (2026-10-24)
+- [x] Redo reviewed — evidence: git diff HEAD single-line, web part unchanged; pytest tests/test_mubit.py 10 passed exit 0; check-process-refs exit 0 (2026-10-24)
+
+**Redo (arbiter FIX_NOW, 2026-10-24)**: README re-seed note. File: `worker/README.md`
+only. The seed section and the re-seed note for test users both say to stop
+`pywrangler dev` before running `worker/scripts/seed.sh` and restart it afterwards,
+because a running server keeps a stale view of the D1 and returns 500. Done when no
+other file changes, `.claude/scripts/check-process-refs.sh` exits 0, no banned words.
+
+- [x] Redo implemented — evidence: worker/README.md two additions (seed section, test re-seed note); git diff HEAD -- worker/README.md is only those (2026-10-24)
+- [x] Redo reviewed — evidence: diff limited to two README additions, accurate, no banned words; check-process-refs.sh exit 0 (2026-10-24)
+
 ---
 
 ## TRADEOFFS
@@ -236,6 +274,8 @@ run (seed exit 0, 34 passed; only cold-cache downloads unobserved). Done when
 | 2026-10-24 | 3 | Only `x-middleware-request-id` is copied out of the runtime's response headers, so `retry-after` and `x-should-retry` are not available to callers | Nobody consumes them yet; the runtime Headers object has no confirmed iteration API | Small: copy more headers once a caller retries — accepted by arbiter 2026-10-24: no caller retries, so copying more headers now would be speculative (ladder rung 1); MubitError already carries status and request ID, enough to decide on a retry later |
 | 2026-10-24 | 3 | The Gemini-format gateway error type is read from `error.type` or ErrorInfo `metadata.type`, a guess; the skill only says the code is the ErrorInfo `reason` | No real gateway refusal body was seen (spend limited to one call) | Small: confirm on the first real refusal and adjust `parse_response` — accepted by arbiter 2026-10-24: confirming needs a real refusal body, which needs more paid calls; a wrong guess only mislabels gateway vs provider in the error, and status, code and request ID are still raised |
 | 2026-10-24 | 4 | README steps were run on the existing working tree, not a clean clone; kit-config's backend Lint, Typecheck and Build lines are left blank (no such commands exist) | A clean clone would redownload wrangler and Python packages; inventing commands is barred | Small: reviewer repeats from a fresh clone — accepted by arbiter 2026-10-24: the reviewer has since run the README from a clean clone (seed exit 0, 34 tests passed); only the first-run download with cold npx/uv caches is unobserved, and the README already states Node/npx and network on first run. Blank Lint/Typecheck/Build lines are correct, as no such backend commands exist |
+| 2026-10-24 | 2 redo | 500 guard is an `@app.middleware("http")` try/except, chosen without trying the `Exception` handler route | The handler route re-raises after responding and the Workers ASGI adapter may drop the body; middleware is the redo's stated fallback | Small: try the `Exception` handler if the middleware causes trouble (reviewer observed 500 `internal_error` body works) — accepted by arbiter 2026-10-24: the middleware route is the redo's stated fallback and the reviewer saw it return the contract 500 body under `pywrangler dev`; trying the other route now buys nothing |
+| 2026-10-24 | 2 redo | Statuses other than 404/405 reaching the HTTPException handler get the message "Request not allowed.", which can be inaccurate | No other HTTPException status is raised today; a per-status message table would be speculative | Small: add messages when a route raises another status — accepted by arbiter 2026-10-24: no route raises HTTPException; app errors go through `ApiError` with contract codes and messages, and B3's 401 `unknown_user` will too. The path is unreachable today, so a message table would be speculative |
 
 ---
 
@@ -244,21 +284,104 @@ run (seed exit 0, 34 passed; only cold-cache downloads unobserved). Done when
 - `worker/pylock.toml` is generated by `pywrangler dev` and is not in the declared file scope (the scope names `uv.lock`). Left untracked in the working tree; decide whether to commit it or gitignore it. Low. resolved by Step 1 redo 2026-10-24
 - `worker/README.md` ping section: the ping reads repo-root `.env` while the dev server reads `worker/.dev.vars`, so the key lives in two files. Low. — accepted by arbiter 2026-10-24: by design, Step 1 creates `.dev.vars` from `.env` and Step 3's reviewed done-when has the ping read `.env`; both files are gitignored and the README states which file each reads
 - `worker/uv.lock` is generated by `uv run --group dev` and is untracked. Step 1 scope names it "if generated"; commit it with step 2. Low. — accepted by arbiter 2026-10-24: commit it with the step 2 commit. Two laptops run the backend, and a lockfile keeps fastapi/pytest versions identical on both; it is declared in Step 1 scope, not gitignored, and holds only fastapi, pytest and their transitive deps
+- `worker/scripts/mubit_ping.py` parses `.env` with a plain `KEY=value` split, so an `export KEY=...` line is not read (qa-gate). Low. — accepted by arbiter 2026-10-24: the repo `.env` has no `export` lines, the ping has already made its one call and must not be re-run casually, and a missed key fails loudly with a KeyError before any request is sent
+- Re-seeding the local D1 while `pywrangler dev` runs leaves the server returning 500 until it is restarted (step 2 redo). Low. — resolved by Step 4 redo 2026-10-24 (README re-seed note)
+- The 405 `Allow` header for `DELETE /api/users` lists only `GET`, though POST is also allowed (GET and POST are separate routes on one path; Starlette reports the first). Low. — accepted by arbiter 2026-10-24: the web client never sends a wrong method and nothing reads `Allow`; correcting it means re-matching routes in the handler, Starlette's job, for no consumer
 
 ---
 
 ## VERIFICATION
 
-- [ ] All step checkboxes ticked with evidence
-- [ ] Every evidence path in this file exists
-- [ ] Test suite run — result:
-- [ ] Lint run — result:
-- [ ] Typecheck run — result:
-- [ ] Build run — result:
-- [ ] Diff contains no files outside declared scope
-- [ ] Tradeoff ledger reviewed and signed off by human
-- [ ] Human eye test completed
+- [x] All step checkboxes ticked with evidence — qa-gate: 4 steps x 5 boxes plus 2 redos x 2 boxes, all dated 2026-10-24 (2026-10-24)
+- [x] Every evidence path in this file exists — qa-gate: evidence/backend-scaffold/step-1.md to step-4.md present (2026-10-24)
+- [x] Test suite run — result: backend `uv run --group dev pytest tests -q` 34 passed, exit 0 (after seed.sh exit 0, listings 635, users 0); web `npm test` 121 passed, exit 0 (2026-10-24)
+- [ ] Lint run — result: not configured in kit-config (no lint command for web or backend); not run
+- [x] Typecheck run — result: web `npm run typecheck` exit 0; no backend typecheck configured (2026-10-24)
+- [x] Build run — result: web `npm run build` exit 0; no backend build configured (2026-10-24)
+- [x] Diff contains no files outside declared scope — qa-gate: all 18 files map to a step's Files in scope, an Evidence location or this file (2026-10-24)
+- [x] Tradeoff ledger reviewed — signed by arbiter (full automation): all 9 TRADEOFFS and 3 SPOTTED entries carry an arbiter verdict (2026-10-24)
+- [ ] Human eye test completed — not human-verified (full automation) — smoke check: seeded D1, `pywrangler dev` and Vite dev server started; curl GET/POST /api/users gave 200, 201, 409 `username_taken` (case variant), 422 `invalid_request` (bad char, malformed JSON); GET via the Vite proxy on :5173 gave 200 with the new user. Unknown route gave 404 `{"detail":"Not Found"}` and wrong method 405 `{"detail":"Method Not Allowed"}`, not the contract error shape. Both servers stopped by process group.
+
+QA-GATE: PASS WITH FINDINGS 2026-10-24 — 404, 405 and unhandled 500 responses do not use the contract's `{"error": {"code", "message"}}` shape (contract General: "Errors always have this shape"). Needs an arbiter ruling before merge.
 
 ---
 
 ## HANDOVER
+
+**What was built**
+
+There is now a backend in `worker/`. It runs on your laptop as a Cloudflare Python
+Worker with FastAPI, against a local D1 database. A seed script fills that database
+with the 635 listings and an empty users table. You can list users and create a user
+by username alone, and the web app's dev server reaches it through its `/api` proxy.
+There is also a small client for calling Gemini through Mubit, which later features
+(curator, photo flags) will use. Nothing calls it yet in the running app.
+
+**What to check yourself**
+
+1. From the repo root, run `worker/scripts/seed.sh`. It should end with exit 0. The
+   first run downloads wrangler, so it needs network.
+2. Check the counts: `cd worker && npx wrangler d1 execute haka --local --command "SELECT (SELECT count(*) FROM listings), (SELECT count(*) FROM users)"`.
+   You should see 635 and 0.
+3. Create `worker/.dev.vars` with `MUBIT_API_KEY=...` if it is not there. It is
+   gitignored.
+4. In `worker/`, run `uvx --from workers-py pywrangler dev`. Wait for "Ready on
+   http://localhost:8787".
+5. `curl -s http://localhost:8787/api/users` should return `{"users":[]}`.
+6. `curl -s -X POST -H 'Content-Type: application/json' -d '{"username":"alex"}' http://localhost:8787/api/users`
+   should return 201 and `{"user_id":"u_…","username":"alex"}`.
+7. Send the same request with `"ALEX"`. You should get 409 and
+   `{"error":{"code":"username_taken",…}}`.
+8. Send `{"username":"al ex"}`. You should get 422 and `invalid_request`.
+9. In a second terminal, `cd worker && uv run --group dev pytest tests -q`. Expect 34
+   passed. This adds test users (`t_…`) to the local D1; re-seed to clear them.
+10. Start the web app with `cd web && npm run dev` (make sure `VITE_API_MODE` is not
+    `mock` in `web/.env`; anything else uses the real API). Open
+    http://localhost:5173. The user picker should list `alex`, and creating a user
+    there should work. The deck screen will fail after that, because `/prefs` and
+    `/deck` do not exist yet.
+11. Do not run `worker/scripts/mubit_ping.py` unless you mean to: it makes a paid call.
+
+**Tools that will help**
+
+- curl or Postman for the two endpoints. Look at the status code as well as the body.
+- Browser devtools, Network tab, on http://localhost:5173: requests to `/api/users`
+  should go to the same origin and come back 200 or 201, with no CORS errors.
+- `npx wrangler d1 execute haka --local --command "SELECT * FROM users"` in `worker/`
+  to see what is actually stored.
+- The `pywrangler dev` terminal: Python tracebacks from the Worker appear there.
+
+**What is not done**
+
+- Requests to an unknown path return 404 `{"detail":"Not Found"}`, a wrong method
+  returns 405 `{"detail":"Method Not Allowed"}`, and an unexpected D1 failure returns a
+  plain 500. None use the contract's error shape. The web client falls back to a
+  generic "Request failed" message, so nothing crashes, but the contract says errors
+  always have that shape.
+- The Mubit client's real call path (`generate_content`, using the Workers `fetch`) has
+  never run. Only the request building and response parsing are tested, and the one
+  live call used Python's `urllib`. B4's first curator call is its first real test.
+- How the client tells a Mubit gateway refusal from a Gemini error is a guess. No real
+  refusal body has been seen.
+- Only `x-middleware-request-id` is read from Mubit responses; retry headers are not.
+- A duplicate username is detected by matching the text "UNIQUE constraint failed" in
+  the D1 error. If D1 ever words it differently, a duplicate becomes a 500, not a 409.
+- All bad-body 422s share one generic message, not one per field.
+- The API tests need a seeded, running dev server. There is no in-process test.
+- `seed.sh` needs Node and `npx`, and network on first run, to fetch wrangler.
+- The README was run from a clean clone, but with warm caches. A truly cold first run
+  is unobserved.
+- No lint, backend typecheck or backend build commands exist.
+- The X-User-Id check and 401 `unknown_user` are not built; B3 builds them.
+
+**What could bite you**
+
+- The Mubit client in the Worker. It is written against the Workers `fetch` API from
+  the SDK source, not from a run. If the response object differs, B4's first curator
+  call fails, and that is on the critical path to Sat 13:00. Test it early in B4.
+- Stray dev servers. During this check a second `wrangler dev` (started 16:52, not by
+  this check) was already running and holding the inspector port. Two servers fighting
+  over :8787 means you may be testing an old build. Check with `ss -ltnp | grep 8787`.
+- `seed.sh` deletes all local D1 state, including users, every time. Once B3 to B5
+  write prefs, swipes and feedback, re-seeding wipes them too. Do not re-seed during
+  the persona batch.
