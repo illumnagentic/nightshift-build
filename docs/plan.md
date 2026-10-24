@@ -48,7 +48,7 @@ Branch names are proposals; set them at feature-kickoff.
   client against mocks from the contract.
 - [x] **F2 Swipe deck** — `feat/web-deck` — property card, swipe left / right,
   superlike.
-- [ ] **F3 Feedback screen** — `feat/web-feedback` — filtered chips, phrase dialog with
+- [x] **F3 Feedback screen** — `feat/web-feedback` — filtered chips, phrase dialog with
   preset suggestions, free-text box, compulsory for the first 15–20 cards.
 - [ ] **F4 Prefs and favourites** — `feat/web-prefs-favourites` — prefs input with
   workplace postcode, favourites with remove-with-reason.
