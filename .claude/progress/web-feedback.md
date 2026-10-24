@@ -228,11 +228,11 @@ wired into the app yet.
 
 **Evidence location**: `evidence/web-feedback/step-4.md`.
 
-- [ ] Implemented
-- [ ] Tested — evidence: (date)
-- [ ] Best practices met — evidence: (date)
-- [ ] Matches locked requirements — evidence: (date)
-- [ ] No scope drift — evidence: (date)
+- [x] Implemented — ChipDialog.tsx, feedback.css, evidence/web-feedback/step-4.md present (2026-10-24)
+- [x] Tested — evidence: typecheck/test (160)/build/process-refs all exit 0; no component test (no jsdom), logged as tradeoff, eye test pending (2026-10-24)
+- [x] Best practices met — evidence: native dialog, aria-labelledby, labelled fields, fieldset/legend, 44px targets, focus-visible, reduced motion (2026-10-24)
+- [x] Matches locked requirements — evidence: four strengths map to contract strings, phrases fill text only, no numeric rating (2026-10-24)
+- [x] No scope drift — evidence: only the three in-scope files plus progress tradeoff lines; not imported anywhere, no new deps (2026-10-24)
 
 ### Step 5 — Feedback screen in the deck
 
@@ -272,6 +272,10 @@ check exits 0.
 - Step 2 | Four existing deck tests changed expectations or flow because a ranked right swipe now opens optional feedback (listed in the step evidence). Assertions kept; two now call `continue` before the next step. | None.
 - Step 3 | `toRequest` trusts the card's `chips` to have unique `chip_id`s; if a card repeated one, the body would repeat it. The contract says chips are unique per card. | Dedupe by `chip_id` in `toRequest` if the backend ever sends repeats.
 - Step 3 | `setAnswer` keeps raw text untrimmed in the form and trims only when building the request, so the text box can hold trailing spaces while typing. | None needed.
+- Step 4 | Not browser-tested and no component test exists (node test env, no jsdom), so focus return, Escape and the `showModal()` effect are unverified until the eye test. | A jsdom or browser test setup, which needs a dependency.
+- Step 4 | Focus return is done by hand in an effect (stored opener, `.focus()` after `close()`) rather than relying on the browser's own restore. If the opener is removed from the page it is silently skipped. | None needed unless the screen unmounts chips on save.
+- Step 4 | Backdrop click does not close the dialog; only Cancel and Escape do. | Add a click-outside handler if wanted.
+- Step 4 | Saved text is passed to `onSave` untrimmed (the form trims on build); Save is allowed with empty text. | None needed.
 
 ---
 
