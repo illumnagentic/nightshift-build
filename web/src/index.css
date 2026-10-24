@@ -2,3 +2,19 @@ body {
   font-family: system-ui, sans-serif;
   margin: 2rem;
 }
+
+ul {
+  padding-left: 1.25rem;
+}
+
+li {
+  margin: 0.25rem 0;
+}
+
+form {
+  margin-top: 1rem;
+}
+
+[role="alert"] {
+  color: #b00020;
+}

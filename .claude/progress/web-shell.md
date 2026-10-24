@@ -216,11 +216,11 @@ control; typecheck, tests and build pass; the human has eyeballed it in the brow
 **Evidence location**: the diff, plus a short note and screenshot path in
 `evidence/web-shell/step-4.md`.
 
-- [ ] Implemented
-- [ ] Tested — evidence: (date)
-- [ ] Best practices met — evidence: (date)
-- [ ] Matches locked requirements — evidence: (date)
-- [ ] No scope drift — evidence: (date)
+- [x] Implemented — App.tsx, UserPicker.tsx, session.ts: list, create, restore, switch; localStorage in try/catch (2026-10-24)
+- [x] Tested — typecheck, npm test (50 passed), build, check-process-refs all exit 0 on reviewer re-run; smoke.test.ts unchanged; UI has no component tests by locked scope (2026-10-24)
+- [x] Best practices met — ApiError.message shown, fallback for non-ApiError, labelled input, role=alert, no router/deps, no mock checks copied, source never shown (2026-10-24)
+- [x] Matches locked requirements — done-when holds; human eye test recorded in evidence/web-shell/step-4.md (human: "it's fine"; orchestrator re-run: list, create, username_taken message, reload restore, switch all pass; no screenshot kept, done-when does not require one) (2026-10-24)
+- [x] No scope drift — only 5 declared files plus progress-file TRADEOFFS appends; smoke.test.ts and package.json untouched (2026-10-24)
 
 ---
 
@@ -242,6 +242,11 @@ control; typecheck, tests and build pass; the human has eyeballed it in the brow
 - Step 3 | `index.ts` imports the mock unconditionally, so fixtures are in the production bundle even in HTTP mode. | reported by implementer
 - Step 3 | Chip catalogue clauses for photo flags are applied to the three fixtures that carry flags. The contract says flags do not exist yet and to skip those clauses, so these fixtures would differ from the real backend today. | reported by implementer
 - Step 3 | Fixture chips are computed at load by `buildChips` in `fixtures.ts`, a local implementation of the contract's chip catalogue rules. This departs from the locked out-of-scope line about hand-picked chips; authorised by the human in AMENDMENTS 2026-10-24. Risk: it can drift from the backend's implementation. Fix: replace with the real backend once B4 lands. Mitigation: `mock.test.ts` checks hand-derived chip lists for five fixtures. | reported by implementer
+- Step 4 | Session stores `{user_id, username}` in `localStorage`, not only the id. The username is refreshed from `listUsers()` on restore. | reported by implementer
+- Step 4 | A network failure (native error) shows a fixed message, "Could not reach the server. Try again."; no retry. On restore, a failed `listUsers()` falls back to the picker rather than trusting the stored user. | reported by implementer
+- Step 4 | On load with a stored user, `listUsers()` is called by App and again by the picker if the check fails or the user is gone. One extra call, no caching. | reported by implementer
+- Step 4 | In mock mode a created user (`u_03`+) does not survive reload, because mock state is in memory. Seeded alex and jordan do. | reported by implementer
+- Step 4 | Create form blocks only empty or whitespace-only input; the raw (untrimmed) text is sent, the backend decides. | reported by implementer
 
 ---
 
