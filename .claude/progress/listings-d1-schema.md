@@ -114,11 +114,11 @@ All paths relative to the worktree root. Steps 1–5 are independent of the netw
 
 **Evidence location**: the test file; test run output recorded in the reviewer's tick.
 
-- [ ] Implemented
-- [ ] Tested — evidence: (date)
-- [ ] Best practices met — evidence: (date)
-- [ ] Matches locked requirements — evidence: (date)
-- [ ] No scope drift — evidence: (date)
+- [x] Implemented — dataset/tests/test_sanitise.py, 56 unittest cases (2026-10-24)
+- [x] Tested — `python3 -I -B -m unittest discover -s dataset/tests` exit 0, Ran 56 OK; 9 mutations of sanitise.py in a temp copy (TBC mapped, lease-0 rule dropped, lon bound, km added, default unit km, 0 nulled, not-specified mapped, unescape removed, rounding) each failed the suite (2026-10-24)
+- [x] Best practices met — stdlib only, no raw/ or listings.jsonl read, RANGES and COLUMNS cross-checked against schema.sql, km NULL pin logged in TRADEOFFS; process-refs exit 0 (2026-10-24)
+- [x] Matches locked requirements — accept and reject case per rule: enums, miles default, 0 kept vs lease 0 NULL, clean text, dates, range edges, NOT NULL drops, record shape (2026-10-24)
+- [x] No scope drift — only dataset/tests/test_sanitise.py new in step; other changes are pre-existing progress file and .gitignore (2026-10-24)
 
 ### Step 4 — Build seed.sql and the local sqlite from the schema
 
@@ -171,6 +171,8 @@ All paths relative to the worktree root. Steps 1–5 are independent of the netw
 - 2026-10-24 | step 2 | RANGES in sanitise.py repeat the schema.sql CHECK bounds by hand | the schema is SQL, the cleaner is Python | generate one from the other, or test they agree (step 3).
 - 2026-10-24 | step 2 | Whitespace collapse changes 19 addresses (embedded newlines become one space) and 295 descriptions (trailing spaces before newlines removed); 92 key_features lose HTML entities such as `&amp;` | required by the clean-text rule | none.
 - 2026-10-24 | step 2 | Description is HTML-stripped in build() and again in sanitise, so text that decodes to a tag-like string after the first pass is stripped on the second | build() needs stripped text for its parsers | strip once, at the end only.
+- 2026-10-24 | step 3 | test_sanitise.py inserts `dataset/scripts` into `sys.path`; `-t dataset` fails because `dataset/tests` is not a package, and `__init__.py` is outside the step's files | no `__init__.py` allowed | add `dataset/tests/__init__.py` and `dataset/scripts/__init__.py`, then run with `-t dataset`.
+- 2026-10-24 | step 3 | sanitise.py has no km unit, so a declared `km` distance is set to NULL (`unknown_unit`) and the test pins that; the RANGES-vs-schema test reads only `BETWEEN` CHECKs by regex | RapidAPI/Rightmove give miles only | add `km` to KM_PER_UNIT if a km source appears.
 - Step 1: `postcode` has no format CHECK (UK postcode GLOB is unreliable).
 
 ---
