@@ -53,7 +53,7 @@ Branch names are proposals; set them at feature-kickoff.
   superlike.
 - [x] **F3 Feedback screen** — `feat/web-feedback` — filtered chips, phrase dialog with
   preset suggestions, free-text box, compulsory for the first 15–20 cards.
-- [ ] **F4 Prefs and favourites** — `feat/web-prefs-favourites` — prefs input with
+- [x] **F4 Prefs and favourites** — `feat/web-prefs-favourites` — prefs input with
   workplace postcode, favourites with remove-with-reason.
 - [ ] **F5 Dashboard** — `feat/web-dashboard` — three-bar chart with error bars,
   false-exclude panel.
