@@ -172,11 +172,11 @@ exits 0. Not wired into the app yet.
 
 **Evidence location**: `evidence/web-prefs-favourites/step-2.md`.
 
-- [ ] Implemented
-- [ ] Tested — evidence: (date)
-- [ ] Best practices met — evidence: (date)
-- [ ] Matches locked requirements — evidence: (date)
-- [ ] No scope drift — evidence: (date)
+- [x] Implemented — PrefsScreen.tsx, prefs.css; save() guarded by pollId generation against unmount/userId races (2026-10-24)
+- [x] Tested — evidence: typecheck, npm test (178), build, process-refs all exit 0, re-run by reviewer; no component test env per scope (2026-10-24)
+- [x] Best practices met — evidence: stale responses ignored, timers cleared on unmount, Save disabled while saving, 4xx shows error.message (2026-10-24)
+- [x] Matches locked requirements — evidence: 1500 ms poll, pending/failed on open handled, onReady once, no postcode check, no source (2026-10-24)
+- [x] No scope drift — evidence: only prefs/PrefsScreen.tsx, prefs.css, evidence/step-2.md new; progress file edits only (2026-10-24)
 
 ### Step 3 — Favourites screen
 
@@ -236,6 +236,8 @@ process-wording check exits 0.
 ## TRADEOFFS
 
 - Step 1 | The client accepts zero and negative whole numbers as a commute limit and rejects an explicit plus sign ("+5") | the backend owns range checks (422); the form only parses what it can put in the JSON | add a range check or accept "+" if the backend contract defines one
+- Step 2 | Polling has no time limit and keeps retrying after any error, including a 4xx, while the status is pending | the contract defines no timeout and a transient failure should not strand the user; leaving the screen or saving again stops it | add a cap with a visible 'taking too long' message once the backend gives an expected time
+- Step 2 | The parsed result is shown only when it has at least one hard limit or soft preference, and a failed load shows the error with empty fields | nothing useful to show otherwise | none needed unless the eye test finds it confusing
 
 ---
 
@@ -245,6 +247,7 @@ process-wording check exits 0.
 - `web/src/deck/useDeck.ts` | `swipeBusy` ref race on a rapid user switch mid-swipe (from F2) | low
 - `web/src/feedback/ChipDialog.tsx`, `FeedbackScreen.tsx` | strength labels written out in both files (from F3, logged by the human's choice) | low
 - `web/src/deck/deck.css` | orphaned `.deck-feedback` rules after the stub was deleted (from F3) | low
+- `web/src/prefs/PrefsScreen.tsx` | form, parsed and status are not reset on a userId change; needs `key={userId}` or a reset when wired | low
 
 ---
 
