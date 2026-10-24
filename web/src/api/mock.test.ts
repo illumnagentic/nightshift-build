@@ -629,6 +629,87 @@ describe("feedback", () => {
       "chip_not_offered",
     );
   });
+
+  it("returns skipped false for normal feedback", async () => {
+    const card = await swiped();
+    const res = await api.putFeedback(ALEX, card.decision_id, {
+      chips: [],
+      free_text: "Fine",
+    });
+    expect(res.skipped).toBe(false);
+  });
+
+  it("stores a skip, returns it and bumps the profile version", async () => {
+    const card = await swiped();
+    const before = (await api.getProfile(ALEX)).version;
+    const res = await api.putFeedback(ALEX, card.decision_id, {
+      chips: [],
+      free_text: "  ",
+      skipped: true,
+    });
+    expect(res).toEqual({
+      decision_id: card.decision_id,
+      chips: [],
+      free_text: null,
+      skipped: true,
+      profile_version: before + 1,
+    });
+    const profile = await api.getProfile(ALEX);
+    expect(profile.version).toBe(before + 1);
+    expect(profile.history[0].cause).toMatchObject({
+      type: "feedback",
+      decision_id: card.decision_id,
+    });
+  });
+
+  it("returns 422 invalid_request for a skip with chips or free text", async () => {
+    const card = await swiped();
+    const id = card.chips[0].chip_id;
+    await expectError(
+      api.putFeedback(ALEX, card.decision_id, {
+        chips: [{ chip_id: id, strength: "must_have", text: null }],
+        free_text: null,
+        skipped: true,
+      }),
+      422,
+      "invalid_request",
+    );
+    await expectError(
+      api.putFeedback(ALEX, card.decision_id, {
+        chips: [],
+        free_text: "Nice",
+        skipped: true,
+      }),
+      422,
+      "invalid_request",
+    );
+    await expectError(
+      api.putFeedback(ALEX, card.decision_id, {
+        chips: [],
+        free_text: null,
+        skipped: "yes" as never,
+      }),
+      422,
+      "invalid_request",
+    );
+  });
+
+  it("lets a later non-skipped answer replace a skip", async () => {
+    const card = await swiped();
+    const id = card.chips[0].chip_id;
+    await api.putFeedback(ALEX, card.decision_id, {
+      chips: [],
+      free_text: null,
+      skipped: true,
+    });
+    const res = await api.putFeedback(ALEX, card.decision_id, {
+      chips: [{ chip_id: id, strength: "must_have", text: null }],
+      free_text: null,
+    });
+    expect(res.skipped).toBe(false);
+    const { factors } = await api.getProfile(ALEX);
+    expect(factors).toEqual([{ factor: id, direction: "must have", weight: 1 }]);
+  });
 });
 
 describe("flag correction", () => {
@@ -810,6 +891,31 @@ describe("profile", () => {
     expect(factors).toEqual([
       { factor: id, direction: card.chips[0].phrases[0], weight: 1 },
     ]);
+  });
+
+  it("does not lower a factor's weight when another card with that chip was skipped", async () => {
+    await ready();
+    const cards = await deck(ALEX, 10);
+    const id = cards[0].chips[0].chip_id;
+    const offering = cards.filter((c) => c.chips.some((x) => x.chip_id === id));
+    const [a, b] = offering;
+    expect(b).toBeDefined();
+    for (const c of [a, b])
+      await api.swipe(ALEX, c.decision_id, { action: "right" });
+    await api.putFeedback(ALEX, a.decision_id, {
+      chips: [{ chip_id: id, strength: "must_have", text: null }],
+      free_text: null,
+    });
+    const answered = (await api.getProfile(ALEX)).factors[0].weight;
+    expect(answered).toBe(Math.round(100 / offering.length) / 100);
+    await api.putFeedback(ALEX, b.decision_id, {
+      chips: [],
+      free_text: null,
+      skipped: true,
+    });
+    expect((await api.getProfile(ALEX)).factors[0].weight).toBe(
+      Math.round(100 / (offering.length - 1)) / 100,
+    );
   });
 });
 

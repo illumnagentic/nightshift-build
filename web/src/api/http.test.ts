@@ -102,3 +102,19 @@ it("URL-encodes path ids", async () => {
   await httpClient.getListing("u_01", "a/b c");
   expect(lastCall()[0]).toBe("/api/listings/a%2Fb%20c");
 });
+
+it("sends skipped in the PUT feedback body", async () => {
+  fetchMock.mockResolvedValue(
+    json({ decision_id: "d_000001", chips: [], free_text: null, skipped: true, profile_version: 2 }),
+  );
+  const res = await httpClient.putFeedback("u_01", "d_000001", {
+    chips: [],
+    free_text: null,
+    skipped: true,
+  });
+  const [url, init] = lastCall();
+  expect(url).toBe("/api/decisions/d_000001/feedback");
+  expect(init.method).toBe("PUT");
+  expect(init.body).toBe(JSON.stringify({ chips: [], free_text: null, skipped: true }));
+  expect(res.skipped).toBe(true);
+});

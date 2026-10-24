@@ -6,6 +6,7 @@ import {
   canSwipe,
   currentCard,
   deckReducer,
+  feedbackOutcome,
   initialDeckState,
   needsRefetch,
   phase,
@@ -13,10 +14,10 @@ import {
   type DeckState,
 } from "./deckState";
 
-function card(id: string, feedbackHint = false): Card {
+function card(id: string, feedbackHint = false, source: Card["source"] = "ranked"): Card {
   return {
     decision_id: id,
-    source: "ranked",
+    source,
     feedback_required: feedbackHint,
     listing: {
       id: `l-${id}`,
@@ -108,6 +109,22 @@ describe("fetching", () => {
     expect(s.emptyReason).toBe("exhausted");
     expect(needsRefetch(s)).toBe(false);
     expect(phase(s)).toBe("card");
+  });
+
+  it("keeps refetching when a duplicate batch arrives while plenty of cards are queued", () => {
+    const first = Array.from({ length: 10 }, (_, i) => `c${i}`);
+    let s = run([
+      { type: "fetchOk", response: batch(first) },
+      { type: "fetchOk", response: batch(first) },
+    ]);
+    expect(s.emptyReason).toBeNull();
+    for (const id of first.slice(0, 7)) {
+      s = deckReducer(s, { type: "swipeStart" });
+      s = deckReducer(s, { type: "swipeOk", card: card(id), response: swipeResponse(id) });
+      s = deckReducer(s, { type: "continue" });
+    }
+    expect(ids(s)).toEqual(["c7", "c8", "c9"]);
+    expect(needsRefetch(s)).toBe(true);
   });
 });
 
@@ -209,7 +226,7 @@ describe("swiping", () => {
     expect(deckReducer(initialDeckState, { type: "swipeStart" })).toBe(initialDeckState);
   });
 
-  it("drops the swiped card and shows the next when no feedback is required", () => {
+  it("drops the swiped card and opens optional feedback when none is required", () => {
     const s = run(
       [
         { type: "swipeStart" },
@@ -219,8 +236,23 @@ describe("swiping", () => {
     );
     expect(ids(s)).toEqual(["b", "c", "d", "e"]);
     expect(s.swiping).toBe(false);
+    expect(s.pendingFeedback?.compulsory).toBe(false);
+    expect(phase(s)).toBe("feedback");
+  });
+
+  it("moves to the next card when the outcome is none", () => {
+    const e = card("a", false, "exploration");
+    const s = run(
+      [
+        { type: "swipeStart" },
+        { type: "swipeOk", card: e, response: swipeResponse("a", { action: "left" }) },
+      ],
+      loaded,
+    );
+    expect(ids(s)).toEqual(["b", "c", "d", "e"]);
     expect(s.pendingFeedback).toBeNull();
     expect(phase(s)).toBe("card");
+    expect(currentCard(s)?.decision_id).toBe("b");
   });
 
   it("pauses when the response requires feedback even if the card hint is false", () => {
@@ -235,10 +267,11 @@ describe("swiping", () => {
     expect(phase(s)).toBe("feedback");
     expect(s.pendingFeedback?.card.decision_id).toBe("a");
     expect(s.pendingFeedback?.response.decision_id).toBe("a");
+    expect(s.pendingFeedback?.compulsory).toBe(true);
     expect(canSwipe(s)).toBe(false);
   });
 
-  it("does not pause when the response says false even if the card hint is true", () => {
+  it("does not make feedback compulsory when the response says false even if the card hint is true", () => {
     const a = card("a", true);
     const s = run(
       [
@@ -247,9 +280,8 @@ describe("swiping", () => {
       ],
       loaded,
     );
-    expect(phase(s)).toBe("card");
-    expect(s.pendingFeedback).toBeNull();
-    expect(currentCard(s)?.decision_id).toBe("b");
+    expect(phase(s)).toBe("feedback");
+    expect(s.pendingFeedback?.compulsory).toBe(false);
   });
 
   it("moves to the next card on continue", () => {
@@ -275,6 +307,39 @@ describe("swiping", () => {
       loaded,
     );
     expect(s.favourited).toBe(true);
+    const next = deckReducer(s, { type: "continue" });
+    expect(deckReducer(next, { type: "swipeStart" }).favourited).toBe(false);
+  });
+
+  it("clears favourited on continue after a superlike opens feedback", () => {
+    const paused = run(
+      [
+        { type: "swipeStart" },
+        { type: "swipeOk", card: card("a"), response: swipeResponse("a", { action: "superlike", favourited: true }) },
+      ],
+      loaded,
+    );
+    expect(phase(paused)).toBe("feedback");
+    expect(paused.favourited).toBe(true);
+    const s = deckReducer(paused, { type: "continue" });
+    expect(phase(s)).toBe("card");
+    expect(s.favourited).toBe(false);
+  });
+
+  it("keeps favourited until the next swipe when no feedback screen opens", () => {
+    const s = run(
+      [
+        { type: "swipeStart" },
+        {
+          type: "swipeOk",
+          card: card("a", false, "exploration"),
+          response: swipeResponse("a", { action: "left", favourited: true }),
+        },
+      ],
+      loaded,
+    );
+    expect(s.pendingFeedback).toBeNull();
+    expect(s.favourited).toBe(true);
     expect(deckReducer(s, { type: "swipeStart" }).favourited).toBe(false);
   });
 
@@ -295,8 +360,36 @@ describe("swiping", () => {
       { type: "fetchOk", response: batch([], "exhausted") },
       { type: "swipeStart" },
       { type: "swipeOk", card: card("a"), response: swipeResponse("a") },
+      { type: "continue" },
     ]);
     expect(phase(s)).toBe("empty");
+  });
+});
+
+describe("feedbackOutcome", () => {
+  const ranked = card("r", false, "ranked");
+  const exploration = card("x", false, "exploration");
+  const res = (action: SwipeResponse["action"], feedback_required = false) =>
+    swipeResponse("d", { action, feedback_required });
+
+  it.each(["left", "right", "superlike"] as const)("is compulsory when required, ranked, %s", (a) => {
+    expect(feedbackOutcome(res(a, true), ranked)).toBe("compulsory");
+  });
+
+  it.each(["left", "right", "superlike"] as const)("is compulsory when required, exploration, %s", (a) => {
+    expect(feedbackOutcome(res(a, true), exploration)).toBe("compulsory");
+  });
+
+  it.each(["left", "right", "superlike"] as const)("is optional for ranked, %s", (a) => {
+    expect(feedbackOutcome(res(a), ranked)).toBe("optional");
+  });
+
+  it("is none for exploration, left", () => {
+    expect(feedbackOutcome(res("left"), exploration)).toBe("none");
+  });
+
+  it.each(["right", "superlike"] as const)("is optional for exploration, %s", (a) => {
+    expect(feedbackOutcome(res(a), exploration)).toBe("optional");
   });
 });
 
