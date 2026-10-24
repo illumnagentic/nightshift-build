@@ -90,6 +90,16 @@ Then, in `worker/`:
 BASE_URL=http://localhost:8788 uv run --group dev pytest tests -q
 ```
 
+The fake upstream listens on `FAKE_PORT` (default 8799). It must match the port in
+`GEMINI_BASE` and `TFL_BASE`. To use another port, for example when a second server is
+running, change all three together:
+
+```
+FAKE_PORT=8801 BASE_URL=http://localhost:8790 uv run --group dev pytest tests -q
+```
+
+with the server started with `--var GEMINI_BASE:http://127.0.0.1:8801 --var TFL_BASE:http://127.0.0.1:8801`.
+
 `BASE_URL` defaults to http://localhost:8787, the normal dev server. Always set it to the
 test-mode server. Before the API tests run, a guard sends one probe save and one probe
 poll. If the fake upstream did not receive them with the fake key, or the server is not

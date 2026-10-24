@@ -1,6 +1,8 @@
 """TfL Journey Planner commute times, calculated in small batches and cached per (listing, postcode).
 
 Weekday, arrive 08:30, public transport. TfL needs no key for this volume.
+No `mode` is sent: on 2026-10-24 two anonymous requests for this URL shape returned six journeys whose legs
+were only walking, bus and tube, so the default is public transport plus walking, with no cycle, taxi or car.
 """
 import asyncio
 import json
@@ -106,7 +108,10 @@ async def run_batch(db, base: str, hard: dict, postcode: str, streak: int) -> tu
             ).bind(listing_id, postcode, minutes, datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")).run()
             cached += 1
 
-    await asyncio.gather(*(one(*item) for item in todo[:BATCH_SIZE]))
+    # After a batch with no answers, start further along, so listings TfL keeps failing at the head of the order cannot stall the rest.
+    start = (streak * BATCH_SIZE) % len(todo)
+    batch = (todo[start:] + todo[:start])[:BATCH_SIZE]
+    await asyncio.gather(*(one(*item) for item in batch))
     if cached == len(todo):
         return "ready", 0
     if cached:
@@ -115,4 +120,8 @@ async def run_batch(db, base: str, hard: dict, postcode: str, streak: int) -> tu
         # Anonymous TfL answers 429 with Retry-After after a burst. That is the pace of the quota, not a bad postcode.
         return "pending", streak
     streak += 1
-    return ("failed" if streak >= FAIL_STREAK_LIMIT else "pending"), streak
+    if streak < FAIL_STREAK_LIMIT:
+        return "pending", streak
+    # Any cached row shows TfL resolves this postcode, so what is left are listings it cannot route: they stay unknown.
+    row = (await db.prepare("SELECT 1 AS found FROM commute_cache WHERE postcode = ? LIMIT 1").bind(postcode).all()).results
+    return ("ready", 0) if row else ("failed", streak)

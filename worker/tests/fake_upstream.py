@@ -1,7 +1,8 @@
 """A stand-in for the Mubit Gemini route and the TfL Journey Planner, so tests never reach either.
 
 TfL behaviour is chosen by the outward code of the destination postcode: E1 has no journey (404),
-N1, EC2N and SW1A always answer 500, W1 always answers 429, SE1 answers 503 and SW1 answers 429 once per journey and then succeeds,
+N1, EC2N and SW1A always answer 500, N7 always answers 300 (what TfL says for a postcode that does not exist),
+a journey from any start in FAILING_STARTS answers 500, W1 always answers 429, SE1 answers 503 and SW1 answers 429 once per journey and then succeeds,
 anything else gets a journey. EC2N and SW1A are the postcodes the prefs tests save: failing them keeps their
 commute pending, and caches nothing, however often the suite is run against one database.
 Both routes are served on one port.
@@ -21,6 +22,8 @@ GOOD = {
              "min_epc": "D", "tenure": None, "min_lease_years": None},
     "soft": ["near a tube station", "bright rooms", "not on the ground floor"],
 }
+# (lat, lon) of listings whose journeys always answer 500, whatever the postcode. Tests fill and clear it.
+FAILING_STARTS: set[tuple[float, float]] = set()
 BAD_VALUES = {
     "hard": {"max_price_gbp": 5, "min_bedrooms": True, "property_types": ["flat", "castle", "flat"],
              "min_epc": "H", "tenure": "commonhold", "min_lease_years": "99"},
@@ -76,6 +79,10 @@ def tfl_answer(path: str, first_time: bool) -> tuple[int, str]:
     if outward == "E1":
         return 404, json.dumps({"message": "no journey"})
     if outward in ("N1", "EC2N", "SW1A"):
+        return 500, "{}"
+    if outward == "N7":
+        return 300, "{}"
+    if tuple(float(v) for v in start.split(",")) in FAILING_STARTS:
         return 500, "{}"
     if outward == "W1":
         return 429, "{}"
