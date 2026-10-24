@@ -5,7 +5,7 @@
 - **Started**: 2026-10-24
 - **Branch**: feat/web-shell
 - **BASE_SHA**: 9365776810c0de2f6dead51f86af9b708be7ed04
-- **Status**: in progress
+- **Status**: complete (2026-10-24)
 
 ---
 
@@ -226,27 +226,27 @@ control; typecheck, tests and build pass; the human has eyeballed it in the brow
 
 ## TRADEOFFS
 
-- Step 1 | Smoke test only checks App renders its heading (renderToString); it does not cover the proxy or the build. Proxy evidenced by a manual 502 curl with no backend. Component tests are out of scope per requirements. | reported by implementer, logged by reviewer 2026-10-24
-- Step 2 | A non-2xx response whose body is not `{"error": {code, message}}` (proxy 502, non-JSON) throws `ApiError` with the real status, code `http_error` and message "Request failed with status N." The contract defines no code for this; `http_error` is a client-side invention. | reported by implementer
-- Step 2 | A network failure (fetch rejects, e.g. backend down with no proxy answer) propagates as the native `TypeError`, not `ApiError`. The contract says nothing on it and the brief asked for no extra handling. Callers must not assume every failure is `ApiError`. | reported by implementer
-- Step 2 | `PhotoFlag.value` is `string | number` and `field`/`scope` are independent unions, so scope/field mismatches and the `light` value set are not expressed in the type. A discriminated union would be stricter but is more code than the contract's loose wording needs. | reported by implementer
-- Step 2 | The HTTP client has no timeout or abort handling and no response validation (backend owns validation, per brief). | reported by implementer
-- Step 3 | Mock `soft` prefs are the text split on commas and full stops; `hard` is all null except `max_commute_min`. No parsing. | reported by implementer
-- Step 3 | Mock `commute_status` is `pending` in the PUT response and `ready` on the first GET after it. A pending status therefore never lasts more than one poll. The reserved postcode `FAIL 1AA` (case-insensitive) makes that first GET return `failed`, so the failed state can be shown; this magic value exists only in the mock. | reported by implementer
-- Step 3 | No hard filtering, so `no_matches` is never returned. Exploration is every fifth new card per user, drawn from the same fixture order as ranked cards, not from a band. Fixture order is the "ranking". | reported by implementer
-- Step 3 | `feedback_required` on deck cards is recomputed on every response (swipes so far plus position under 15), including re-served cards. | reported by implementer
-- Step 3 | Mock profile `factors` is one entry per chip the user has answered: direction is the latest answer's text or its strength, weight is answers over times offered, capped at 1. Not the learning model. | reported by implementer
-- Step 3 | Mock commute minutes are a deterministic hash of listing id and postcode (about 1 in 4 `null`), not real journey times. | reported by implementer
-- Step 3 | Mock `POST /users` compares usernames case-insensitively after trimming, and rejects an empty username with 422 `invalid_request`. The contract leaves username rules to the backend. | reported by implementer
-- Step 3 | Mock does light shape validation beyond the brief where the contract states the shape (swipe `action`, chip `strength`, text types), returning 422 `invalid_request`. It does not check formats. | reported by implementer
-- Step 3 | `index.ts` imports the mock unconditionally, so fixtures are in the production bundle even in HTTP mode. | reported by implementer
-- Step 3 | Chip catalogue clauses for photo flags are applied to the three fixtures that carry flags. The contract says flags do not exist yet and to skip those clauses, so these fixtures would differ from the real backend today. | reported by implementer
-- Step 3 | Fixture chips are computed at load by `buildChips` in `fixtures.ts`, a local implementation of the contract's chip catalogue rules. This departs from the locked out-of-scope line about hand-picked chips; authorised by the human in AMENDMENTS 2026-10-24. Risk: it can drift from the backend's implementation. Fix: replace with the real backend once B4 lands. Mitigation: `mock.test.ts` checks hand-derived chip lists for five fixtures. | reported by implementer
-- Step 4 | Session stores `{user_id, username}` in `localStorage`, not only the id. The username is refreshed from `listUsers()` on restore. | reported by implementer
-- Step 4 | A network failure (native error) shows a fixed message, "Could not reach the server. Try again."; no retry. On restore, a failed `listUsers()` falls back to the picker rather than trusting the stored user. | reported by implementer
-- Step 4 | On load with a stored user, `listUsers()` is called by App and again by the picker if the check fails or the user is gone. One extra call, no caching. | reported by implementer
-- Step 4 | In mock mode a created user (`u_03`+) does not survive reload, because mock state is in memory. Seeded alex and jordan do. | reported by implementer
-- Step 4 | Create form blocks only empty or whitespace-only input; the raw (untrimmed) text is sent, the backend decides. | reported by implementer
+- Step 1 | Smoke test only checks App renders its heading (renderToString); it does not cover the proxy or the build. Proxy evidenced by a manual 502 curl with no backend. Component tests are out of scope per requirements. | reported by implementer, logged by reviewer 2026-10-24 | accepted by human 2026-10-24
+- Step 2 | A non-2xx response whose body is not `{"error": {code, message}}` (proxy 502, non-JSON) throws `ApiError` with the real status, code `http_error` and message "Request failed with status N." The contract defines no code for this; `http_error` is a client-side invention. | reported by implementer | accepted by human 2026-10-24
+- Step 2 | A network failure (fetch rejects, e.g. backend down with no proxy answer) propagates as the native `TypeError`, not `ApiError`. The contract says nothing on it and the brief asked for no extra handling. Callers must not assume every failure is `ApiError`. | reported by implementer | accepted by human 2026-10-24
+- Step 2 | `PhotoFlag.value` is `string | number` and `field`/`scope` are independent unions, so scope/field mismatches and the `light` value set are not expressed in the type. A discriminated union would be stricter but is more code than the contract's loose wording needs. | reported by implementer | accepted by human 2026-10-24
+- Step 2 | The HTTP client has no timeout or abort handling and no response validation (backend owns validation, per brief). | reported by implementer | accepted by human 2026-10-24
+- Step 3 | Mock `soft` prefs are the text split on commas and full stops; `hard` is all null except `max_commute_min`. No parsing. | reported by implementer | accepted by human 2026-10-24
+- Step 3 | Mock `commute_status` is `pending` in the PUT response and `ready` on the first GET after it. A pending status therefore never lasts more than one poll. The reserved postcode `FAIL 1AA` (case-insensitive) makes that first GET return `failed`, so the failed state can be shown; this magic value exists only in the mock. | reported by implementer | accepted by human 2026-10-24
+- Step 3 | No hard filtering, so `no_matches` is never returned. Exploration is every fifth new card per user, drawn from the same fixture order as ranked cards, not from a band. Fixture order is the "ranking". | reported by implementer | accepted by human 2026-10-24
+- Step 3 | `feedback_required` on deck cards is recomputed on every response (swipes so far plus position under 15), including re-served cards. | reported by implementer | accepted by human 2026-10-24
+- Step 3 | Mock profile `factors` is one entry per chip the user has answered: direction is the latest answer's text or its strength, weight is answers over times offered, capped at 1. Not the learning model. | reported by implementer | accepted by human 2026-10-24
+- Step 3 | Mock commute minutes are a deterministic hash of listing id and postcode (about 1 in 4 `null`), not real journey times. | reported by implementer | accepted by human 2026-10-24
+- Step 3 | Mock `POST /users` compares usernames case-insensitively after trimming, and rejects an empty username with 422 `invalid_request`. The contract leaves username rules to the backend. | reported by implementer | accepted by human 2026-10-24
+- Step 3 | Mock does light shape validation beyond the brief where the contract states the shape (swipe `action`, chip `strength`, text types), returning 422 `invalid_request`. It does not check formats. | reported by implementer | accepted by human 2026-10-24
+- Step 3 | `index.ts` imports the mock unconditionally, so fixtures are in the production bundle even in HTTP mode. | reported by implementer | accepted by human 2026-10-24
+- Step 3 | Chip catalogue clauses for photo flags are applied to the three fixtures that carry flags. The contract says flags do not exist yet and to skip those clauses, so these fixtures would differ from the real backend today. | reported by implementer | accepted by human 2026-10-24
+- Step 3 | Fixture chips are computed at load by `buildChips` in `fixtures.ts`, a local implementation of the contract's chip catalogue rules. This departs from the locked out-of-scope line about hand-picked chips; authorised by the human in AMENDMENTS 2026-10-24. Risk: it can drift from the backend's implementation. Fix: replace with the real backend once B4 lands. Mitigation: `mock.test.ts` checks hand-derived chip lists for five fixtures. | reported by implementer | accepted by human 2026-10-24
+- Step 4 | Session stores `{user_id, username}` in `localStorage`, not only the id. The username is refreshed from `listUsers()` on restore. | reported by implementer | accepted by human 2026-10-24
+- Step 4 | A network failure (native error) shows a fixed message, "Could not reach the server. Try again."; no retry. On restore, a failed `listUsers()` falls back to the picker rather than trusting the stored user. | reported by implementer | accepted by human 2026-10-24
+- Step 4 | On load with a stored user, `listUsers()` is called by App and again by the picker if the check fails or the user is gone. One extra call, no caching. | reported by implementer | accepted by human 2026-10-24
+- Step 4 | In mock mode a created user (`u_03`+) does not survive reload, because mock state is in memory. Seeded alex and jordan do. | reported by implementer | accepted by human 2026-10-24
+- Step 4 | Create form blocks only empty or whitespace-only input; the raw (untrimmed) text is sent, the backend decides. | reported by implementer | accepted by human 2026-10-24
 
 ---
 
@@ -265,16 +265,57 @@ control; typecheck, tests and build pass; the human has eyeballed it in the brow
 
 ## VERIFICATION
 
-- [ ] All step checkboxes ticked with evidence
-- [ ] Every evidence path in this file exists
-- [ ] Test suite run — result:
-- [ ] Lint run — result:
-- [ ] Typecheck run — result:
-- [ ] Build run — result:
-- [ ] Diff contains no files outside declared scope
-- [ ] Tradeoff ledger reviewed and signed off by human
-- [ ] Human eye test completed
+QA gate, 2026-10-24, base 9365776.
+
+- [x] All step checkboxes ticked with evidence — 20 of 20 ticked, each with text (2026-10-24)
+- [x] Every evidence path in this file exists — evidence/web-shell/step-1.md to step-4.md present (2026-10-24)
+- [x] Test suite run — `cd web && npm test`: 3 files, 50 passed, exit 0
+- [ ] Lint run — not configured (Lint is blank in kit-config by choice); not run
+- [x] Typecheck run — `cd web && npm run typecheck`: exit 0
+- [x] Build run — `cd web && npm run build`: exit 0 (23 modules, JS 270.43 kB)
+- [x] Diff contains no files outside declared scope — 30 files, all in a step's scope or the progress file
+- [x] Tradeoff ledger reviewed and signed off by human — all 21 entries accepted by the human, "accept all" (2026-10-24)
+- [x] Human eye test completed — core checks passed (human and built-in browser); follow-up checks for empty input, Tab order, no-backend error and created-user reload done by the human or in the built-in browser and recorded in evidence/web-shell/step-4.md. Button re-enable after `username_taken` and reload after Switch user not separately checked; no screenshot kept (2026-10-24)
+
+Also: `npm ci` exit 0; `.claude/scripts/check-process-refs.sh 9365776` exit 0, no hits.
 
 ---
 
 ## HANDOVER
+
+**What was built.** A Vite, React and TypeScript app in `web/`. It has a typed client for every endpoint in the API contract, a real fetch version and an in-memory mock with 20 fixture listings. One screen works: you list users, pick one or create one by username, and the choice survives a reload. Nothing else is in the UI yet. No deck, feedback, prefs or dashboard.
+
+**What to check yourself.**
+1. `cd web && npm ci && VITE_API_MODE=mock npm run dev`. Open http://localhost:5173. (Without the variable the app calls the real API, which is not running.)
+2. Clear `localStorage` for the site. You should see "Choose a user" with alex and jordan.
+3. Type "sam" and press Create user. You should see "Signed in as sam" and a Switch user button.
+4. Press Switch user. Create "alex". You should see "That username is taken." and the button usable again.
+5. Not yet run by anyone: submit an empty box, and a box of spaces. Nothing should be sent and nothing should change.
+6. Pick alex, reload. You should still be signed in as alex.
+7. Pick sam (create again after a reload), reload. You should land on the picker. This is expected in mock mode only.
+8. Press Switch user, then reload. You should stay on the picker.
+9. Tab through the picker. Order should be user buttons, the input, Create user.
+10. Without the mock variable, run `npm run dev` with no backend. The picker should show "Request failed with status 502." or the fixed unreachable message.
+
+**Tools that will help.** Browser devtools, Application tab: check `localStorage` key `session.user` holds `{user_id, username}` after sign-in and is gone after Switch user. Network tab in real mode: `GET /api/users` should carry no `X-User-Id`. Console: should be empty. `cd web && npm test` for the 50 tests.
+
+**What is not done.** Everything in TRADEOFFS above stands. Plainly:
+- No lint. No linter is approved.
+- No component tests. UI is checked by eye only.
+- `buildChips` in `fixtures.ts` re-implements the chip catalogue. It was authorised by amendment but can drift from the backend.
+- The mock is not the backend: no filtering, no ranking, no `no_matches`, commute is a hash, `FAIL 1AA` is a mock-only magic postcode.
+- Fixtures ship in the production bundle.
+- Network failures from the HTTP client are a native `TypeError`, not `ApiError`. The picker handles both. Later screens must too.
+- The HTTP client has no timeout and no response validation.
+- Step 4 evidence has no screenshot. The plan mentioned a screenshot path.
+- `.claude/kit-config.md` Project type still says "No code yet". Not fixed (outside scope). `.claude/worktrees/` is untracked.
+- Contract gaps in SPOTTED, NOT FIXED, none fixed or edited.
+- `docs/plan.md` is not ticked; that belongs in the merging PR.
+- The REQUIREMENTS block could only be compared from the commit where the progress file first appeared (4b3ca20). It is unchanged since then.
+
+**What could bite you.**
+1. Real backend mismatch. The client has only been run against a mock and stubbed fetch. The first run against the real Worker may expose shape or error-code differences. Check `GET /api/users` and `POST /api/users` first.
+2. Mock drift. F2 and F3 will build on mock chips and deck behaviour that come from the implementer's reading of the contract, including `feedback_required` recomputing on re-served cards, which the contract does not state.
+3. Forgetting the mock variable. `.env.example` sets it but nobody copies it automatically. Without it the app talks to a dead `:8787` and shows an error.
+
+Feature is not complete until the human has done the eye test and signed the tradeoff ledger.

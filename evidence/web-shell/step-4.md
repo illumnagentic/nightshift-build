@@ -27,8 +27,9 @@ Eye test, 2026-10-24. The human ran the five core checks in the browser and repo
 | Picker lists alex and jordan | pass |
 | Create a new user (for example "sam"): signed in as sam | pass |
 | Create "alex" again: server message for `username_taken` shows, button re-enables | pass: "That username is taken." shown; re-enable not checked |
-| Empty or spaces-only username: nothing is submitted | not run |
+| Empty or spaces-only username: nothing is submitted | pass (checked by the human, 2026-10-24) |
 | Pick alex, reload: still signed in as alex | pass (`session.user` = u_01 after reload) |
-| Create "sam", reload: back at picker (mock state resets; expected in mock mode only) | not run |
+| Create "sam", reload: back at picker (mock state resets; expected in mock mode only) | pass as expected: created user disappears on reload, alex and jordan stay signed in (checked by the human, 2026-10-24) |
 | "Switch user" returns to the picker; reload stays on the picker | pass: returns to picker, `session.user` cleared; reload not checked |
-| Keyboard: Tab reaches list buttons, input and Create; Enter submits the form | Enter submits: pass; Tab order not checked |
+| Keyboard: Tab reaches list buttons, input and Create; Enter submits the form | pass (Tab order checked by the human, 2026-10-24; Enter checked in the built-in browser) |
+| No mock, no backend (`npm run dev -- --port 5174`): picker shows an error, no crash | pass: "Request failed with status 502." shown; `GET /api/users` returned 502 from the dev proxy (2026-10-24, built-in browser) |
