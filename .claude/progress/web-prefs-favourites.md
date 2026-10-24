@@ -4,7 +4,7 @@
 - **Owner**: Yewen
 - **Started**: 2026-10-24
 - **Branch**: feat/web-prefs-favourites (stacked on feat/web-feedback, PR #13)
-- **BASE_SHA**: a4d0c48e8fbee1a74b7bc4bed97cd5cad77fcf32
+- **BASE_SHA**: 914735a (rebased onto `main` after F3's squash merge; kickoff base was a4d0c48e8fbee1a74b7bc4bed97cd5cad77fcf32 — see AMENDMENTS 2026-10-25)
 - **Status**: in progress
 
 ---
@@ -105,6 +105,11 @@ BASE_SHA will stop being an ancestor.
   (4) DeckScreen's `commute_failed` block gets a "Set preferences" button. This replaces
   Step 4's "PrefsScreen and FavouritesScreen rendered only when their tab is active" for
   PrefsScreen only. Done as a redo of Step 2, then a redo of Step 4.
+- 2026-10-25, orchestrator, per the Merge note: F3 (PR #13) was squash-merged as 914735a.
+  The branch was rebased with `git rebase --onto origin/main a4d0c48
+  feat/web-prefs-favourites`, with no conflicts. F4's web and evidence files are
+  unchanged by the rebase (the only new files are backend evidence from `main`).
+  typecheck, 178 tests and build exit 0 after the rebase. New base: 914735a.
 
 ---
 
@@ -277,14 +282,14 @@ process-wording check exits 0.
 
 ## TRADEOFFS
 
-- Step 1 | The client accepts zero and negative whole numbers as a commute limit and rejects an explicit plus sign ("+5") | the backend owns range checks (422); the form only parses what it can put in the JSON | add a range check or accept "+" if the backend contract defines one
-- Step 2 | Polling has no time limit and keeps retrying after any error, including a 4xx, while the status is pending | the contract defines no timeout and a transient failure should not strand the user; leaving the screen or saving again stops it | add a cap with a visible 'taking too long' message once the backend gives an expected time
-- Step 2 | The parsed result is shown only when it has at least one hard limit or soft preference, and a failed load shows the error with empty fields | nothing useful to show otherwise | none needed unless the eye test finds it confusing
-- Step 3 | After a successful removal focus is not moved anywhere (the Remove button is gone) | no next target was specified | move focus to the next entry's Remove button or the screen heading
-- Step 3 | The thumbnail shows only the first photo, with no handling for an image that fails to load | brief asks for the first photo only | add an onError fallback to the placeholder
-- Step 4 | Saving preferences discards the deck at save time (onSaved remounts it), and again when `onReady` fires (including from polling on the hidden Preferences screen), so a feedback screen left pending (including compulsory onboarding feedback) is dropped and that card's feedback is lost | the contract says to discard the local deck after a re-save, and a remount is the simplest way to do it | persist pending feedback in App or the API, or only remount once no feedback is pending
-- Step 4 | The deck is kept mounted while hidden, so a prefs_missing redirect and its Set preferences button fire from a hidden screen, and the onNeedPrefs effect ignores callback changes | needed to keep the local deck and pending feedback across tab switches | none needed unless the hidden deck causes trouble
-- Redo of Step 4 | On a failed commute the deck shows its blocked state and needs Retry or a re-save; no onFailed callback | kept minimal | add onFailed to refresh the deck on failure
+- Step 1 | The client accepts zero and negative whole numbers as a commute limit and rejects an explicit plus sign ("+5") | the backend owns range checks (422); the form only parses what it can put in the JSON | add a range check or accept "+" if the backend contract defines one | accepted by human 2026-10-25
+- Step 2 | Polling has no time limit and keeps retrying after any error, including a 4xx, while the status is pending | the contract defines no timeout and a transient failure should not strand the user; leaving the screen or saving again stops it | add a cap with a visible 'taking too long' message once the backend gives an expected time | accepted by human 2026-10-25
+- Step 2 | The parsed result is shown only when it has at least one hard limit or soft preference, and a failed load shows the error with empty fields | nothing useful to show otherwise | none needed unless the eye test finds it confusing | accepted by human 2026-10-25
+- Step 3 | After a successful removal focus is not moved anywhere (the Remove button is gone) | no next target was specified | move focus to the next entry's Remove button or the screen heading | accepted by human 2026-10-25
+- Step 3 | The thumbnail shows only the first photo, with no handling for an image that fails to load | brief asks for the first photo only | add an onError fallback to the placeholder | accepted by human 2026-10-25
+- Step 4 | Saving preferences discards the deck at save time (onSaved remounts it), and again when `onReady` fires (including from polling on the hidden Preferences screen), so a feedback screen left pending (including compulsory onboarding feedback) is dropped and that card's feedback is lost | the contract says to discard the local deck after a re-save, and a remount is the simplest way to do it | persist pending feedback in App or the API, or only remount once no feedback is pending | accepted by human 2026-10-25
+- Step 4 | The deck is kept mounted while hidden, so a prefs_missing redirect and its Set preferences button fire from a hidden screen, and the onNeedPrefs effect ignores callback changes | needed to keep the local deck and pending feedback across tab switches | none needed unless the hidden deck causes trouble | accepted by human 2026-10-25
+- Redo of Step 4 | On a failed commute the deck shows its blocked state and needs Retry or a re-save; no onFailed callback | kept minimal | add onFailed to refresh the deck on failure | accepted by human 2026-10-25
 
 ---
 
@@ -307,7 +312,7 @@ process-wording check exits 0.
 - [x] Typecheck run — result: `npm run typecheck`, exit 0 (2026-10-25)
 - [x] Build run — result: `npm run build`, exit 0 (2026-10-25)
 - [ ] Diff contains no files outside declared scope — every code and evidence file is declared at branch level; this progress file is in no step's scope (waiver proposed: it is the tracking file, and kit-config commits progress files) — left for the human (2026-10-25)
-- [ ] Tradeoff ledger reviewed and signed off by human
+- [x] Tradeoff ledger reviewed and signed off by human — all 8 entries accepted, "sign off the F4 tradeoff" (2026-10-25)
 - [ ] Human eye test completed
 
 QA-GATE: FAIL 2026-10-25 — only human sign-offs outstanding: 8 unsigned tradeoffs, eye test, progress-file scope waiver (and confirmation of the 2026-10-25 amendment made under delegation)
