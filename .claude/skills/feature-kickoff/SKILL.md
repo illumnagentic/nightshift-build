@@ -84,11 +84,14 @@ architectural thinking out of the main context.
 
 ## 5. Gitignore
 
-Ensure `.claude/.gitignore` exists and contains `progress/`. The progress file is a
-working document, not a deliverable.
+Check **Progress files** in `.claude/kit-config.md`.
 
-If the human explicitly says this feature's progress file should be committed, add an
-exception for that one file — `!progress/<slug>.md` — and nothing else.
+- `committed`: leave `.claude/.gitignore` as it is. It un-ignores `progress/`, and the
+  progress file is committed with the work it tracks.
+- `ignored` or unset: ensure `.claude/.gitignore` exists and contains `progress/`. The
+  progress file is a working document, not a deliverable. If the human explicitly says
+  this feature's progress file should be committed, add an exception for that one
+  file — `!progress/<slug>.md` — and nothing else.
 
 ## 6. Show it and get agreement
 

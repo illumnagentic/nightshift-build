@@ -140,7 +140,8 @@ Step order:
 
 Feature work is tracked in `.claude/progress/<slug>.md`, created by the
 `feature-kickoff` skill before any code is written. That file is the single source of
-truth for what was agreed. It is gitignored by default.
+truth for what was agreed. Whether it is committed is set by **Progress files** in
+`.claude/kit-config.md`; if that is unset, it is gitignored.
 
 - The `REQUIREMENTS (LOCKED)` block is written once and is never edited or reworded.
   Changes are appended to `AMENDMENTS` with a date, by explicit human instruction only.

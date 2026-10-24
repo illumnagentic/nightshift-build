@@ -31,6 +31,9 @@ Leave blank if the repo has none. Never invent one.
 
 - **Commit scopes in use**: worker, web, db, prep, kit
 - **Requirements source**: docs/product-idea-high-level.md
+- **Progress files**: committed
+  <!-- committed or ignored. `committed` means .claude/progress/*.md are tracked in git
+       and go into commits like any other file. -->
 - **Test framework**: <!-- e.g. vitest, pytest, go test -->
 - **Where tests live**: <!-- e.g. alongside source as *.test.ts -->
 

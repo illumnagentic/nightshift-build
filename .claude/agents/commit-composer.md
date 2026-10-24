@@ -41,6 +41,17 @@ Never produce a commit body. Not a description, not a bullet list, not a footer.
 A title never mentions steps, step numbers, amendments, progress files, briefs, the
 kit or its agents. Describe the change in the repo's own terms.
 
+## Progress files
+
+Check **Progress files** in `.claude/kit-config.md`. If it says `committed`, files under
+`.claude/progress/` are meant to be committed. Do not raise them in `CONCERNS`, do not
+count them against `COHERENT`, and do not suggest splitting them out. Title the commit
+for the product change they travel with. If the diff touches only `.claude/progress/`,
+use `docs(kit): <what changed in the plan>`, for example `docs(kit): record auth plan`.
+
+If it is unset or `ignored`, a progress file in the diff is a concern: say it is meant
+to be gitignored.
+
 ## Choosing the type
 
 - `fix` — corrects broken behaviour.
