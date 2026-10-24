@@ -24,4 +24,5 @@ def test_url_and_next_tuesday():
     assert tfl.next_tuesday(date(2026, 10, 27)) == date(2026, 11, 3)  # a Tuesday gives the following one
     assert tfl.next_tuesday(date(2026, 10, 26)) == date(2026, 10, 27)
     assert tfl.build_url("http://x", 51.5, -0.1, "EC2N 2DB", date(2026, 10, 27)) == (
-        "http://x/Journey/JourneyResults/51.5,-0.1/to/EC2N2DB?date=20261027&time=0830&timeIs=Arriving")
+        "http://x/Journey/JourneyResults/51.5,-0.1/to/EC2N2DB?date=20261027&time=0830&timeIs=Arriving"
+        "&mode=bus,cable-car,dlr,elizabeth-line,national-rail,overground,replacement-bus,river-bus,tram,tube,walking")

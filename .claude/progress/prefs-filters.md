@@ -124,6 +124,8 @@ Quoted above. Contract: `docs/api-contract.md` on `main` at `0755bcb`. Plan by t
 
   Tracked as `### Step 6` in PLAN, where its boxes live (the step-order hook reads PLAN headings).
 
+
+
 ---
 
 ## RULES IN FORCE
@@ -314,6 +316,15 @@ changes), `worker/README.md` (test-mode section only).
 - [x] Matches locked requirements — contract line "single listing failure is not failed" held by test_one_listing_that_always_fails_is_left_unknown (2026-10-24)
 - [x] No scope drift — diff limited to declared files; README change only test-mode FAKE_PORT paragraph; check-process-refs exit 0 (2026-10-24)
 
+**Redo (arbiter FIX_NOW, 2026-10-24)**: explicit TfL modes. Files: `worker/src/tfl.py`,
+`worker/tests/test_tfl_unit.py`, `worker/tests/test_commute.py` (line 87 only: expect the mode suffix — stricter; it is in Step 6's declared files), `evidence/prefs-filters/step-6.md`. `build_url` sends
+one fixed `&mode=` list (scheduled public-service modes plus walking; no cycle, taxi,
+car, coach). Done when one free TfL call in the new shape returns journeys whose leg
+modes are all in the list, the stricter URL assertion passes, and both test runs pass.
+
+- [x] Redo implemented — tfl.py MODES + `&mode=`; test_tfl_unit.py and test_commute.py:87 stricter; server-less 99 passed, full suite test mode 174 passed, check-process-refs exit 0 (2026-10-24)
+- [x] Redo reviewed — MODES checked against live Meta/Modes: public-service modes plus walking only; no assertion loosened; fake_upstream.py unchanged; evidence section supersedes old text (2026-10-24)
+
 ---
 
 ## KICKOFF RULINGS
@@ -359,7 +370,7 @@ Q13: Optional Worker vars `GEMINI_BASE` / `TFL_BASE` overriding the upstream hos
 2026-10-24 | step 3 | `test_commute.py` holds two pure unit tests (classify, URL and Tuesday) that need the server because of the module `pytestmark` | the step's file scope has no other test file for tfl.py | move them to a server-less module in a later step — FIX_NOW by arbiter 2026-10-24: cheap (a file move, under 30 lines), and it lets the unit-only run cover tfl.py; see AMENDMENTS (arbiter) Step 5
 2026-10-24 | step 6 | the new tests prove "cached" and "unknown" from the fake's request log, not a D1 read | the fake runs in the test process and the server's D1 file is not reachable from pytest | a test-only endpoint or opening the .wrangler sqlite by path; one direct D1 read recorded in evidence instead — accepted by arbiter 2026-10-24: the fake's request log shows which listings got an answer, and the evidence records a direct read of the local D1 (95 rows with one failing listing, 83 with 13 failing, 96 for a full postcode) that matches it; a test-only endpoint would be new code with no other use
 2026-10-24 | step 6 | with 13 failing head listings the postcode needs ~20+ polls: each progress poll resets the streak and the offset, so a wasted poll on the failing head follows | the rule as ruled | keep the offset while the head is known bad (needs per-postcode state, a schema change) — accepted by arbiter 2026-10-24: at worst it doubles the polls for an affected postcode (one wasted poll per productive one), it never fails the postcode, and the pilot had no failing listings in 96; no checkpoint is blocked, as warming is a manual run-book step done once per destination; fixing it needs per-postcode state, which is not cheap; revisit only if B6's warm-up stalls, and the main agent should add to HANDOVER that listings TfL keeps failing slow warm-up by up to 2x
-2026-10-24 | step 6 | no explicit TfL `mode=`: the docs state no default; six observed journeys used only walking, bus and tube legs; four free TfL calls made where one was allowed | small sample, undocumented default | send an explicit mode list if a cycle or taxi leg shows up
+2026-10-24 | step 6 | no explicit TfL `mode=`: the docs state no default; six observed journeys used only walking, bus and tube legs; four free TfL calls made where one was allowed | small sample, undocumented default | send an explicit mode list if a cycle or taxi leg shows up | resolved by Step 6 redo 2026-10-24
 
 ---
 

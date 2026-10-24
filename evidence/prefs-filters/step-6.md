@@ -20,3 +20,13 @@ the postcode, else `failed`. A 429-only batch still does not count. No schema ch
   walking, bus and tube.
 - Conclusion: no `mode=` added; the finding is in the `tfl.py` docstring. The sample is small, and the
   default is not documented, so a journey with a cycle or taxi leg is not ruled out.
+
+## Explicit TfL modes (supersedes "no mode= added" above)
+- Every journey request now sends `&mode=` with a fixed comma-separated list, taken from Meta/Modes (2026-10-24):
+  bus, cable-car, dlr, elizabeth-line, national-rail, overground, replacement-bus, river-bus, tram, tube, walking.
+- Left out: cycle, cycle-hire, taxi, black-cab, private-car, electric-car, private-hire, coach, plane, international-rail,
+  river-tour and the other non-public or non-scheduled modes.
+- One anonymous call, 51.545,-0.062 to EC2N2DB, 2026-10-27 0830 Arriving: HTTP 200, 3 journeys, leg modes seen:
+  overground, walking (all within the list). TfL accepted the list first time, no retry.
+- Results with the mode list: full suite in test mode (server 8790, inspector 9241, fake upstream 8801) 174 passed;
+  server-less modules (filters, prefs_unit, mubit, tfl_unit) 99 passed. The commute test now expects the exact mode suffix.

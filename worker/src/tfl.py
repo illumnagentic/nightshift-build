@@ -1,8 +1,9 @@
 """TfL Journey Planner commute times, calculated in small batches and cached per (listing, postcode).
 
 Weekday, arrive 08:30, public transport. TfL needs no key for this volume.
-No `mode` is sent: on 2026-10-24 two anonymous requests for this URL shape returned six journeys whose legs
-were only walking, bus and tube, so the default is public transport plus walking, with no cycle, taxi or car.
+Modes are sent explicitly, because the product promises public transport and the Journey Planner documents no
+default: the ids below are the public-service modes from /Journey/Meta/Modes plus walking, with no cycle, taxi,
+car or coach.
 """
 import asyncio
 import json
@@ -17,6 +18,7 @@ BATCH_SIZE = 12
 CONCURRENCY = 6
 BUDGET_SECONDS = 5.0
 FAIL_STREAK_LIMIT = 3
+MODES = "bus,cable-car,dlr,elizabeth-line,national-rail,overground,replacement-bus,river-bus,tram,tube,walking"
 
 
 def next_tuesday(today: date) -> date:
@@ -36,7 +38,7 @@ def london_today() -> date:
 def build_url(base: str, lat: float, lon: float, postcode: str, on: date) -> str:
     """Journey from a listing's coordinates to a normalised postcode, arriving 08:30 on `on`."""
     return (f"{base}/Journey/JourneyResults/{lat},{lon}/to/{postcode.replace(' ', '')}"
-            f"?date={on:%Y%m%d}&time=0830&timeIs=Arriving")
+            f"?date={on:%Y%m%d}&time=0830&timeIs=Arriving&mode={MODES}")
 
 
 def classify(status: int, body: str) -> tuple[str, int | None]:

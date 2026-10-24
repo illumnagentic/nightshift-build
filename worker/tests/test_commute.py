@@ -84,7 +84,7 @@ def test_pending_then_ready_after_several_polls(fake):
     assert poll(user) == ["pending"] * (math.ceil(pool / tfl.BATCH_SIZE) - 1) + ["ready"]
     assert tfl_calls(fake, postcode) == pool  # only listings passing the other filters, each once
     sent = next(p for p in fake.tfl_requests if f"/to/{postcode.replace(' ', '')}?" in p)
-    assert sent.endswith("&time=0830&timeIs=Arriving")
+    assert sent.endswith(f"&time=0830&timeIs=Arriving&mode={tfl.MODES}")
     on = datetime.strptime(sent.split("date=")[1][:8], "%Y%m%d").date()
     assert on.weekday() == 1 and 0 < (on - datetime.now(timezone.utc).date()).days <= 8  # a coming Tuesday
     assert call("GET", "/api/prefs", user_id=user)[1]["commute_status"] == "ready"
