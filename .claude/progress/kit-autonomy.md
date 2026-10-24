@@ -117,6 +117,35 @@ Effect on the plan (orchestrator, same date):
   and a feature-branch push are not denied. Each listed spelling exercised by feeding
   the hook JSON on stdin, results in the evidence file.
 
+**2026-10-24 — (arbiter).** Extra done-when for step 7, same file
+(`.claude/skills/pr-description/SKILL.md`), reviewed with step 7.
+
+- **Goal**: the autonomous PR route gets autonomy-guard's auto-allow. The guard gives no
+  decision to a command containing a newline, `$(` or a backtick, so a multi-line
+  `--body` stalls every autonomous PR on a prompt, and a body that mentions the switch
+  file is denied.
+- **Files**: `.claude/skills/pr-description/SKILL.md`.
+- **Done when**: the skill's `gh pr create` example and its "When autonomy is on" text
+  write the body to a file in the session scratchpad and pass it with
+  `--body-file <path>`, title in double quotes, one line, no `$(...)`; the push line
+  stays `git push -u origin <branch>`. Evidence: feeding autonomy-guard the resulting
+  `gh pr create` command as JSON on stdin with the switch file present returns `allow`.
+
+**2026-10-24 — human, in session.**
+
+> "also add a AUTO_SETUP.md that give instrution to claude how to update the kit and
+> how to use it on another machine"
+
+Effect on the plan (orchestrator): step 7 also creates `.claude/AUTO_SETUP.md`,
+written for Claude. It covers (a) updating the kit: which files make up the
+autonomy layer, that kit changes go through feature-kickoff like any feature, that
+edits to settings, hooks, `autonomy.sh` and `safe-merge.sh` raise a permission prompt
+by design, and how to re-run the stub tests; (b) using it on another machine: clone,
+install the commit guard per `.claude/README.md`, `gh auth login`, python3 present,
+the switch starts off on every machine, how to turn it on (two confirmations) and off
+(one), and how to check the GitHub repo settings. It refers to existing files rather
+than repeating them.
+
 ---
 
 ## RULES IN FORCE
@@ -258,11 +287,11 @@ JSON on stdin.
 
 **Evidence location**: `evidence/kit-autonomy/autonomy-guard-checks.md`
 
-- [ ] Implemented
-- [ ] Tested — evidence: (date)
-- [ ] Best practices met — evidence: (date)
-- [ ] Matches locked requirements — evidence: (date)
-- [ ] No scope drift — evidence: (date)
+- [x] Implemented — evidence: autonomy.sh, autonomy-guard.sh, settings.json, .claude/.gitignore present; bash -n and json.tool exit 0 (2026-10-24)
+- [x] Tested — evidence: harness run.py (142 cases) and run2.py (30 redo cases) re-run by reviewer, BAD COUNT 0; evidence/kit-autonomy/autonomy-guard-checks.md; live ask prompt on hook Edit, human refused (2026-10-24)
+- [x] Best practices met — evidence: fails closed, deny before allow, exact-match allow list, switch off verified by autonomy.sh status; tradeoffs arbiter-marked (2026-10-24)
+- [x] Matches locked requirements — evidence: done-when (a) block, (b) ask, (c) allow only with switch, plus arbiter push/force/merge/bare-push/content-check extras all exercised (2026-10-24)
+- [x] No scope drift — evidence: diff limited to the four scoped files plus the declared evidence file (2026-10-24)
 
 ### Step 7 — Point the kit text at the mode switch
 
@@ -272,9 +301,11 @@ JSON on stdin.
 **Files in scope**: `.claude/kit-config.md`, `.claude/CLAUDE.md`,
 `.claude/agents/arbiter.md`, `.claude/agents/qa-gate.md`,
 `.claude/skills/feature-kickoff/SKILL.md`, `.claude/skills/commit-workflow/SKILL.md`,
-`.claude/skills/pr-description/SKILL.md`, `.claude/skills/feature-wrapup/SKILL.md`
+`.claude/skills/pr-description/SKILL.md`, `.claude/skills/feature-wrapup/SKILL.md`,
+`.claude/AUTO_SETUP.md`
 
-**Done when**: no kit file refers to an `Autonomy` setting in kit-config (approved
+**Done when**: `.claude/AUTO_SETUP.md` exists as described in AMENDMENTS
+(2026-10-24, AUTO_SETUP); no kit file refers to an `Autonomy` setting in kit-config (approved
 dependencies stay there); CLAUDE.md says default mode is the kit as before, full
 automation is switched on only when the human asks, after a chat confirmation and the
 harness prompt, never on an agent's own initiative or a subagent's request, and
@@ -297,11 +328,35 @@ checks (declared scopes).
 
 2026-10-24 | 4 | safe-merge.sh tested with stub `gh` and `git`; the real fetch, ls-tree and show paths and exit 3 were not run against GitHub | no real PR existed and a fixture repo needs commits | the first real run on this feature's own PR exercises them — accepted by arbiter 2026-10-24: every untested path fails closed (refuse or exit 3, no merge), every refusal path and the merge argv were exercised, and running `--check-only` on this feature's own PR before the real merge tests the real paths at no cost
 
-2026-10-24 | 4 | Deny rules in settings.json are prefix patterns and can be bypassed by unusual spellings (`git push origin +main`, `git -C . push`, `gh api` merges) | Claude Code `Bash(...)` rules match prefixes | a parsing PreToolUse hook, or branch protection on `main` (out of scope)
+2026-10-24 | 4 | Deny rules in settings.json are prefix patterns and can be bypassed by unusual spellings (`git push origin +main`, `git -C . push`, `gh api` merges) | Claude Code `Bash(...)` rules match prefixes | a parsing PreToolUse hook, or branch protection on `main` (out of scope) — fixed by redo of step 6 2026-10-24: autonomy-guard parses every Bash segment and denies main pushes, force pushes, `gh pr merge` and `gh api` merge paths in both modes, including `-C`, env prefix, `sudo`, `+main`, `:main` and `--delete main` (evidence rows 12–41, 81–110)
 
 2026-10-24 | 4 | A `*` in a scope entry is a bash glob, so it also matches `/` | simplest reading of "shell glob" | none planned — accepted by arbiter 2026-10-24: no progress file uses a glob entry today, a directory entry (`lib/`) already matches at any depth by design so this is the same width, and step-reviewer's scope-drift check runs independently of safe-merge
 
 2026-10-24 | 4 | `check-process-refs.sh` reports 6 hits in `evidence/kit-autonomy/safe-merge-checks.md`; they are verbatim script output (`.claude/`, "progress file") | rewording would falsify the record; excluding `evidence/` from the checker is a kit change outside every step | a checker change, for the human — accepted by arbiter 2026-10-24: evidence metadata, not code; rewording would falsify the record
+
+2026-10-24 | 6 | The switch-file check in autonomy-guard is textual; obfuscation (`.auto""nomy`, variables, globs) can get past it | a hook cannot parse arbitrary shell | a sandbox write-deny on the switch path — accepted by arbiter 2026-10-24: the guard is a defence against an agent switching itself on, not an adversary; obfuscating the path is deliberate circumvention already forbidden by the house rules, and closing it needs a sandbox, not a hook
+
+2026-10-24 | 6 | A script the agent writes with Write and then runs with `bash <file>` is not inspected by the guard | the hook sees command text, not file contents | deny `bash <file>` outside an allow-list, or scan referenced scripts — fixed by redo of step 6 2026-10-24: Edit/Write/MultiEdit/NotebookEdit content naming the switch file is denied outside markdown and the guarded config files, so a helper script that changes it cannot be written (evidence redo rows 191–204)
+
+2026-10-24 | 6 | An agent can edit `.claude/settings.json` or the guard hook to remove the ask rule or the guard | the hook only guards the switch file | settings deny rules for Edit/Write on those paths, or an integrity check — fixed by redo of step 6 2026-10-24: settings `ask` rules on Edit and Write for both settings files, `.claude/hooks/**`, `autonomy.sh` and `safe-merge.sh` (live prompt exercised 2026-10-24: Edit of the hook raised a prompt, human refused; Bash writes are a separate redo entry)
+
+2026-10-24 | 6 | In bypassPermissions mode the settings ask rule is the only second confirmation (hook `ask` is documented for default and auto only) | harness behaviour | none possible in this layer — accepted by arbiter 2026-10-24: settings `ask` rules apply in every mode including bypassPermissions, so the second confirmation still holds; the hook layer cannot do better
+
+2026-10-24 | 6 | Guard splits on `;|&()` and backticks even inside quotes, so some harmless commands are denied; allow-list matching is strict, so e.g. `gh pr create --body "$(...)"` gets no decision and falls back to a normal prompt | safer to over-deny | a real shell parser — PR part moved to step 7 (arbiter amendment); over-splitting accepted by arbiter 2026-10-24: fails safe
+
+2026-10-24 | 6 | Bare `git push` is denied only when HEAD is `main`; push.default/upstream not resolved, detached HEAD not denied; `--all` denied, `--tags` not restricted | minimum rule set | resolve push.default and upstream — fixed by redo of step 6 2026-10-24: bare push denied from a detached HEAD and when `@{push}` resolves to `main` (evidence redo rows 181–190); `--tags` stays unrestricted as it moves no branch
+
+2026-10-24 | 6 | Auto-allowed push form is only `git push [-u|--set-upstream] origin <branch>` | brief said single-command non-main push | widen if needed — accepted by arbiter 2026-10-24: it is exactly the form the pr-description skill uses (`git push -u origin <branch>`); anything else falls back to a normal prompt, which fails safe
+
+2026-10-24 | 6 (redo) | The content check is textual; obfuscated content (string concatenation, base64, env-built paths) still passes | a hook cannot evaluate code | a sandbox write-deny on the switch path — accepted by arbiter 2026-10-24: the check stops an agent writing a helper by accident or habit; obfuscating the path is deliberate circumvention the house rules already forbid, and closing it needs a sandbox, not a hook
+
+2026-10-24 | 6 (redo) | Bash writes (`sed -i`, `>`, `python -c`, `cp`) to the settings, hook and script files are not covered by the Edit/Write ask rules | ask rules match only the Edit and Write tools | Bash ask patterns for those paths, or read-only files — accepted by arbiter 2026-10-24: `sed -i` or `>` on the kit's own guard is deliberate circumvention, not an accident; prefix ask patterns would not catch those spellings anyway, and any such change shows in the diff that step-reviewer and qa-gate read
+
+2026-10-24 | 6 (redo) | Ask rules prompt rather than block, so a casual human approval can still let the guard be edited | chosen over deny so default mode and the redo loop keep a human-approval path | deny rules plus manual human edits — accepted by arbiter 2026-10-24: a human approving the prompt is the human deciding, which is what the prompt is for; deny would remove the human route the redo loop needs
+
+2026-10-24 | 6 (redo) | The content check blocks legitimate non-markdown files that mention the switch file name | rule as briefed | a narrower matcher — accepted by arbiter 2026-10-24: fails safe (deny, never allow); no later plan step writes non-markdown code naming the switch file, and the files that legitimately do are exempt
+
+2026-10-24 | 6 (redo) | A bare push outside a repo, or where git fails, gets no decision; the `@{push}` target is judged by name (`main` or `*/main`) only | minimum rule set | resolve the destination ref properly — accepted by arbiter 2026-10-24: no decision falls back to the settings deny rules and a normal prompt, and the autonomous allow-list never covers a bare push, so it fails safe
 
 ---
 
