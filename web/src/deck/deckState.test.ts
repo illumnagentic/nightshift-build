@@ -110,6 +110,22 @@ describe("fetching", () => {
     expect(needsRefetch(s)).toBe(false);
     expect(phase(s)).toBe("card");
   });
+
+  it("keeps refetching when a duplicate batch arrives while plenty of cards are queued", () => {
+    const first = Array.from({ length: 10 }, (_, i) => `c${i}`);
+    let s = run([
+      { type: "fetchOk", response: batch(first) },
+      { type: "fetchOk", response: batch(first) },
+    ]);
+    expect(s.emptyReason).toBeNull();
+    for (const id of first.slice(0, 7)) {
+      s = deckReducer(s, { type: "swipeStart" });
+      s = deckReducer(s, { type: "swipeOk", card: card(id), response: swipeResponse(id) });
+      s = deckReducer(s, { type: "continue" });
+    }
+    expect(ids(s)).toEqual(["c7", "c8", "c9"]);
+    expect(needsRefetch(s)).toBe(true);
+  });
 });
 
 describe("refetch threshold", () => {

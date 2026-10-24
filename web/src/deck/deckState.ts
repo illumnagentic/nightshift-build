@@ -109,11 +109,13 @@ export function deckReducer(state: DeckState, action: DeckAction): DeckState {
     case "fetchOk": {
       const known = new Set([...state.queue.map((c) => c.decision_id), ...state.swipedIds]);
       const fresh = action.response.cards.filter((c) => !known.has(c.decision_id));
+      // Nothing new only means exhausted when the deck is low enough to have asked.
+      const exhausted = fresh.length === 0 && state.queue.length <= REFETCH_THRESHOLD;
       return {
         ...state,
         loading: false,
         queue: [...state.queue, ...fresh],
-        emptyReason: fresh.length > 0 ? null : (action.response.empty_reason ?? "exhausted"),
+        emptyReason: exhausted ? (action.response.empty_reason ?? "exhausted") : null,
       };
     }
 

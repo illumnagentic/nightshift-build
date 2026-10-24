@@ -5,28 +5,29 @@ import { canSwipe, currentCard, deckReducer, initialDeckState, needsRefetch, pha
 
 export function useDeck(userId: string) {
   const [state, dispatch] = useReducer(deckReducer, initialDeckState);
-  // The user whose responses may still be applied. Cleared on unmount or user change.
-  const live = useRef<string | null>(null);
+  // Bumped on every reset, user change and unmount. A response from an earlier
+  // generation is dropped, including a repeat request from a doubled effect run.
+  const generation = useRef(0);
   const swipeBusy = useRef(false);
 
   useEffect(() => {
-    live.current = userId;
     swipeBusy.current = false;
     dispatch({ type: "reset" });
     return () => {
-      live.current = null;
+      generation.current += 1;
     };
   }, [userId]);
 
   useEffect(() => {
     if (!needsRefetch(state)) return;
     dispatch({ type: "fetchStart" });
+    const requested = generation.current;
     api.getDeck(userId).then(
       (response) => {
-        if (live.current === userId) dispatch({ type: "fetchOk", response });
+        if (generation.current === requested) dispatch({ type: "fetchOk", response });
       },
       (error: unknown) => {
-        if (live.current === userId) dispatch({ type: "fetchFail", error });
+        if (generation.current === requested) dispatch({ type: "fetchFail", error });
       },
     );
   }, [state, userId]);
@@ -38,14 +39,15 @@ export function useDeck(userId: string) {
       if (!card || swipeBusy.current || !canSwipe(state)) return;
       swipeBusy.current = true;
       dispatch({ type: "swipeStart" });
+      const requested = generation.current;
       api.swipe(userId, card.decision_id, { action }).then(
         (response) => {
           swipeBusy.current = false;
-          if (live.current === userId) dispatch({ type: "swipeOk", card, response });
+          if (generation.current === requested) dispatch({ type: "swipeOk", card, response });
         },
         (error: unknown) => {
           swipeBusy.current = false;
-          if (live.current === userId) dispatch({ type: "swipeFail", error });
+          if (generation.current === requested) dispatch({ type: "swipeFail", error });
         },
       );
     },
