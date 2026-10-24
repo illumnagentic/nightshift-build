@@ -140,7 +140,7 @@ export function deckReducer(state: DeckState, action: DeckAction): DeckState {
       return { ...state, swiping: false, failure: toFailure(action.error) };
 
     case "continue":
-      return { ...state, pendingFeedback: null };
+      return { ...state, pendingFeedback: null, favourited: false };
 
     case "retry":
       return { ...state, failure: null };

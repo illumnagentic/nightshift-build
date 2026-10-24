@@ -101,7 +101,15 @@ match before this feature merges.
 
 ## AMENDMENTS
 
-_None._
+- 2026-10-24, human, after the first QA gate (FAIL):
+  1. Done on an empty optional screen: "A, treat it as skip" — when the screen is
+     optional and nothing is filled in, Done sends the skip body
+     (`{"chips": [], "free_text": null, "skipped": true}`), never empty feedback.
+     Redo of Step 5.
+  2. "Added to favourites" shown twice after Love: "Fix now" — continuing past the
+     feedback screen clears the note so it does not show above the next card. Redo of
+     Step 2, reviewed before the Step 5 redo.
+  3. Duplicated strength labels: "Log it" — recorded under SPOTTED, NOT FIXED.
 
 ---
 
@@ -185,6 +193,22 @@ tests and build exit 0; the process-wording check exits 0.
 - [x] Matches locked requirements — evidence: outcome table matches answer 2; check-process-refs.sh exit 0 (2026-10-24)
 - [x] No scope drift — evidence: diff touches only deckState.ts, deckState.test.ts, step-2.md; useDeck.ts untouched (2026-10-24)
 
+#### Redo of Step 2 — clear the favourites note on continue
+
+**Goal**: The "Added to favourites" note does not carry over to the next card after the feedback screen.
+
+**Files in scope**: `web/src/deck/deckState.ts`, `web/src/deck/deckState.test.ts`, `evidence/web-feedback/step-2-redo.md`.
+
+**Done when**: the `continue` action clears `favourited` as well as the pending feedback; a superlike with no feedback screen (exploration is never this case today, but the reducer must not depend on that) still shows the note until the next swipe; a test covers continue clearing it; existing tests unweakened; typecheck, tests and build exit 0; the process-wording check exits 0.
+
+**Evidence location**: `evidence/web-feedback/step-2-redo.md`.
+
+- [x] Implemented — deckState.ts `continue` now clears favourited + pendingFeedback (2026-10-24)
+- [x] Tested — evidence: new tests "clears favourited on continue after a superlike opens feedback" and "keeps favourited until the next swipe when no feedback screen opens"; typecheck, npm test (162 pass), build all exit 0 (2026-10-24)
+- [x] Best practices met — evidence: one-line reducer change, no new code paths (2026-10-24)
+- [x] Matches locked requirements — evidence: AMENDMENTS 2026-10-24 item 2 satisfied by reducer change; no-feedback path unchanged (2026-10-24)
+- [x] No scope drift — evidence: git diff touches only deckState.ts, deckState.test.ts, evidence/web-feedback/step-2-redo.md; 1 removed line, the reducer line; check-process-refs.sh exit 0 (2026-10-24)
+
 ### Step 3 — Feedback form logic
 
 **Goal**: A pure, tested module that holds the answers on one feedback screen and builds
@@ -261,6 +285,22 @@ check exits 0.
 - [x] Matches locked requirements — evidence: compulsory: no Skip, Done gated by canSubmit; optional: Skip sends skipRequest(); blank to null via toRequest; source unread (2026-10-24)
 - [x] No scope drift — evidence: diff limited to declared files plus progress tradeoffs; ChipDialog, useDeck, deckState, feedbackForm untouched (2026-10-24)
 
+#### Redo of Step 5 — empty optional Done is a skip
+
+**Goal**: On an optional screen with nothing filled in, Done sends the skip body.
+
+**Files in scope**: `web/src/feedback/FeedbackScreen.tsx`, `evidence/web-feedback/step-5-redo.md`.
+
+**Done when**: when `pending.compulsory` is false and the form has no chip answer and blank free text, Done sends `skipRequest()`; otherwise Done sends `toRequest(...)` as before; compulsory behaviour unchanged (Done disabled until an answer); the decision is made by a pure check (e.g. reuse `canSubmit(form, true)` as "has an answer") without editing `feedbackForm.ts`; typecheck, tests and build exit 0; the process-wording check exits 0.
+
+**Evidence location**: `evidence/web-feedback/step-5-redo.md`.
+
+- [ ] Implemented
+- [ ] Tested — evidence: (date)
+- [ ] Best practices met — evidence: (date)
+- [ ] Matches locked requirements — evidence: (date)
+- [ ] No scope drift — evidence: (date)
+
 ---
 
 ## TRADEOFFS
@@ -289,22 +329,151 @@ check exits 0.
 - `.claude/worktrees/` | untracked and not gitignored on `main` | low
 - `.claude/kit-config.md` Project type | still says "No code yet" | low
 - `web/src/deck/useDeck.ts` | `swipeBusy` ref race on a rapid user switch mid-swipe (from F2) | low
+- `web/src/feedback/ChipDialog.tsx`, `FeedbackScreen.tsx` | strength labels written out in both files; human chose to log it (AMENDMENTS 2026-10-24) | low
 - `web/src/deck/deckState.ts`, `deckState.test.ts` | `npx prettier --check` warns; not known whether pre-existing; prettier is not a configured check (step 2 implementer) | low
 
 ---
 
 ## VERIFICATION
 
-- [ ] All step checkboxes ticked with evidence
-- [ ] Every evidence path in this file exists
-- [ ] Test suite run — result:
-- [ ] Lint run — result:
-- [ ] Typecheck run — result:
-- [ ] Build run — result:
-- [ ] Diff contains no files outside declared scope
+Run by the QA gate on 2026-10-24 against BASE_SHA `dc0e819` and HEAD `cb4d6fe`.
+
+**QA-GATE: FAIL 2026-10-24.** Reasons: 15 TRADEOFFS entries carry no human sign-off;
+the contract change this feature depends on (`skipped`, post-onboarding rule) is not on
+`origin/main`; one open decision (Done on an empty optional screen, see HANDOVER). All
+commands are green.
+
+- [x] All step checkboxes ticked with evidence — 25 of 25, all dated 2026-10-24, order ok (2026-10-24)
+- [x] Every evidence path in this file exists — `evidence/web-feedback/step-1.md` to `step-5.md` all present (2026-10-24)
+- [x] Test suite run — result: `cd web && npm test` exit 0, 6 files, 160 tests passed (2026-10-24)
+- [ ] Lint run — result: not configured in kit-config, not run
+- [x] Typecheck run — result: `cd web && npm run typecheck` exit 0 (2026-10-24)
+- [x] Build run — result: `cd web && npm run build` exit 0 (2026-10-24)
+- [ ] Diff contains no files outside declared scope — all code and evidence files are in a step's scope; `.claude/progress/web-feedback.md` itself is in no step's scope (it is the tracking file, committed per kit-config). Left for the human to accept.
 - [ ] Tradeoff ledger reviewed and signed off by human
 - [ ] Human eye test completed
+
+Also run: `cd web && npm ci` exit 0; `.claude/scripts/check-process-refs.sh dc0e819…` exit 0,
+no hits. REQUIREMENTS (LOCKED) block identical in all five commits; it could not be checked
+before the first commit, which created the file.
 
 ---
 
 ## HANDOVER
+
+### What was built
+
+After you swipe a card, a feedback screen now opens instead of the placeholder. It shows
+the listing's price and address, the feature chips the card came with, and a box for a
+note about the whole property. Tapping a chip opens a dialog where you pick suggested
+words or type your own and choose how much it matters (Must have, Nice to have, Would
+prefer not, Deal-breaker). For the first 15 cards the screen is compulsory: there is no
+Skip and Done stays grey until you answer one chip or write a note. After that it is
+optional with a Skip button, and a left swipe on an exploration card goes straight to
+the next card.
+
+### Blocker before merge: the contract
+
+This feature sends `"skipped": true` on `PUT /decisions/{id}/feedback` and follows the
+post-onboarding rule you agreed with the backend side. Neither is written down yet. On
+`origin/main` (now at `0755bcb`), `docs/api-contract.md` has no `skipped` field, and
+`docs/decisions.md` line 31 still says feedback is "optional on right swipes". The
+backend side owns that change. The frontend code is not at fault. Do not merge until the
+contract lands; if it differs from what is assumed here, redo step 1 to match.
+
+### Decide this: Done on an empty optional screen
+
+On an optional screen, pressing Done with nothing filled in sends
+`{"chips": [], "free_text": null}` with no `skipped`. That is empty feedback, not a skip.
+The agreed rule says a skip is always sent as `skipped: true`, and the backend leaves only
+skipped screens out of its offered counts. So these screens will count as "chips offered,
+none chosen" and push chip weights down. This came from step 3 (`canSubmit` is always true
+when optional) meeting step 5 (Done always sends `toRequest`). No tradeoff entry covers
+it. Choose one: grey out Done when the optional form is empty; send the skip body in that
+case; or accept it and add a tradeoff entry.
+
+### What to check yourself
+
+1. In `web/`, make sure `.env` (or `.env.local`) has `VITE_API_MODE=mock` (see
+   `web/.env.example`). The real backend on `main` has no deck or feedback endpoints yet,
+   so mock mode is the only way to see this.
+2. Run `cd web && npm run dev -- --port 5183 --strictPort` and open http://localhost:5183.
+3. Pick the user `alex`. Swipe the first card right (or press the right arrow key).
+   The screen "Tell us why" should open, with "You liked this: £…, address". There should
+   be no Skip button, Done should be grey, and the hint "Pick a feature or write a note to
+   continue." should show.
+4. Tap a chip, for example Parking. A dialog opens over a dimmed page. Tap a suggested
+   phrase: the text box fills, no strength is picked, Save stays grey. Pick "Nice to have"
+   and press Save. The chip should now show "Nice to have" and Done should be enabled.
+5. Tap the same chip again. It should open with "Nice to have" and your text filled in,
+   plus a Remove button. Press Remove. The mark goes and Done goes grey again.
+6. Press Escape with the dialog open. It should close and focus should land back on the
+   chip. Press Tab through the whole screen: every chip, the note box and Done should be
+   reachable.
+7. Write a note only, press Done. The next card should appear.
+8. Press Love (up arrow) on a card. The feedback screen should say "You loved this" and
+   "Added to favourites". After Done, check whether "Added to favourites" shows again above
+   the next card. It will (see "What could bite you"); decide if that is acceptable.
+9. Swipe until you have done 15 cards. From card 16 the screen should show a Skip button
+   and Done should be enabled with nothing filled in. Press Skip: the next card appears.
+10. The mock makes every fifth new card an exploration card (`source` is never shown on
+    screen, and mock mode sends no network requests, so count cards). After card 15, swipe it left. No feedback screen
+    should open; the next card shows at once. Swipe another exploration card right: the
+    optional screen should open.
+11. Check on a narrow phone width (devtools device toolbar) that the chips wrap and the
+    dialog fits.
+
+### Tools that will help
+
+- Browser devtools, Network tab: in mock mode the client is in-browser, so feedback sends
+  show no request. Use it for the deck response (to spot `"source": "exploration"`) once
+  real mode works. Then look at the `PUT /api/decisions/<id>/feedback` body: Skip must send
+  `{"chips":[],"free_text":null,"skipped":true}`; Done must send chips in the card's order,
+  trimmed text, and `null` for blanks.
+- Devtools Elements panel: answered chips carry `aria-pressed="true"`; the Done button has
+  `aria-describedby` pointing at the hint only while the compulsory screen is empty.
+- Devtools Accessibility pane or VoiceOver: the dialog should be announced by the chip
+  name, and the strength options as a group titled "How much does this matter?".
+- curl, once the backend endpoint exists:
+  `curl -X PUT http://localhost:8787/api/decisions/<decision_id>/feedback -H 'Content-Type: application/json' -d '{"chips":[],"free_text":null,"skipped":true}'`
+  should return the body echoed with `"skipped": true` and a `profile_version`.
+
+### What is not done
+
+- The contract change above is not merged. Merge blocker, backend side.
+- The Done-on-empty-optional-screen behaviour above is undecided.
+- None of the 15 TRADEOFFS entries is signed off. In short: the exploration leak on left
+  swipes; the mock's own 422 for a non-boolean `skipped`; mock weights still count
+  unanswered cards as offered; unknown future actions open optional feedback; four deck
+  tests changed because ranked swipes now open feedback; `toRequest` trusts unique chip
+  ids; raw text kept untrimmed until send; no component or browser tests for the dialog or
+  the screen; focus return done by hand; clicking the backdrop does not close the dialog;
+  Save allowed with empty text; the favourites note moved into the feedback screen; typed
+  answers are lost on a user switch mid-send; the compulsory hint is the only validation
+  text.
+- No automated test covers the screen or the dialog. Focus handling, Escape, the dialog
+  opening and the error display have not been tested by any test.
+- The error display cannot be triggered from the UI in mock mode. It was not seen in the
+  earlier browser check either. It is unverified until the real backend returns a 4xx.
+- The optional screen with Skip and the exploration left-swipe path were not checked in a
+  browser.
+- Spotted, not fixed: orphaned `.deck-feedback` rules in `web/src/deck/deck.css`;
+  `.claude/worktrees/` untracked and not gitignored; kit-config "No code yet" (already fixed
+  on `origin/main`); `swipeBusy` race on a fast user switch mid-swipe (from F2); prettier
+  warnings on `deckState.ts` and its test.
+- The strength labels are written out twice, in `ChipDialog.tsx` and `FeedbackScreen.tsx`.
+  If one is changed the other will drift.
+- The branch is one commit behind `origin/main`. It merges cleanly (checked with
+  `git merge-tree`), but needs a rebase.
+
+### What could bite you
+
+- **Empty Done screens skew the profile.** As above: every optional screen closed with an
+  empty Done counts against the chips it offered. Over a persona batch that is many
+  screens, and it pushes weights down for exactly the users who skip most.
+- **The contract may not match.** The frontend guesses the shape of `skipped`. If the
+  backend rejects the key, or names it differently, every Skip will fail with an error and
+  the user is stuck on the screen until they fill something in and press Done.
+- **"Added to favourites" shows twice.** After Love it shows on the feedback screen, then
+  again above the next, different card, because `favourited` is only cleared on the next
+  swipe. On a recording this reads as if the new card was favourited.

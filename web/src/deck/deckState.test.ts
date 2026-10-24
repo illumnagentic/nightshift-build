@@ -295,6 +295,38 @@ describe("swiping", () => {
     expect(deckReducer(next, { type: "swipeStart" }).favourited).toBe(false);
   });
 
+  it("clears favourited on continue after a superlike opens feedback", () => {
+    const paused = run(
+      [
+        { type: "swipeStart" },
+        { type: "swipeOk", card: card("a"), response: swipeResponse("a", { action: "superlike", favourited: true }) },
+      ],
+      loaded,
+    );
+    expect(phase(paused)).toBe("feedback");
+    expect(paused.favourited).toBe(true);
+    const s = deckReducer(paused, { type: "continue" });
+    expect(phase(s)).toBe("card");
+    expect(s.favourited).toBe(false);
+  });
+
+  it("keeps favourited until the next swipe when no feedback screen opens", () => {
+    const s = run(
+      [
+        { type: "swipeStart" },
+        {
+          type: "swipeOk",
+          card: card("a", false, "exploration"),
+          response: swipeResponse("a", { action: "left", favourited: true }),
+        },
+      ],
+      loaded,
+    );
+    expect(s.pendingFeedback).toBeNull();
+    expect(s.favourited).toBe(true);
+    expect(deckReducer(s, { type: "swipeStart" }).favourited).toBe(false);
+  });
+
   it("does not favourite on a right swipe", () => {
     const s = run(
       [
