@@ -233,11 +233,11 @@ branch deletion on merge.
 
 **Evidence location**: `evidence/kit-autonomy/repo-settings.md`
 
-- [ ] Implemented
-- [ ] Tested — evidence: (date)
-- [ ] Best practices met — evidence: (date)
-- [ ] Matches locked requirements — evidence: (date)
-- [ ] No scope drift — evidence: (date)
+- [x] Implemented — evidence/kit-autonomy/repo-settings.md with apply command and before/after table (2026-10-24)
+- [x] Tested — evidence: live gh api read matches all six target values (2026-10-24)
+- [x] Best practices met — evidence: only the six named fields changed; metadata only, no secrets (2026-10-24)
+- [x] Matches locked requirements — evidence: answer 3 (squash only, PR title, empty body, delete branch) matches live settings (2026-10-24)
+- [x] No scope drift — evidence: git status shows only evidence/kit-autonomy/repo-settings.md untracked (2026-10-24)
 
 ### Step 6 — Mode switch with double confirmation
 
