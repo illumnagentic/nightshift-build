@@ -29,7 +29,7 @@ Leave blank if the repo has none. Never invent one.
 
 ## Conventions
 
-- **Commit scopes in use**: worker, web, db, prep, kit
+- **Commit scopes in use**: worker, web, db, prep, kit, api
 - **Requirements source**: docs/product-idea-high-level.md
 - **Progress files**: committed
   <!-- committed or ignored. `committed` means .claude/progress/*.md are tracked in git
