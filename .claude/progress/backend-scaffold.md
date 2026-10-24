@@ -185,11 +185,11 @@ and the `mreq_` ID to evidence.
 **Evidence location**: `evidence/backend-scaffold/step-3.md` (unit test summary, the
 one live call's metadata).
 
-- [ ] Implemented
-- [ ] Tested — evidence: (date)
-- [ ] Best practices met — evidence: (date)
-- [ ] Matches locked requirements — evidence: (date)
-- [ ] No scope drift — evidence: (date)
+- [x] Implemented — worker/src/mubit.py, worker/tests/test_mubit.py, worker/scripts/mubit_ping.py; diff within declared scope (2026-10-24)
+- [x] Tested — evidence: `uv run --group dev pytest tests/test_mubit.py -q` 10 passed exit 0; test_users.py still collects (34); one live call in evidence/backend-scaffold/step-3.md, 200, mreq_01a16ea1592f7052b9714df8ae035fb2 (2026-10-24)
+- [x] Best practices met — evidence: key only in x-goog-api-key, no ?key= (test_build_request_url_headers_body), never in error text (test_key_never_in_error), ping prints metadata only; fetch(url, method=, headers=, body=) and response.status/.headers.get/.text() checked against python_modules/workers/fetch.py and response.py (2026-10-24)
+- [x] Matches locked requirements — evidence: request ID returned and MubitError carries status/code/request_id; gateway vs provider told apart in tests; fixed gemini-3.8-flash with explicit thinkingLevel low (2026-10-24)
+- [x] No scope drift — evidence: git status shows only the 3 declared files, the evidence file and the progress file changed; no hunk outside Step 3 (2026-10-24)
 
 ### Step 4 — Run instructions
 
@@ -223,6 +223,9 @@ README steps).
 | 2026-10-24 | 2 | Duplicate detection maps any exception whose text contains `UNIQUE constraint failed` to 409; D1 gives no error code to match on | Only string matching works through the Pyodide JS exception; a pre-check alone would race | Small: match on a structured D1 error code if the runtime ever exposes one — accepted by arbiter 2026-10-24: no error code is exposed through Pyodide, the UNIQUE constraint still decides the race, and any other error is re-raised, so a mismatch fails loudly as 500 rather than a false 409 |
 | 2026-10-24 | 2 | Tests need a running `pywrangler dev` and a seeded DB; no in-process test | `TestClient` needs `httpx`, not approved; D1 only exists in the Worker runtime | Large: add `httpx` and a fake D1, which would not test the real binding — accepted by arbiter 2026-10-24: already the locked approach (httpx out of scope, stdlib urllib against `pywrangler dev`); testing the real D1 binding is the better test. Step 4 README must give the seed, dev-server and pytest sequence |
 | 2026-10-24 | 2 | All 422 bodies for malformed or mistyped JSON share one generic message | The contract says the frontend shows `error.message` and replicates no checks; per-field messages were not asked for | Small: map pydantic error types to messages — accepted by arbiter 2026-10-24: contract wants code `invalid_request` and a displayable message, not per-field messages; the generic message names the expected body shape, and the frontend sends that shape anyway |
+| 2026-10-24 | 3 | `generate_content` (Workers `fetch` transport) is not exercised live or in a test; the ping uses urllib. The runtime `fetch` call and `response.headers.get(...)` follow the workers-py API from memory and the 24 Oct spike | The workers module exists only inside the runtime, and an extra endpoint to hit it was out of scope | Small: B4's first curator call through `pywrangler dev` exercises it; fix there if the response API differs — accepted by arbiter 2026-10-24: step-reviewer checked the fetch call and Response API against the vendored workers SDK, and a live runtime test now would need another paid Mubit call, which this feature may not make. B4's first curator call under `pywrangler dev` exercises it |
+| 2026-10-24 | 3 | Only `x-middleware-request-id` is copied out of the runtime's response headers, so `retry-after` and `x-should-retry` are not available to callers | Nobody consumes them yet; the runtime Headers object has no confirmed iteration API | Small: copy more headers once a caller retries — accepted by arbiter 2026-10-24: no caller retries, so copying more headers now would be speculative (ladder rung 1); MubitError already carries status and request ID, enough to decide on a retry later |
+| 2026-10-24 | 3 | The Gemini-format gateway error type is read from `error.type` or ErrorInfo `metadata.type`, a guess; the skill only says the code is the ErrorInfo `reason` | No real gateway refusal body was seen (spend limited to one call) | Small: confirm on the first real refusal and adjust `parse_response` — accepted by arbiter 2026-10-24: confirming needs a real refusal body, which needs more paid calls; a wrong guess only mislabels gateway vs provider in the error, and status, code and request ID are still raised |
 
 ---
 
