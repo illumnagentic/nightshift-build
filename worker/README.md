@@ -31,6 +31,8 @@ worker/scripts/seed.sh
 This deletes the local D1 state, then loads the listings schema, the app schema and the
 listings data (635 rows in `listings`, none in `users`). It is safe to re-run. Do it
 before starting the dev server, and again whenever you want an empty `users` table.
+Stop `pywrangler dev` before running it, then start it again. A running server keeps a
+stale view of the local D1 and returns 500 until restarted.
 
 ## Run
 
@@ -55,7 +57,8 @@ cd worker && uv run --group dev pytest tests -q
   network.
 - `tests/test_users.py` calls the API and needs a seeded, running dev server. It uses
   `http://localhost:8787` unless `BASE_URL` is set. Each run adds users to the local D1;
-  re-seed to clear them.
+  re-seed to clear them. Stop `pywrangler dev` before running `worker/scripts/seed.sh`
+  and start it again afterwards, or the server returns 500.
 
 ## Mubit ping
 
