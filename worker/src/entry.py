@@ -14,6 +14,7 @@ import asgi
 
 import mubit
 import prefs
+import tfl
 
 USERNAME_RE = re.compile(r"[A-Za-z0-9_-]{1,32}")
 
@@ -121,7 +122,20 @@ async def prefs_row(db, user_id: str):
 
 @api.get("/prefs")
 async def get_prefs(request: Request, user_id: str = Depends(current_user)):
-    return prefs_response(await prefs_row(request.scope["env"].DB, user_id))
+    env = request.scope["env"]
+    row = await prefs_row(env.DB, user_id)
+    if row is not None and row["commute_status"] == "pending":
+        # Each poll does one bounded batch of TfL calls; the contract already has the client polling.
+        status, streak = await tfl.run_batch(
+            env.DB, getattr(env, "TFL_BASE", None) or tfl.TFL_BASE, json.loads(row["parsed_json"])["hard"],
+            row["commute_postcode"], row["commute_fail_streak"],
+        )
+        # Skip the write if the user re-saved prefs while the batch ran.
+        await env.DB.prepare(
+            "UPDATE prefs SET commute_status = ?, commute_fail_streak = ? WHERE user_id = ? AND updated_at = ? AND commute_status = 'pending'"
+        ).bind(status, streak, user_id, row["updated_at"]).run()
+        row = await prefs_row(env.DB, user_id)
+    return prefs_response(row)
 
 
 @api.put("/prefs")

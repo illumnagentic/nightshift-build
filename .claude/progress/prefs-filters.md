@@ -76,7 +76,23 @@ Quoted above. Contract: `docs/api-contract.md` on `main` at `0755bcb`. Plan by t
 
 ## AMENDMENTS
 
-_None._
+2026-10-24 — Step 5 (arbiter) — move the pure tfl.py unit tests to a server-less module.
+- **Goal**: `test_classify_answers` and `test_url_and_next_tuesday` run without a dev
+  server, so the unit-only run covers `tfl.py`.
+- **Files**: `worker/tests/test_tfl_unit.py` (new), `worker/tests/test_commute.py`,
+  `worker/README.md` (only the unit-only test line, to list the new module).
+- **Done when**: the two tests live in `test_tfl_unit.py` unchanged (no assertion
+  removed or loosened) and are gone from `test_commute.py`; `test_commute.py` keeps
+  `pytestmark = pytest.mark.usefixtures("fake")`; the unit-only run (`test_filters.py`,
+  `test_prefs_unit.py`, `test_mubit.py`, `test_tfl_unit.py`) passes with no server;
+  the full suite passes in test mode; README's unit-only line lists the new module.
+- **Evidence location**: `evidence/prefs-filters/step-5.md`
+
+- [ ] Implemented
+- [ ] Tested — evidence: (date)
+- [ ] Best practices met — evidence: (date)
+- [ ] Matches locked requirements — evidence: (date)
+- [ ] No scope drift — evidence: (date)
 
 ---
 
@@ -197,11 +213,11 @@ and what TfL answers for a well-formed postcode that does not exist.
 
 **Evidence location**: `evidence/prefs-filters/step-3.md`
 
-- [ ] Implemented
-- [ ] Tested — evidence: (date)
-- [ ] Best practices met — evidence: (date)
-- [ ] Matches locked requirements — evidence: (date)
-- [ ] No scope drift — evidence: (date)
+- [x] Implemented — tfl.py, commute_cache, GET /prefs batch, filters postcode entry point; diff read, hunks trace to Step 3 and carry-over (a)-(d) (2026-10-24)
+- [x] Tested — evidence: reviewer re-ran seed.sh, test-mode server :8788 with TFL_BASE, pytest 171 passed exit 0, second run exit 0, unit-only exit 0; test_commute.py has pytestmark usefixtures("fake"); probe now requires a fake TfL request (2026-10-24)
+- [x] Best practices met — evidence: bound params in entry.py/tfl.py/filters.py, bounded batch (12 pairs, 5 s, concurrency 6), transient never cached, status write guarded on updated_at and pending, check-process-refs exit 0 (2026-10-24)
+- [x] Matches locked requirements — evidence: Q5 no key support, Q7 nonexistent postcode (HTTP 300) ends failed after 3-poll streak, Q11 pool is other-hard-filter matches via matching_listing_ids, Q12 poll-driven, Q13 TFL_BASE var; contract GET shape asserted on every poll (PREFS_KEYS); pilot in evidence/prefs-filters/step-3.md (2026-10-24)
+- [x] No scope drift — evidence: git status shows entry.py, tfl.py, filters.py, schema.sql, fake_upstream.py, test_commute.py plus permitted conftest.py/test_filters.py, evidence, progress file (2026-10-24)
 
 ### Step 4 — README and B4 handover
 
@@ -261,6 +277,12 @@ Q13: Optional Worker vars `GEMINI_BASE` / `TFL_BASE` overriding the upstream hos
 
 2026-10-24 | step 2 | Unknown tenure with unknown lease is excluded when `min_lease_years` is set | conservative, consistent with Q3 (unknown never passes a set limit); the brief left it open | pass it instead if the pool proves too small (check count of such rows) — accepted by arbiter 2026-10-24: consistent with Q3; the real dump has 0 rows with NULL tenure (339 freehold, 236 leasehold, 60 share_of_freehold), so the pool cost today is nil
 
+2026-10-24 | step 3 | A TfL batch that cached nothing and met a 429 does not add to the fail streak (the brief counted every transient batch) | the pilot showed anonymous TfL answers 429 with `Retry-After: 31` after about 54 calls in 17 s; three rate-limited polls in a row (one poll a second) would end `failed` for a good postcode | none if accepted; a permanent 429 would poll as `pending` for ever, so cap total polls if that is seen — accepted by arbiter 2026-10-24: departs from the wording of kickoff ruling Q7, not from decisions.md; the pilot showed the 429 is a ~30 s throttle that clears, and counting it would end good postcodes `failed`; a non-existent postcode still ends `failed` (HTTP 300 is transient, not 429); a permanent 429 is not observed and re-saving prefs resets it
+2026-10-24 | step 3 | Anonymous TfL throughput is roughly 12 calls per 3 to 5 s poll until throttled, then 30 s waits; a 96-listing pool needed 12 polls across a throttle, ~366 London listings will take minutes | Q5 says build no key support unless the pilot shows one is needed; the limit slows the commute step, it does not block it | a TfL app key (new secret) or fewer pairs per poll; ESCALATE decision left to the caller — accepted by arbiter 2026-10-24: the pilot does not show a key is needed (Q5): throughput slows the commute step but every postcode reached `ready`; a new postcode costs minutes, once, and the cache is shared (≤635 listings × ~5 persona destinations, about 15–60 min of polling in total at the measured 45–190 calls/min), which fits Saturday afternoon; Step 4's README must say: (1) a new commute postcode takes minutes to reach `ready` on anonymous TfL; (2) save each persona destination and the demo postcode once and poll to `ready` before the persona batch and before recording (warming is a run-book step, not code in B3); (3) poll `GET /prefs` no faster than every 2–3 s, and a run of quick `pending` polls means the TfL throttle, wait ~30 s; (4) the test-mode command needs `--var TFL_BASE:http://127.0.0.1:8799` as well as `GEMINI_BASE`; revisit (escalate for a key) only if B6's batch stalls on commute
+2026-10-24 | step 3 | Date fallback: `london_today` falls back to UTC if `zoneinfo` fails in the runtime; not observed which path ran | UTC is at most an hour off London, which never moves a Tuesday | none — accepted by arbiter 2026-10-24: either path yields a coming Tuesday at 08:30 (a weekday, as decisions.md Commute requires) and a test asserts it; the only edge (London Tuesday 00:00–01:00 BST) picks the following Tuesday, still valid
+2026-10-24 | step 3 | A concurrent poll can run a second batch for the same user; the status write is skipped if the prefs row changed, but two simultaneous batches may both count a fail | cache writes are idempotent (INSERT OR REPLACE); a client polls one request at a time | a per-user lock if clients ever poll in parallel — accepted by arbiter 2026-10-24: cache writes are idempotent, the status write is guarded, the frontend and the planned persona swiper poll one request at a time; worst case is an early `failed` the user clears by re-saving
+2026-10-24 | step 3 | `test_commute.py` holds two pure unit tests (classify, URL and Tuesday) that need the server because of the module `pytestmark` | the step's file scope has no other test file for tfl.py | move them to a server-less module in a later step — FIX_NOW by arbiter 2026-10-24: cheap (a file move, under 30 lines), and it lets the unit-only run cover tfl.py; see AMENDMENTS (arbiter) Step 5
+
 ---
 
 ## SPOTTED, NOT FIXED
@@ -268,6 +290,9 @@ Q13: Optional Worker vars `GEMINI_BASE` / `TFL_BASE` overriding the upstream hos
 2026-10-24 | `worker/README.md` | test instructions do not yet describe test mode or the fake upstream | low (Step 4 covers the README) — accepted by arbiter 2026-10-24: in Step 4's scope and done-when; Step 4 must also say test mode is mandatory and that the default BASE_URL (8787) is the normal dev server
 
 2026-10-24 | `worker/tests/test_prefs.py` | no guard if pytest runs against a normal dev server (real key, no GEMINI_BASE): the first PUT would reach the real Mubit; Q13 wanted a separate test vars file | medium (Step 4 README must say test mode is mandatory; consider a guard test that fails fast) — resolved by Step 1 redo 2026-10-24
+
+2026-10-24 | `worker/src/entry.py` GET /prefs | the status-write race guard compares `updated_at`, which has one-second resolution; a re-save in the same second as the previous save could be overwritten by a stale batch, and no test covers the guard | low (a PUT includes an LLM call, so same-second re-saves are not realistic) | step 3 review — accepted by arbiter 2026-10-24: unreachable in practice (each PUT waits on an LLM call); the worst case is a stale status the next poll or re-save corrects; nothing later depends on it
+2026-10-24 | `worker/src/tfl.py` run_batch | a permanent TfL 429 leaves a user `pending` for ever (by design, tradeoff logged); the user can still re-save, but the frontend has no timeout | low to medium, B4/F4 may want a poll cap | step 3 review — accepted by arbiter 2026-10-24: not observed (the pilot's 429 cleared in ~30 s); re-saving resets it; no `web/` change is made or needed now; if B4 or F4 wants a poll cap, that work escalates there (any `web/` change does)
 
 ---
 

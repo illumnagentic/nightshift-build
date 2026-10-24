@@ -18,3 +18,11 @@ CREATE TABLE IF NOT EXISTS prefs (
   commute_fail_streak INTEGER NOT NULL DEFAULT 0, -- consecutive failed commute polls
   updated_at TEXT NOT NULL                   -- ISO 8601 UTC
 );
+
+CREATE TABLE IF NOT EXISTS commute_cache (
+  listing_id TEXT NOT NULL REFERENCES listings(id),
+  postcode TEXT NOT NULL,                    -- normalised, as in prefs.commute_postcode
+  minutes INTEGER,                           -- shortest journey; NULL = TfL found no journey
+  fetched_at TEXT NOT NULL,                  -- ISO 8601 UTC
+  PRIMARY KEY (listing_id, postcode)         -- shared by every user with that postcode
+);

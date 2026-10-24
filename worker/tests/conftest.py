@@ -18,7 +18,7 @@ FAKE_PORT = int(os.environ.get("FAKE_PORT", "8799"))
 NOT_IN_TEST_MODE = (
     f"The server at {BASE_URL} is not in test mode: the probe PUT /api/prefs did not reach the fake "
     f"upstream on port {FAKE_PORT} with the fake key. Stopping before any other test runs. "
-    f"Start it as: pywrangler dev --var MUBIT_API_KEY:{FAKE_KEY} --var GEMINI_BASE:http://127.0.0.1:{FAKE_PORT}"
+    f"Start it as: pywrangler dev --var MUBIT_API_KEY:{FAKE_KEY} --var GEMINI_BASE:http://127.0.0.1:{FAKE_PORT} --var TFL_BASE:http://127.0.0.1:{FAKE_PORT}"
 )
 
 
@@ -49,13 +49,15 @@ def fake():
 
 
 def _probe(server):
-    """One PUT /api/prefs. If the fake did not record exactly it, with the fake key, stop the run."""
+    """One PUT /api/prefs, then one GET /api/prefs for the first TfL batch. If the fake did not record exactly
+    that, with the fake key, stop the run."""
     try:
         status, created = call("POST", "/api/users", body={"username": "probe_" + secrets.token_hex(6)})
         if status != 201:
             pytest.exit(NOT_IN_TEST_MODE, returncode=3)
         status, _ = call("PUT", "/api/prefs", user_id=created["user_id"], body={"text": "any flat", "commute_postcode": "EC2N 2DB"})
+        call("GET", "/api/prefs", user_id=created["user_id"])
     except pytest.fail.Exception:
         pytest.exit(NOT_IN_TEST_MODE, returncode=3)
-    if status != 200 or len(server.requests) != 1 or server.requests[0]["key"] != FAKE_KEY:
+    if status != 200 or len(server.requests) != 1 or server.requests[0]["key"] != FAKE_KEY or not server.tfl_requests:
         pytest.exit(NOT_IN_TEST_MODE, returncode=3)

@@ -217,3 +217,45 @@ def test_real_pool_sizes_are_not_degenerate(real_rows):
     sizes = {n: sum(meets_every_limit(r, lim) for r in real_rows) for n, lim in PREF_SETS.items()}
     assert sizes["price only"] > 0 and sizes["family house"] > 0
     assert any(s < len(real_rows) for s in sizes.values())
+
+
+class CacheDb:
+    """Answers the listings query and the commute_cache query, as D1 would."""
+
+    def __init__(self, rows, cache):
+        self.rows, self.cache, self.bound = rows, cache, []
+        self._sql = ""
+
+    def prepare(self, sql):
+        self._sql = sql
+        return self
+
+    def bind(self, *args):
+        self.bound.append(args)
+        return self
+
+    async def all(self):
+        if "commute_cache" in self._sql:
+            results = [{"listing_id": k, "minutes": v} for k, v in self.cache.items()]
+        else:
+            results = self.rows
+        return type("Result", (), {"results": results})()
+
+
+def test_postcode_entry_point_uses_cached_minutes():
+    db = CacheDb(ROWS, {"a": 20, "b": 50, "c": 25})
+    ids = asyncio.run(filters.matching_listing_ids_for_postcode(db, hard(max_commute_min=30), "EC2N 2DB"))
+    assert ids == ["a", "c"]
+    assert db.bound == [("EC2N 2DB",)]
+
+
+def test_postcode_entry_point_excludes_uncached_and_no_journey_when_limit_set():
+    db = CacheDb(ROWS, {"a": 20, "b": None})  # b: TfL found no journey; c: never fetched
+    ids = asyncio.run(filters.matching_listing_ids_for_postcode(db, hard(max_commute_min=30), "EC2N 2DB"))
+    assert ids == ["a"]
+
+
+def test_postcode_entry_point_ignores_cache_when_no_limit_set():
+    db = CacheDb(ROWS, {})
+    ids = asyncio.run(filters.matching_listing_ids_for_postcode(db, hard(max_price_gbp=500_000), "EC2N 2DB"))
+    assert ids == ["a", "c"]

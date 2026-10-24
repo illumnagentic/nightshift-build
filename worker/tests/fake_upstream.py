@@ -1,4 +1,10 @@
-"""A stand-in for the Mubit Gemini route, so tests never reach the real gateway.
+"""A stand-in for the Mubit Gemini route and the TfL Journey Planner, so tests never reach either.
+
+TfL behaviour is chosen by the outward code of the destination postcode: E1 has no journey (404),
+N1, EC2N and SW1A always answer 500, W1 always answers 429, SE1 answers 503 and SW1 answers 429 once per journey and then succeeds,
+anything else gets a journey. EC2N and SW1A are the postcodes the prefs tests save: failing them keeps their
+commute pending, and caches nothing, however often the suite is run against one database.
+Both routes are served on one port.
 
 The answer is chosen by a marker in the user's text, e.g. "[[bad_values]]". It refuses any
 key other than FAKE_KEY, so a real key sent by mistake shows up as a 401 and a recorded request.
@@ -22,6 +28,9 @@ BAD_VALUES = {
 }
 
 
+TIGHT = {"hard": {**GOOD["hard"], "max_price_gbp": 300000}, "soft": []}
+
+
 def _wrap(text) -> dict:
     return {"modelVersion": "fake-model", "candidates": [{"content": {"role": "model", "parts": [{"text": text}]}}]}
 
@@ -38,6 +47,8 @@ def answer_for(user_text: str) -> tuple[int, str]:
         return 200, json.dumps(_wrap("this is not json"))
     if "[[reply_not_object]]" in user_text:
         return 200, json.dumps(_wrap("[1, 2]"))
+    if "[[tight]]" in user_text:
+        return 200, json.dumps(_wrap(json.dumps(TIGHT)))
     if "[[bad_values]]" in user_text:
         return 200, json.dumps(_wrap(json.dumps(BAD_VALUES)))
     return 200, json.dumps(_wrap(json.dumps(GOOD)))
@@ -46,7 +57,9 @@ def answer_for(user_text: str) -> tuple[int, str]:
 class FakeUpstream(HTTPServer):
     def __init__(self, port: int):
         super().__init__(("127.0.0.1", port), _Handler)
-        self.requests: list[dict] = []  # one per call: path, key, body
+        self.requests: list[dict] = []  # one per Gemini call: path, key, body
+        self.tfl_requests: list[str] = []  # one per TfL call: the request path and query
+        self._tfl_seen: set[str] = set()
 
     def start(self) -> None:
         threading.Thread(target=self.serve_forever, daemon=True).start()
@@ -56,7 +69,38 @@ class FakeUpstream(HTTPServer):
         self.server_close()
 
 
+def tfl_answer(path: str, first_time: bool) -> tuple[int, str]:
+    """(status, body) for a TfL journey request. Minutes come from the start latitude, so they are stable."""
+    start, destination = path.split("?")[0].split("/JourneyResults/")[1].split("/to/")
+    outward = destination[:-3]
+    if outward == "E1":
+        return 404, json.dumps({"message": "no journey"})
+    if outward in ("N1", "EC2N", "SW1A"):
+        return 500, "{}"
+    if outward == "W1":
+        return 429, "{}"
+    if first_time and outward in ("SE1", "SW1"):
+        return (503 if outward == "SE1" else 429), "{}"
+    return 200, json.dumps({"journeys": [{"duration": 90}, {"duration": fake_minutes(start)}]})
+
+
+def fake_minutes(start: str) -> int:
+    return 25 + int(abs(float(start.split(",")[0])) * 10000) % 30
+
+
 class _Handler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.server.tfl_requests.append(self.path)
+        first_time = self.path not in self.server._tfl_seen
+        self.server._tfl_seen.add(self.path)
+        status, text = tfl_answer(self.path, first_time) if "/JourneyResults/" in self.path else (404, "{}")
+        payload = text.encode()
+        self.send_response(status)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(payload)))
+        self.end_headers()
+        self.wfile.write(payload)
+
     def do_POST(self):
         body = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0))) or b"{}")
         key = self.headers.get("x-goog-api-key")

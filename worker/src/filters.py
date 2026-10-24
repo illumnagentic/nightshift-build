@@ -47,3 +47,14 @@ async def matching_listing_ids(db, hard, commutes=None) -> list[str]:
     if commutes is not None:
         return [r["id"] for r in rows if passes(r, hard, commutes.get(r["id"]))]
     return [r["id"] for r in rows if passes(r, {**hard, "max_commute_min": None}, None)]
+
+
+async def load_commutes(db, postcode: str) -> dict:
+    """Listing id to cached minutes for `postcode`. Minutes are None when TfL found no journey; absent when never fetched."""
+    rows = (await db.prepare("SELECT listing_id, minutes FROM commute_cache WHERE postcode = ?").bind(postcode).all()).results
+    return {r["listing_id"]: r["minutes"] for r in rows}
+
+
+async def matching_listing_ids_for_postcode(db, hard, postcode: str) -> list[str]:
+    """Ids of listings that pass `hard`, commute limit included, using the cached times for `postcode`."""
+    return await matching_listing_ids(db, hard, await load_commutes(db, postcode))
