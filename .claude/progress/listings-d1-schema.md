@@ -130,11 +130,11 @@ All paths relative to the worktree root. Steps 1–5 are independent of the netw
 
 **Evidence location**: the diff; row counts and pragma output saved to `dataset/reports/d1-build-report.txt` (new, committed).
 
-- [ ] Implemented
-- [ ] Tested — evidence: (date)
-- [ ] Best practices met — evidence: (date)
-- [ ] Matches locked requirements — evidence: (date)
-- [ ] No scope drift — evidence: (date)
+- [x] Implemented — dataset/scripts/build_d1.py new; seed.sql 6169 INSERTs; normalise.py diff removes only sqlite writer, import, INT/REAL_FIELDS (2026-10-24)
+- [x] Tested — normalise rerun on copy exit 0, jsonl/csv/report byte-identical, no sqlite written; build_d1 rerun byte-identical seed/report/sqlite; schema+seed reload content md5 equal on all 3 tables; hostile values round-trip; bad epc aborts exit 1 naming rm-166294310; unittest 56 OK (2026-10-24)
+- [x] Best practices met — foreign_keys=ON, constraints as validation, deterministic sorted inserts, no BEGIN/COMMIT/PRAGMA statements (12 grep hits are 'commitment'/'begins' in text); tradeoffs honest; process-refs exit 0 (2026-10-24)
+- [x] Matches locked requirements — 398/4577/1194 loaded, fk_check and integrity_check clean, schema+seed counts equal, abort with listing id and constraint (2026-10-24)
+- [x] No scope drift — changes limited to build_d1.py, seed.sql, listings.sqlite, d1-build-report.txt, normalise.py writer removal; .gitignore and progress file pre-existing (2026-10-24)
 
 ### Step 5 — Update the README
 
@@ -173,6 +173,10 @@ All paths relative to the worktree root. Steps 1–5 are independent of the netw
 - 2026-10-24 | step 2 | Description is HTML-stripped in build() and again in sanitise, so text that decodes to a tag-like string after the first pass is stripped on the second | build() needs stripped text for its parsers | strip once, at the end only.
 - 2026-10-24 | step 3 | test_sanitise.py inserts `dataset/scripts` into `sys.path`; `-t dataset` fails because `dataset/tests` is not a package, and `__init__.py` is outside the step's files | no `__init__.py` allowed | add `dataset/tests/__init__.py` and `dataset/scripts/__init__.py`, then run with `-t dataset`.
 - 2026-10-24 | step 3 | sanitise.py has no km unit, so a declared `km` distance is set to NULL (`unknown_unit`) and the test pins that; the RANGES-vs-schema test reads only `BETWEEN` CHECKs by regex | RapidAPI/Rightmove give miles only | add `km` to KM_PER_UNIT if a km source appears.
+- 2026-10-24 | step 4 | `seed.sql` is plain INSERTs, not idempotent: it needs the tables empty, and a second import fails on the primary keys | D1 `--file` rejects BEGIN/COMMIT and INSERT OR REPLACE would hide duplicates | drop and recreate the D1 tables before re-seeding, or switch to INSERT OR REPLACE for listings.
+- 2026-10-24 | step 4 | `seed.sql` is 2.2 MB, one INSERT per row (6169 statements, largest 11,006 bytes against D1's ~100 KB limit); a single `wrangler d1 execute --file` import of that size is untested | no D1 database exists yet | split into several files if D1 rejects the size.
+- 2026-10-24 | step 4 | On a constraint violation build_d1.py exits 1 and leaves a `listings.sqlite` holding the schema and no rows, and no seed.sql update | the first violation aborts by requirement | none needed; re-run after fixing the data.
+- 2026-10-24 | step 4 | seed.sql is written by hand-rolled escaping (double single quotes, NULL, repr for numbers) rather than iterdump; the self-check reloads it and counts match, and table contents were compared equal in a one-off check, but the build itself only checks counts | iterdump emits BEGIN/COMMIT and CREATE, filtering it is no simpler | compare full table contents in the self-check.
 - Step 1: `postcode` has no format CHECK (UK postcode GLOB is unreliable).
 
 ---

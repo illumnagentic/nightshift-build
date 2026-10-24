@@ -1,4 +1,4 @@
-"""Build listings.jsonl, listings.csv and listings.sqlite from raw/.
+"""Build listings.jsonl and listings.csv from raw/.
 
 Reads only files already on disk. Makes no network requests.
 
@@ -14,7 +14,6 @@ import io
 import json
 import os
 import re
-import sqlite3
 import statistics
 import sys
 
@@ -31,8 +30,6 @@ FIELDS = [
     "fetched_at", "parsed_fields",
 ]
 LIST_FIELDS = {"key_features", "parsed_fields", "media", "stations"}
-INT_FIELDS = {"price_gbp", "bedrooms", "bathrooms", "lease_years_remaining"}
-REAL_FIELDS = {"lat", "lon", "service_charge_gbp_pa", "ground_rent_gbp_pa"}
 MAX_PHOTOS = 10
 
 TENURE_MAP = {
@@ -530,21 +527,6 @@ def write_outputs(ds, records):
         for r in records:
             w.writerow([json.dumps(r[k], ensure_ascii=False) if k in LIST_FIELDS
                         else ("" if r[k] is None else r[k]) for k in COLUMNS])
-    db = os.path.join(ds, "listings.sqlite")
-    if os.path.exists(db):
-        os.remove(db)
-    con = sqlite3.connect(db)
-    cols = []
-    for k in COLUMNS:
-        t = "INTEGER" if k in INT_FIELDS else "REAL" if k in REAL_FIELDS else "TEXT"
-        cols.append("%s %s%s" % (k, t, " PRIMARY KEY" if k == "id" else ""))
-    con.execute("CREATE TABLE listings (%s)" % ", ".join(cols))
-    con.executemany(
-        "INSERT INTO listings VALUES (%s)" % ",".join("?" * len(COLUMNS)),
-        [[json.dumps(r[k], ensure_ascii=False) if k in LIST_FIELDS else r[k] for k in COLUMNS] for r in records],
-    )
-    con.commit()
-    con.close()
 
 
 def pct(n, d):
