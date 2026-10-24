@@ -18,14 +18,13 @@ Agents and skills read this file. Leave a value as `auto` to let the kit work it
 
 Leave blank if the repo has none. Never invent one.
 
-- **Install**: <!-- e.g. npm ci -->
-- **Test**: <!-- The exact command CI runs, including any extras or flags CI uses.
-  e.g. npm test -->
-- **Test (single file)**: <!-- e.g. npx vitest run <path> -->
+- **Install**: `cd web && npm ci`
+- **Test**: `cd web && npm test`
+- **Test (single file)**: `cd web && npx vitest run <path>`
 - **Lint**: <!-- e.g. npm run lint -->
-- **Typecheck**: <!-- e.g. npm run typecheck -->
-- **Build**: <!-- e.g. npm run build -->
-- **Run locally**: <!-- e.g. npm run dev -->
+- **Typecheck**: `cd web && npm run typecheck`
+- **Build**: `cd web && npm run build`
+- **Run locally**: `cd web && npm run dev` (serves http://localhost:5173, proxies `/api` to :8787)
 
 ## Conventions
 
@@ -34,8 +33,8 @@ Leave blank if the repo has none. Never invent one.
 - **Progress files**: committed
   <!-- committed or ignored. `committed` means .claude/progress/*.md are tracked in git
        and go into commits like any other file. -->
-- **Test framework**: <!-- e.g. vitest, pytest, go test -->
-- **Where tests live**: <!-- e.g. alongside source as *.test.ts -->
+- **Test framework**: vitest (web)
+- **Where tests live**: alongside source as `*.test.ts` in `web/src/`
 
 ## Brief notes
 
