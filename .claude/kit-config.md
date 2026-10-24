@@ -20,7 +20,7 @@ Leave blank if the repo has none. Never invent one.
 
 - **Install**: `cd web && npm ci`; backend: `cd worker && uv sync --group dev`
 - **Test**: `cd web && npm test`; backend: `cd worker && uv run --group dev pytest tests -q` (needs a seeded, running dev server, see worker/README.md)
-- **Test (single file)**: `cd web && npx vitest run <path>`; backend: `cd worker && uv run --group dev pytest tests/test_mubit.py -q`
+- **Test (single file)**: `cd web && npx vitest run <path>`; backend: `cd worker && uv run --group dev pytest <path> -q`
 - **Lint**: <!-- e.g. npm run lint -->
 - **Typecheck**: `cd web && npm run typecheck`
 - **Build**: `cd web && npm run build`
