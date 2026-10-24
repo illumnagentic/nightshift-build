@@ -12,6 +12,9 @@ contract (see Enums and nullability).
   `/api` prefix.
 - In development the Vite dev server proxies `/api` to `:8787`, so the browser only
   calls its own origin. There is no CORS setup and no preflight to handle.
+- All IDs (`user_id`, `decision_id`, `flag_id` and any other) are opaque strings. The
+  frontend stores them and sends them back unchanged, and never parses them. The
+  prefixed formats in the examples are illustrative.
 - JSON in, JSON out. `Content-Type: application/json` on every request with a body.
 - The user is identified by the header `X-User-Id: <user_id>` on every endpoint except
   `GET /users`, `POST /users` and `GET /stats`. A missing or unknown id returns 401
@@ -217,14 +220,44 @@ Response 200 (`empty_reason` is `null` here; an empty deck is
       },
       "chips": [
         {
-          "chip_id": "natural_light",
-          "label": "Natural light inside",
-          "phrases": ["Bright and airy, I love it", "A bit dark for me"]
+          "chip_id": "balcony_terrace",
+          "label": "Balcony or terrace",
+          "phrases": ["Great outdoor spot", "Too small to use", "Overlooked", "Not needed"]
         },
         {
-          "chip_id": "parking",
-          "label": "Parking",
-          "phrases": ["Parking is a must", "Fine without parking"]
+          "chip_id": "price_value",
+          "label": "Price and value",
+          "phrases": ["Good value", "Fair for what it is", "Overpriced", "Over my budget"]
+        },
+        {
+          "chip_id": "commute",
+          "label": "Commute",
+          "phrases": ["Easy commute", "Fine a few days a week", "Too long for me", "Too many changes"]
+        },
+        {
+          "chip_id": "station_access",
+          "label": "Station access",
+          "phrases": ["Close to the station", "Good transport links", "Too far to walk", "Station noise worries me"]
+        },
+        {
+          "chip_id": "floor_level",
+          "label": "Floor level",
+          "phrases": ["Love being up high", "Good floor for me", "Too low", "Too many stairs"]
+        },
+        {
+          "chip_id": "natural_light",
+          "label": "Natural light inside",
+          "phrases": ["Bright and airy", "A bit dark", "Good light in the main room", "Needs more daylight"]
+        },
+        {
+          "chip_id": "area_busyness",
+          "label": "Area and street feel",
+          "phrases": ["Quiet, I love it", "Lively, I like that", "Too busy for me", "Too quiet for me"]
+        },
+        {
+          "chip_id": "space",
+          "label": "Space and room sizes",
+          "phrases": ["Plenty of room", "Good size for the price", "Rooms feel small", "More than I need"]
         }
       ]
     }
@@ -233,9 +266,13 @@ Response 200 (`empty_reason` is `null` here; an empty deck is
 ```
 
 - `commute.minutes` is `null` if TfL had no answer.
-- `chips[]` is filtered per listing from the photo flags and listing fields. A garden
-  chip is not shown on a flat with no garden. `phrases` are preset suggestions for the
-  chip dialog.
+- `chips[]` is chosen by the backend per listing, from the photo flags and listing
+  fields, by the rules in [Chip catalogue](#chip-catalogue). The frontend renders
+  `chips[]` as sent, in the order sent, and never filters, adds or reorders chips. A
+  card has at most 8 chips. `phrases` are preset suggestions for the chip dialog. The
+  `chips` in the deck example are what the catalogue and the cap produce for that
+  listing, assuming it has a station nearby and no lease length or service charge on
+  record.
 - `photos` is an ordered list of URLs.
 
 Errors: 409 `prefs_missing` (no prefs saved), 409 `commute_pending`
@@ -387,6 +424,134 @@ Nullability of the other listing fields, from the schema:
   `source_photo` and `confidence` are never null. `uncertainty` and `corrected_text`
   are null when absent.
 
+## Chip catalogue
+
+The backend decides which chips a card offers and sends them in `chips[]`. The frontend
+renders them as sent, in the order sent, and never filters, adds or reorders them. The
+backend builds `chips[]` from this section, and the `chip_id`, label, phrases and
+factor of every chip are exactly those written here.
+
+- A chip answer is about this property's version of the feature (see Feedback).
+- A chip is never offered where the feature cannot exist, for example no `parking` chip
+  on a listing with no parking mentioned.
+- Each chip feeds one taste-profile factor, and the factor has the same name as the
+  `chip_id`. `GET /profile` lists exactly these factors (see Profile).
+- Only chips sent in `chips[]` count as offered. That is the set logged when the deck is
+  served, so a chip cut by the per-card limit is not logged as offered.
+- The `chip_id`s below are the full set. A chip not in this section is never sent, and
+  sending one in feedback returns 422 `chip_not_offered`.
+
+### Terms used in the rules
+
+- **mentions `x`**: the regular expression `x`, case-insensitive, matches the text of
+  the listing's `key_features` entries joined by newlines. Only `key_features` is
+  searched, not `description`.
+- **house types**: `house`, `terraced`, `semi_detached`, `end_of_terrace`, `detached`,
+  `bungalow`.
+- **flat-like**: `flat`, `maisonette`, `other`, or `null` property type.
+- **nearest station**: the smallest non-null `stations[].distance_km`.
+- **leasehold-like**: `tenure` is `leasehold` or `share_of_freehold`.
+- **featured**: the chip's featured rule matches, meaning the listing clearly has the
+  feature. A chip with no featured rule is featured whenever it is offered. Featured
+  decides the order, see [Chips per card](#chips-per-card).
+
+### Chips
+
+`#` is the priority, 1 first. Rules are written in terms of `listings` columns, so
+`mentions` and field names are exact.
+
+| # | `chip_id` | Label | Offered when | Featured when |
+| -: | --------- | ----- | ------------ | ------------- |
+| 1 | `garden` | Garden | property type is a house type, or mentions `garden`, or (once flags exist) a photo flag has `room` `garden` | mentions `garden`, or (once flags exist) a photo flag has `room` `garden` |
+| 2 | `parking` | Parking | mentions `parking\|garage\|driveway\|off[- ]street\|car ?port\|car ?park` | whenever offered |
+| 3 | `natural_light` | Natural light inside | every listing | mentions `\b(bright\|light\|sunny\|airy\|south[- ]facing)\b`, or (once flags exist) a `light` flag with value `bright` or `poor` and confidence `high` or `medium` |
+| 4 | `balcony_terrace` | Balcony or terrace | mentions `balcon\|roof terrace`, or mentions `\bterrace\b` and property type is flat-like | whenever offered |
+| 5 | `price_value` | Price and value | every listing | whenever offered |
+| 6 | `commute` | Commute | `commute.minutes` is not null | whenever offered |
+| 7 | `station_access` | Station access | nearest station exists | nearest station is 0.8 km or less, or mentions `station\|tube\|underground\|\bdlr\b\|overground` |
+| 8 | `area_busyness` | Area and street feel | every listing | mentions `quiet\|peaceful\|tranquil\|cul[- ]de[- ]sac\|vibrant\|bustling\|lively\|high street\|village` |
+| 9 | `space` | Space and room sizes | every listing | mentions `spacious\|generous\|large\|ample\|\bhuge\b\|sq\.? ?ft\|sq\.? ?m\b\|sqm`, or (once flags exist) a `sqm_estimate` flag exists |
+| 10 | `kitchen` | Kitchen | every listing | mentions `kitchen` |
+| 11 | `layout` | Layout | every listing | mentions `open[- ]plan` |
+| 12 | `condition` | Condition and decor | every listing | mentions `refurbish\|renovat\|modern\|newly\|new build\|immaculate\|redecorat\|updating\|in need of`, or (once flags exist) a `defects` flag exists |
+| 13 | `bathrooms` | Bathrooms | every listing | mentions `en[- ]?suite\|bathroom\|shower room\|wet room` |
+| 14 | `floor_level` | Floor level | `floor_level` is not null and property type is flat-like | whenever offered |
+| 15 | `building_amenities` | Building facilities | property type is `flat` or `maisonette` and mentions `concierge\|porter\|\bgym\b\|\blifts?\b\|communal\|residents\|swimming\|lounge` | whenever offered |
+| 16 | `lease` | Lease length | leasehold-like and `lease_years_remaining` is not null | whenever offered |
+| 17 | `service_charge` | Service charge | leasehold-like and `service_charge_gbp_pa` is not null | whenever offered |
+| 18 | `energy_efficiency` | Energy efficiency | `epc_current` is not null | `epc_current` is `A`, `B`, `E`, `F` or `G` |
+| 19 | `home_office` | Space to work from home | `bedrooms` is 2 or more, or mentions `study\|office\|home working\|work(ing)? from home` | mentions `study\|office\|home working\|work(ing)? from home` |
+| 20 | `building_style` | Period or modern style | mentions `period\|victorian\|georgian\|edwardian\|character\|original\|art deco\|new build\|purpose[- ]built\|contemporary` | whenever offered |
+
+In the table, `\|` is a literal `|` in the regex (markdown escaping). Patterns are
+case-insensitive.
+
+Notes:
+
+- `terrace` alone is not a terrace. A terraced house mentions "terrace" for its row
+  type, so `balcony_terrace` accepts the bare word only on flat-like listings.
+- `garden` offers on every house type, because a house can have one. It is featured only
+  on evidence.
+- `commute` is the only chip that depends on the user. The backend adds it when the
+  card's `commute.minutes` is not null.
+
+### Photo-flag-dependent chips
+
+No photo flags exist yet. Until then every rule is evaluated as if the flags were
+absent: the "(once flags exist)" clauses are skipped, and nothing else changes.
+
+| Chip | Until flags exist | Once flags exist |
+| ---- | -------------------- | ---------------- |
+| `garden` | offered on house types or a `garden` mention | also offered when any photo flag has `room` `garden` |
+| `natural_light` | offered on every listing, featured on the text mention only | still offered on every listing; a `light` flag adds the featured clause |
+| `space` | offered on every listing, featured on the text mention only | still offered on every listing; a `sqm_estimate` flag adds the featured clause |
+| `condition` | offered on every listing, featured on the text mention only | still offered on every listing; a `defects` flag adds the featured clause |
+
+A user's correction to a flag (`corrected_text`) does not change which chips are offered.
+
+### Chips per card
+
+1. Take every chip whose offered rule matches the listing (and the commute rule).
+2. Sort featured chips first, then by priority number, lowest first.
+3. Send the first 8 as `chips[]`, in that order.
+
+At most 8 chips per card. Chips for features the listing clearly has come first, so
+they are the ones cut last. The same listing gets the same chips for a user in the same
+state, apart from `commute`.
+
+### Preset phrases
+
+`phrases` in `chips[]` is the list below, in this order. A phrase fills `text` only. The
+strength (`must_have`, `nice_to_have`, `would_prefer_not`, `deal_breaker`) is chosen
+separately. Each phrase is about this property, and each chip has phrases that like and
+phrases that dislike.
+
+| `chip_id` | `phrases` |
+| --------- | --------- |
+| `garden` | "Lovely garden", "Too small", "Too much upkeep", "Overlooked" |
+| `parking` | "Parking is a big plus", "Hard to use", "Not enough space", "Don't need it" |
+| `natural_light` | "Bright and airy", "A bit dark", "Good light in the main room", "Needs more daylight" |
+| `balcony_terrace` | "Great outdoor spot", "Too small to use", "Overlooked", "Not needed" |
+| `price_value` | "Good value", "Fair for what it is", "Overpriced", "Over my budget" |
+| `commute` | "Easy commute", "Fine a few days a week", "Too long for me", "Too many changes" |
+| `station_access` | "Close to the station", "Good transport links", "Too far to walk", "Station noise worries me" |
+| `area_busyness` | "Quiet, I love it", "Lively, I like that", "Too busy for me", "Too quiet for me" |
+| `space` | "Plenty of room", "Good size for the price", "Rooms feel small", "More than I need" |
+| `kitchen` | "Great kitchen", "Fine as it is", "Needs replacing", "Too small to cook in" |
+| `layout` | "Layout works well", "Love the open plan", "Awkward layout", "Want separate rooms" |
+| `condition` | "Great condition", "Happy to renovate", "Too dated", "Needs too much work" |
+| `bathrooms` | "Good bathroom", "Love the en-suite", "Dated bathroom", "Need more bathrooms" |
+| `floor_level` | "Love being up high", "Good floor for me", "Too low", "Too many stairs" |
+| `building_amenities` | "Great facilities", "Concierge is a plus", "Would not use them", "Paying for what I don't want" |
+| `lease` | "Long lease, fine", "Lease is too short", "Worried about extending", "Share of freehold helps" |
+| `service_charge` | "Charge is reasonable", "Too high", "Worried it will rise", "Fine for what's included" |
+| `energy_efficiency` | "Good energy rating", "Costly to heat", "Happy to improve it", "Rating doesn't matter" |
+| `home_office` | "Room to work from home", "Spare room is useful", "No space for a desk", "Don't need an office" |
+| `building_style` | "Love the period character", "Prefer a modern build", "Too dated", "Character matters to me" |
+
+The numbers of listings each rule offers a chip on are in
+`evidence/chip-catalogue/coverage.md`.
+
 ## Swipe and feedback
 
 ### `POST /decisions/{decision_id}/swipe`
@@ -448,8 +613,8 @@ Request:
 ```json
 {
   "chips": [
-    {"chip_id": "natural_light", "strength": "must_have", "text": "Bright and airy, I love it"},
-    {"chip_id": "parking", "strength": "would_prefer_not", "text": null}
+    {"chip_id": "natural_light", "strength": "must_have", "text": "Bright and airy"},
+    {"chip_id": "balcony_terrace", "strength": "would_prefer_not", "text": null}
   ],
   "free_text": "Lovely kitchen, but the street felt noisy."
 }
@@ -476,8 +641,8 @@ Response 200:
 {
   "decision_id": "d_000231",
   "chips": [
-    {"chip_id": "natural_light", "strength": "must_have", "text": "Bright and airy, I love it"},
-    {"chip_id": "parking", "strength": "would_prefer_not", "text": null}
+    {"chip_id": "natural_light", "strength": "must_have", "text": "Bright and airy"},
+    {"chip_id": "balcony_terrace", "strength": "would_prefer_not", "text": null}
   ],
   "free_text": "Lovely kitchen, but the street felt noisy.",
   "profile_version": 14
@@ -615,9 +780,11 @@ and adds a `history` entry.
 - `history` lists the most recent versions only, newest first, at most 10 entries.
 - `cause.type` is `swipe`, `feedback`, `flag_correction` or `favourite_removed`. The ids
   that do not apply are `null`. `listing_id` is set only for `favourite_removed`.
-- `factor` values come from a fixed list, seeded from the chip ids (`natural_light`,
-  `parking` and so on). They are never free text. The list may also hold factors with no
-  chip, such as `area_busyness`.
+- `factor` values come from a fixed list: exactly the `chip_id`s in the
+  [Chip catalogue](#chip-catalogue), one factor per chip, with the same name. There are
+  no other factors. They are never free text, so a term in the free-text box or a
+  favourite-removal reason can move a factor's `direction` or `weight`, but never adds
+  a factor.
 - A user with no activity has `version: 0`, empty `factors` and empty `history`.
 
 ## Stats
@@ -656,20 +823,7 @@ No header needed. Not per user. Feeds the dashboard graph.
 
 ## Schema baseline
 
-The contract is written against `main` at `7597e7f`. That commit already drops `epc`
-media from the D1 build and fills demo EPC ratings, so EPC is carried only by
-`epc_current` and `epc_potential`. Uncommitted work on `feat/dataset-extend` adds
-`listings.split`, an evaluation holdout column. The contract never exposes it.
-
-## Open points
-
-Everything not settled lives here.
-
-1. **Chip catalogue.** The preset chip list, each chip's `chip_id`, `phrases`, and the
-   filter rule that decides when a chip is offered.
-2. **Flag confidence scale.** `high | medium | low` is assumed. The photo pipeline
-   may use another scale.
-3. **Flag value types.** `value` is text for most fields, a string enum for `light` and
-   a number for `sqm_estimate`. The photo pipeline may want a stricter split.
-4. **Id formats.** `user_id`, `decision_id`, `flag_id` shown as prefixed strings in the
-   examples. The backend picks the format.
+The contract matches `main` at `658c6b5`: 635 listings, with `epc` media dropped from
+the D1 build and demo EPC ratings filled, so EPC is carried only by `epc_current` and
+`epc_potential`. `listings.split`, the evaluation holdout column, exists in
+`dataset/d1/schema.sql`. The contract never exposes it.
