@@ -1,0 +1,6 @@
+[project]
+name = "haka-worker"
+version = "0.1.0"
+description = "Property Swipe Agent backend: FastAPI on a Cloudflare Python Worker"
+requires-python = ">=3.12"
+dependencies = ["fastapi"]
