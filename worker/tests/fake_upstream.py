@@ -5,7 +5,9 @@ N1, EC2N and SW1A always answer 500, N7 always answers 300 (what TfL says for a 
 a journey from any start in FAILING_STARTS answers 500, W1 always answers 429, SE1 answers 503 and SW1 answers 429 once per journey and then succeeds,
 anything else gets a journey.
 DESTINATION_STATUS maps a compact destination postcode (e.g. "EC1A1BB") to a status that every journey to it
-answers with body {}; it is checked first, so a test can start and end an outage on a postcode it chose. EC2N and SW1A are the postcodes the prefs tests save: failing them keeps their
+answers with body {}; it is checked first, so a test can start and end an outage on a postcode it chose.
+START_STATUS maps a start (lat, lon) to a status that every journey from it answers with body {}; it is checked next, so a test
+can make one listing's journeys answer 429 whatever the postcode. EC2N and SW1A are the postcodes the prefs tests save: failing them keeps their
 commute pending, and caches nothing, however often the suite is run against one database.
 Both routes are served on one port.
 
@@ -28,6 +30,8 @@ GOOD = {
 FAILING_STARTS: set[tuple[float, float]] = set()
 # Compact destination postcode to the status every journey to it answers with. Tests fill and clear it.
 DESTINATION_STATUS: dict[str, int] = {}
+# (lat, lon) of a listing to the status every journey from it answers with. Tests fill and clear it.
+START_STATUS: dict[tuple[float, float], int] = {}
 BAD_VALUES = {
     "hard": {"max_price_gbp": 5, "min_bedrooms": True, "property_types": ["flat", "castle", "flat"],
              "min_epc": "H", "tenure": "commonhold", "min_lease_years": "99"},
@@ -82,6 +86,8 @@ def tfl_answer(path: str, first_time: bool) -> tuple[int, str]:
     outward = destination[:-3]
     if destination in DESTINATION_STATUS:
         return DESTINATION_STATUS[destination], "{}"
+    if tuple(float(v) for v in start.split(",")) in START_STATUS:
+        return START_STATUS[tuple(float(v) for v in start.split(","))], "{}"
     if outward == "E1":
         return 404, json.dumps({"message": "no journey"})
     if outward in ("N1", "EC2N", "SW1A"):

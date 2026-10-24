@@ -163,6 +163,13 @@ def destination_status():
     fake_upstream.DESTINATION_STATUS.clear()
 
 
+@pytest.fixture
+def start_status():
+    fake_upstream.START_STATUS.clear()
+    yield fake_upstream.START_STATUS
+    fake_upstream.START_STATUS.clear()
+
+
 def starts_asked(fake, postcode) -> list[tuple[float, float]]:
     """The start coordinates of every TfL call for this postcode, in order."""
     marker = f"/to/{postcode.replace(' ', '')}?"
@@ -241,3 +248,22 @@ def test_rate_limit_after_progress_never_fails_the_commute(fake, destination_sta
     assert poll_n(user, 1) == ["pending"]
     destination_status[postcode.replace(" ", "")] = 429
     assert poll_n(user, tfl.FAIL_STREAK_LIMIT + 2) == ["pending"] * (tfl.FAIL_STREAK_LIMIT + 2)
+
+
+def test_rate_limited_control_call_never_fails_the_commute(fake, failing_starts, start_status):
+    postcode, user = fresh_postcode("EC1A"), new_user()
+    save(user, postcode)
+    rows = pool_rows(GOOD)
+    assert poll_n(user, 1) == ["pending"]
+    # Listings are tried in id order, so the first batch cached the first rows; the control call re-asks the lowest id.
+    control, uncached = rows[0][1:], {r[1:] for r in rows[tfl.BATCH_SIZE:]}
+    assert control not in uncached  # listings sharing coordinates would make the control start fail with the rest
+    assert sorted(starts_asked(fake, postcode)[:tfl.BATCH_SIZE]) == sorted(r[1:] for r in rows[:tfl.BATCH_SIZE])
+    asked_before = starts_asked(fake, postcode).count(control)
+    failing_starts.update(uncached)
+    start_status[control] = 429
+    assert poll_n(user, tfl.FAIL_STREAK_LIMIT + 2) == ["pending"] * (tfl.FAIL_STREAK_LIMIT + 2)
+    assert starts_asked(fake, postcode).count(control) > asked_before  # the control call ran, and was rate limited
+    start_status.clear()
+    failing_starts.add(control)
+    assert poll_n(user, 1) == ["failed"]

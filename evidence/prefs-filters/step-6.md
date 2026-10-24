@@ -48,3 +48,18 @@ the postcode, else `failed`. A 429-only batch still does not count. No schema ch
 - Smoke script against the same server (fake only, no real TfL or Mubit): one failing listing ends `ready`
   (`pending, pending, ready`, 104 TfL calls); outage after the first poll now ends
   `pending, pending, pending, failed` (earlier result: `ready` with 12 of 96 cached). The fake saw only the fake key.
+
+## Rate-limited control call (test-only)
+- The fake gains `START_STATUS` (start coordinates to status, body `{}`, checked after `DESTINATION_STATUS`, before the
+  other rules). New test `test_rate_limited_control_call_never_fails_the_commute` on a fresh EC1A postcode: one poll
+  caches the first 12 listings; every uncached pool start answers 500; the lowest-id cached listing (the control) answers
+  429; `FAIL_STREAK_LIMIT + 2` polls are all `pending`; the fake's log shows the control start asked again; then the
+  control answers 500 and the next poll is `failed`.
+- Coordinate collisions: 635 listings share 626 distinct coordinates, so the test asserts the control start is not shared
+  by any uncached listing (a shared start would take the 429 and stop the batch before the control call). It holds for
+  the current pool. It also asserts the first batch asked exactly the first 12 pool rows (compared sorted, as requests run concurrently).
+- Mutation check: with the control-call `if status == 429: return "pending", streak` removed from `tfl.run_batch` (dev server
+  confirmed reloaded), the new test failed (`pending, pending, failed`, expected all pending). The two lines were restored;
+  `git diff` of `worker/src/tfl.py` is empty.
+- Server-less modules (filters, prefs_unit, mubit, tfl_unit): 99 passed, exit 0.
+- Full suite in test mode (server 8790, inspector 9241, fake upstream 8801): 178 passed, exit 0.

@@ -357,8 +357,8 @@ branch. Files: `worker/tests/fake_upstream.py`, `worker/tests/test_commute.py`,
 test passes and fails if the control-call `status == 429` line is removed (recorded in
 evidence), both test runs pass, no existing assertion changed.
 
-- [ ] Redo 3 implemented
-- [ ] Redo 3 reviewed — evidence: (date)
+- [x] Redo 3 implemented — test_rate_limited_control_call_never_fails_the_commute in worker/tests/test_commute.py, START_STATUS in fake_upstream.py; worker/src unchanged (2026-10-24)
+- [x] Redo 3 reviewed — evidence: reviewer mutation in throwaway worktree (control-call 429 lines removed) failed the new test at index 2 (failed vs pending); main tree 178 passed exit 0, server-less 99 passed exit 0, check-process-refs exit 0, git diff --stat HEAD -- worker/src empty (2026-10-24)
 
 ---
 
@@ -409,6 +409,8 @@ Q13: Optional Worker vars `GEMINI_BASE` / `TFL_BASE` overriding the upstream hos
 2026-10-24 | step 6 redo 2 | A decision poll can take about 10 s (batch budget plus a 5 s control call) | the control call runs after the batch inside the same request | lower the budgets, or run the control call concurrently with the last batch — accepted by arbiter 2026-10-24: only the one decision poll after three fully failed batches is slow (worst case nearer 15 s, a call started just before the budget ends plus the control call); polls are sequential, web/ has no request timeout and no poll loop yet (F4), and pywrangler dev imposes no wall-clock limit, so a slow poll delays the next one and breaks nothing; the README's 2–3 s is the gap between polls and still holds
 2026-10-24 | step 6 redo 2 | Under per-call timeouts a failing batch may try only about 6 of its 12 listings, so "in a failing batch" is not quite "tried" | calls start only while the batch budget lasts, 6 at a time | track tried ids per postcode, which needs a schema change — accepted by arbiter 2026-10-24: bites only when TfL is up (the control call answered), the failures are timeouts rather than fast errors, and 7–36 listings remain (the ready test needs streak*BATCH_SIZE >= len(todo)); then up to about half of them can end unknown untried, and a re-save retries only uncached listings; the pilot had no failing listings in 96; the fix needs per-postcode state, not cheap; the main agent should add it to HANDOVER What is not done
 2026-10-24 | step 6 redo 2 | If TfL recovers between the third failing batch and the control call, the poll can end `ready` early with listings never answered | one control call is a sample, not a proof | none cheap; the user can re-save to retry — accepted by arbiter 2026-10-24: a race inside one request (seconds between the last failing batch and the control call), and it can end ready only when at most 36 listings remain uncached; with more left the poll stays pending and the next batch makes progress; a re-save resumes only the uncached listings; the main agent should add it to HANDOVER What is not done
+
+2026-10-24 | step 6 redo 3 | The new control-call test relies on the first 12 pool listings being cached by the first poll and on no uncached listing sharing the control listing's coordinates | it asserts both, so a change to batch order or to the dump fails it loudly rather than passing for the wrong reason | key the test on the cache rows instead of the dump order if the batch order ever changes — accepted by arbiter 2026-10-24: both assumptions are asserted (the first poll's 12 starts match the first 12 pool rows; the control coordinates are not among the uncached rows), so a change to batch order or the dump fails the test loudly and never passes it for the wrong reason; the dump is frozen (635 listings, 626 distinct coordinates); test-only, so no later step or checkpoint depends on it
 
 ---
 
