@@ -300,33 +300,38 @@ process-wording check exits 0.
 
 ## VERIFICATION
 
-- [x] All step checkboxes ticked with evidence — 20 of 20, all dated 2026-10-24, in step order (2026-10-25)
-- [x] Every evidence path in this file exists — evidence/web-prefs-favourites/step-1.md to step-4.md present (2026-10-25)
-- [x] Test suite run — result: `npm test` in a clean copy of HEAD, 7 files, 178 passed, exit 0 (2026-10-25)
+- [x] All step checkboxes ticked with evidence — 30 of 30 (Steps 1 to 4 and the redos of Steps 2 and 4). Steps 1 to 4 dated 2026-10-24; both redos dated 2026-10-25, done after Step 4 as the redo rule in `.claude/CLAUDE.md` (Step order) allows (2026-10-25)
+- [x] Every evidence path in this file exists — evidence/web-prefs-favourites/step-1.md, step-2.md, step-2-redo.md, step-3.md, step-4.md, step-4-redo.md all present (2026-10-25)
+- [x] Test suite run — result: `npm test` in a clean `git archive` copy of HEAD 9f41390, 7 files, 178 passed, exit 0 (2026-10-25)
 - [ ] Lint run — result: not configured in kit-config, not run (2026-10-25)
 - [x] Typecheck run — result: `npm run typecheck`, exit 0 (2026-10-25)
 - [x] Build run — result: `npm run build`, exit 0 (2026-10-25)
-- [ ] Diff contains no files outside declared scope — every code and evidence file is declared; this progress file is in no step's scope (waiver proposed: it is the tracking file, and kit-config commits progress files) — left for the human (2026-10-25)
+- [ ] Diff contains no files outside declared scope — every code and evidence file is declared at branch level; this progress file is in no step's scope (waiver proposed: it is the tracking file, and kit-config commits progress files) — left for the human (2026-10-25)
 - [ ] Tradeoff ledger reviewed and signed off by human
 - [ ] Human eye test completed
 
-QA-GATE: FAIL 2026-10-25 — the local deck is not discarded when the user leaves Preferences before commute times are ready (see HANDOVER, What could bite you); tradeoff ledger unsigned (7 entries)
+QA-GATE: FAIL 2026-10-25 — only human sign-offs outstanding: 8 unsigned tradeoffs, eye test, progress-file scope waiver (and confirmation of the 2026-10-25 amendment made under delegation)
 
 ---
 
 ## HANDOVER
 
-Written 2026-10-25. Verdict: FAIL. Tests, typecheck and build pass. One requirement
-is not fully met (the stale deck, below), and the 7 tradeoffs are unsigned.
+Written 2026-10-25, second gate. Verdict: FAIL, but only because the human sign-offs
+are outstanding. Install, tests, typecheck and build pass in a clean copy. Every locked
+requirement maps to the diff. The stale deck found by the first gate is fixed. What is
+left: sign the 8 tradeoffs, do the eye test below, waive the progress file's scope, and
+confirm the 2026-10-25 amendment (made under your F4 delegation, not on your direct
+instruction).
 
 ### What was built
 
 A signed-in user now sees three tabs: Deck, Preferences and Favourites. Preferences
 holds a free-text description, a workplace postcode and an optional maximum commute in
-minutes. Saving shows what was understood and waits for commute times, then opens a
-fresh deck. A new user with no preferences is sent to Preferences on its own.
-Favourites lists saved properties, and each one can be removed with a written reason.
-It all runs against the mock API. Nothing talks to the real backend yet.
+minutes. Saving shows what was understood, throws away the old deck at once, and loads
+a fresh deck when commute times are ready, whichever tab the user is on. A new user
+with no preferences is sent to Preferences on their own. Favourites lists saved
+properties, and each one can be removed with a written reason. It all runs against the
+mock API. Nothing talks to the real backend yet.
 
 ### What to check yourself
 
@@ -341,57 +346,51 @@ so reloading the page wipes users, swipes and favourites.
    disabled.
 3. Enter some text, postcode `EC2N 2DB`, no limit. Press Save. You should see "What we
    understood", then the Deck tab with cards.
-Steps 4 and 5 were traced from the code, not clicked in a browser. The mock half was
-run: after a re-save, swiping an old card returns 404 `decision_not_found`, and the
-first preferences read after a save already reports ready (or failed for `FAIL 1AA`).
-
-4. Known bug, path A. Create another new user. Fill in Preferences, press Save, then
-   press the Deck tab straight away, within about a second and a half. The deck still
-   says to save your preferences. Press "Set preferences" and then Deck again. It will
-   stay blocked until you save once more and wait on Preferences.
-5. Known bug, path B. With a user who has cards on the deck, open Preferences, change
-   the postcode to `FAIL 1AA` and save. You should see "Commute times could not be
-   worked out. Check the postcode and save again." That part is correct. Now open
-   Deck. The old cards are still there. Swipe one. You should get "No decision with
-   that id." and Retry. Retry only clears the message: you stay on the same old card,
-   and swiping it fails again. Only once 3 or fewer cards are queued does Retry fetch,
-   and then the deck shows the correct "commute failed" block.
-6. Superlike (Love) a card. Open Favourites. The property should be listed with
+4. Leaving early. Create another new user. Fill in Preferences, press Save, then press
+   the Deck tab at once, within a second and a half. You may see "Commute times are
+   still being worked out." Cards should then appear without you doing anything.
+5. Re-save with a bad postcode. With a user who has cards on the deck, open
+   Preferences, change the postcode to `FAIL 1AA` and save. You should see "Commute
+   times could not be worked out. Check the postcode and save again." Open Deck. The
+   old cards must be gone. Known weakness: the deck says "Commute times are still being
+   worked out." even though they have failed. Press Retry. It should now say they could
+   not be worked out, with a "Set preferences" button. Press it, set the postcode back
+   to `EC2N 2DB` and save. A fresh deck should appear on the Deck tab.
+6. Ready while elsewhere. Open Preferences, save, then open Favourites at once. When
+   commute times are ready you should stay on Favourites. Open Deck: it should be a
+   fresh deck, not the old cards.
+7. Superlike (Love) a card. Open Favourites. The property should be listed with
    photo, price, address and "Added <today>".
-7. Press Remove. A dialog asks "Why are you removing it?". Confirm should stay
+8. Press Remove. A dialog asks "Why are you removing it?". Confirm should stay
    disabled while the box is empty. Press Cancel: the dialog closes and focus returns
    to that Remove button. Open it again and press Escape: same result.
-8. Open Remove again, type a reason, press Confirm. The entry should disappear.
+9. Open Remove again, type a reason, press Confirm. The entry should disappear.
    Reopen the Favourites tab: it should still be gone.
-9. With a new user, swipe any of the first cards (the first 15 are compulsory). The
-   feedback screen opens. Switch to
-   Favourites and back. The feedback screen should still be there. On Favourites,
-   the arrow keys should not swipe the deck card.
-10. While on Preferences or Favourites, press "Switch user" and pick a user. You
-    should land on Deck.
-11. Narrow the browser to phone width (about 375 px) in devtools. Check that the three
+10. With a new user, swipe any of the first cards (the first 15 are compulsory). The
+    feedback screen opens. Switch to Favourites and back. The feedback screen should
+    still be there. On Favourites, the arrow keys should not swipe the deck card.
+11. While on Preferences or Favourites, press "Switch user" and pick a user. You
+    should land on Deck, and Preferences should show that user's own saved values.
+12. Narrow the browser to phone width (about 375 px) in devtools. Check that the three
     tabs, the Preferences form and the Favourites list are usable without sideways
     scrolling.
 
 ### Tools that will help
 
 - Browser devtools, Elements panel: the current tab button carries
-  `aria-current="page"`. The deck sits inside a `hidden` div while another tab is open.
-  It is hidden, not removed.
-- Browser devtools, device toolbar: for the narrow-width check in step 11.
+  `aria-current="page"`. The Deck and Preferences screens sit inside `hidden` divs
+  while another tab is open. They are hidden, not removed, which is why polling and
+  pending feedback survive a tab switch. Favourites is removed and rebuilt each time.
+- Browser devtools, device toolbar: for the narrow-width check in step 12.
 - The Network panel shows no API calls in mock mode: `VITE_API_MODE=mock` swaps in an
   in-memory client (`web/src/api/index.ts`). Once the real backend is connected, watch
-  `PUT /prefs`, the repeated `GET /prefs` every 1.5 seconds, and
+  `PUT /prefs`, then `GET /deck` straight after it, the repeated `GET /prefs` every
+  1.5 seconds, a second `GET /deck` when the status turns `ready`, and
   `DELETE /favourites/{listing_id}` with its `reason` body.
 
 ### What is not done
 
-Bug, not logged as a tradeoff: the contract says the frontend discards its local deck
-and fetches a new one once commute times are ready. That only happens if the user
-stays on Preferences until then. Leaving early stops the polling, and nothing else
-refreshes the deck (paths A and B above).
-
-Tradeoffs, all unsigned:
+Tradeoffs, all unsigned (8):
 
 1. Step 1: zero and negative commute limits are accepted, and "+5" is rejected. The
    backend owns range checks.
@@ -402,10 +401,14 @@ Tradeoffs, all unsigned:
 4. Step 3: after a removal, focus goes nowhere, because the Remove button has gone.
 5. Step 3: the thumbnail uses the first photo only, with no fallback if it fails to
    load.
-6. Step 4: saving preferences rebuilds the deck. A pending feedback screen, including
-   compulsory onboarding feedback, is dropped and that card's feedback is lost.
+6. Step 4: saving preferences throws away the deck at save, and again when commute
+   times are ready. A pending feedback screen, including compulsory onboarding
+   feedback, is dropped and that card's feedback is lost. This entry was reworded by
+   the redo; the first gate saw an earlier wording.
 7. Step 4: the deck stays mounted while hidden. The "go to Preferences" redirect can
    fire from a hidden screen, and that effect ignores changes to its callback.
+8. Redo of Step 4: when commute times fail, nothing tells the deck. It keeps saying
+   "still being worked out" until Retry or a re-save (check step 5).
 
 Spotted, not fixed:
 
@@ -414,22 +417,25 @@ Spotted, not fixed:
 - Strength labels are written out in both `ChipDialog.tsx` and `FeedbackScreen.tsx`
   (from F3).
 - `deck.css` has orphaned `.deck-feedback` rules (from F3).
-- `PrefsScreen.tsx` does not reset on a user change. As wired, this cannot happen:
-  Switch user unmounts the screen. The entry can be closed.
+- `PrefsScreen.tsx` not resetting on a user change: resolved, it is now keyed by user.
 
-Also not done: there is no lint command configured, so lint was not run. There are no
+Also not done: no lint command is configured, so lint was not run. There are no
 component tests, because no DOM test setup is in scope. The real API is not connected.
-The deck's "commute failed" message has no button to open Preferences. Only "prefs
-missing" has one.
+`PrefsScreen.tsx` and `FavouritesScreen.tsx` each write out "Could not reach the server.
+Try again." instead of reusing `GENERIC_ERROR_MESSAGE` from `web/src/deck/deckState.ts`.
+`UserPicker.tsx` and `FeedbackScreen.tsx` already did the same, so this follows an
+existing habit, but it is duplication.
 
 ### What could bite you
 
-- The stale deck. On the real backend, commute times take as long as the TfL calls
-  take, not one mock read. Users will leave Preferences before it finishes. They will
-  then be stuck on a blocked deck, or on an old card the backend has already thrown
-  away, with a Retry that does not move them on.
+- Failed commute while on Deck. On the real backend TfL can fail after the user has
+  left Preferences. The deck then says commute times are "still being worked out" when
+  they have failed, until the user presses Retry. Nothing is broken, but the message is
+  wrong and a user may wait for nothing.
 - Lost onboarding feedback. Re-saving preferences while a compulsory feedback screen
   is open drops it. During the persona or recording runs this means a missing
   feedback row, with no error shown.
 - Endless polling. If the backend never leaves `pending`, the screen says "Working out
-  commute times…" for ever, with no message to say something is wrong.
+  commute times…" for ever, with no message to say something is wrong. Preferences now
+  stays mounted while hidden, so this polling also carries on while the user is on
+  another tab, until they switch user or save again.
