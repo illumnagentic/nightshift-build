@@ -359,7 +359,8 @@ fallback (A–D under Headline metric) applies.
 - [x] **Overview.** `docs/plan.md`: one line per feature (name, owner, branch, status)
   and the checkpoints (Sat 13:00, Sat evening, Sun 06:00 freeze) with what must work by
   each. Status lines only, never a copy of progress-file detail. Updated in the PR that
-  merges a feature, so it only changes on `main`. Written after feature-kickoff.
+  merges a feature, so it only changes on `main`. Drafted 2026-10-24 before kickoff,
+  with checkboxes per checkpoint and feature; branch names firmed up at each kickoff.
   Decided: 2026-10-24.
 
 - [x] **Step size.** Coarse vertical slices, 3–5 steps per feature?

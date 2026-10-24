@@ -1,5 +1,7 @@
 # **Night Shift Hackathon – Idea: Property Swipe Agent**
 
+> **Superseded in part (24 Oct 2026).** Where this document and [decisions.md](decisions.md) disagree, decisions.md wins. Notably: the demo is a screen recording, accounts are username only, commute is in the cut, the headline metric is the three-bar controlled comparison, and nothing is deployed.
+
 **Event:** Mubit Night Shift, London, 23–25 Oct. Hacking runs Fri 19:30 → Sun 10:00 (about 39.5 hours including the clock change). Team of two.
 
 **The brief:** route every LLM call through Mubit and show a **correction turning into a model update** for a recurring task.
