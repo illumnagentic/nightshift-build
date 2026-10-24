@@ -8,9 +8,11 @@ Usage (from the dataset/ directory):
   python3 -I -B scripts/build_d1.py --dataset .
 """
 import argparse
+import hashlib
 import json
 import os
 import random
+import re
 import sqlite3
 import sys
 from collections import Counter
@@ -21,7 +23,7 @@ LISTING_COLS = [
     "property_type", "address", "postcode", "lat", "lon", "tenure", "lease_years_remaining",
     "service_charge_gbp_pa", "ground_rent_gbp_pa", "council_tax_band", "epc_current",
     "epc_potential", "floor_level", "key_features", "description", "agent_name", "listed_date",
-    "fetched_at", "parsed_fields",
+    "fetched_at", "parsed_fields", "split",
 ]
 JSON_COLS = {"key_features", "parsed_fields"}
 MEDIA_COLS = ["listing_id", "kind", "position", "url"]
@@ -30,6 +32,12 @@ STATION_COLS = ["listing_id", "position", "name", "distance_km", "types"]
 
 BANDS = "ABCDEFG"
 EPC_SEED = 20261024
+SPLIT_SEED = 20261025  # separate from EPC_SEED so the split never moves the EPC draws
+EVAL_SHARE = 0.25
+# Postcode areas counted as London, as in the README area table. CR and KT are
+# included: every CR and KT listing in the data is in Croydon or Kingston, both
+# London boroughs (some real CR/KT postcodes, such as Caterham or Esher, are Surrey).
+LONDON_AREAS = {"E", "EC", "N", "NW", "SE", "SW", "W", "WC", "BR", "IG", "CR", "KT"}
 
 
 def demo_epc(r, rng, letters, weights):
@@ -47,6 +55,57 @@ def demo_epc(r, rng, letters, weights):
     gain = rng.choices([0, 1, 2], [20, 50, 30])[0]
     out["epc_potential"] = BANDS[max(0, BANDS.index(out["epc_current"]) - gain)]
     return out
+
+
+def area_of(r):
+    """Postcode area letters ('SE' for 'SE15 4QA'), or '' when the postcode is unknown."""
+    m = re.match(r"[A-Z]+", r["postcode"] or "")
+    return m.group() if m else ""
+
+
+def coord_key(r):
+    """Listings at the same coordinates (4 dp) are one group. No coordinates: a group of one."""
+    if r["lat"] is None or r["lon"] is None:
+        return ("id", r["id"])
+    return (round(r["lat"], 4), round(r["lon"], 4))
+
+
+def assign_split(records):
+    """Return {id: 'train' | 'eval'}. Groups of same-coordinate listings stay together.
+
+    Each group's side comes from a hash of SPLIT_SEED and the group key alone, so it
+    does not depend on any other listing: adding listings never moves an existing one.
+    The eval share is therefore about EVAL_SHARE by chance, not exactly balanced.
+    """
+    out = {}
+    for r in records:
+        digest = hashlib.sha256(("%d|%r" % (SPLIT_SEED, coord_key(r))).encode()).digest()
+        value = int.from_bytes(digest[:8], "big") / 2 ** 64
+        out[r["id"]] = "eval" if value < EVAL_SHARE else "train"
+    return out
+
+
+def check_duplicates(records):
+    """Abort the build if two listings are the same home.
+
+    Same id or any shared photo URL always counts. Same coordinates (4 dp) + bedrooms +
+    price counts unless the same agent listed both (distinct units in one new-build).
+    """
+    seen = {}
+    for r in records:
+        keys = [("id", r["id"])] + [("photo URL", m["url"]) for m in r["media"] if m["kind"] == "photo"]
+        if r["lat"] is not None and r["lon"] is not None:
+            keys.append(("coordinates + bedrooms + price",
+                         (round(r["lat"], 4), round(r["lon"], 4), r["bedrooms"], r["price_gbp"])))
+        for k in keys:
+            other = seen.setdefault(k, r)
+            if other is r:
+                continue
+            if k[0].startswith("coordinates") and r["agent_name"] and r["agent_name"] == other["agent_name"]:
+                continue
+            print("build failed: listings %s and %s are duplicates (same %s: %s)"
+                  % (other["id"], r["id"], k[0], k[1]), file=sys.stderr)
+            sys.exit(1)
 
 
 def rows_of(r):
@@ -74,6 +133,21 @@ def counts(con):
     return {t: con.execute("SELECT COUNT(*) FROM " + t).fetchone()[0] for t in TABLES}
 
 
+def split_lines(rows):
+    """Report lines: eval share overall, London versus outside, and per postcode area."""
+    def line(label, sides):
+        n, e = len(sides), sides.count("eval")
+        return "  %s: %d listings, train %d, eval %d (%.1f%% eval)" % (label, n, n - e, e, 100.0 * e / max(n, 1))
+
+    area = {}
+    for pc, side in rows:
+        area.setdefault(area_of({"postcode": pc}), []).append(side)
+    lon = [s for a, v in area.items() if a in LONDON_AREAS for s in v]
+    out = [line("all", [s for _, s in rows]), line("London", lon),
+           line("outside London", [s for a, v in area.items() if a not in LONDON_AREAS for s in v])]
+    return out + [line("area " + (a or "unknown"), area[a]) for a in sorted(area)]
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--dataset", required=True, help="dataset/ directory")
@@ -91,6 +165,10 @@ def main():
     weights = [real[x] for x in letters]
     rng = random.Random(EPC_SEED)
     records = [demo_epc(r, rng, letters, weights) for r in sorted(records, key=lambda r: r["id"])]
+    check_duplicates(records)
+    split = assign_split(records)
+    for r in records:
+        r["split"] = split[r["id"]]
 
     listings, media, stations = [], [], []
     for r in records:
@@ -129,6 +207,7 @@ def main():
     db_counts = counts(con)
     epc_cur = dict(con.execute("SELECT epc_current, COUNT(*) FROM listings GROUP BY 1 ORDER BY 1"))
     epc_pot = dict(con.execute("SELECT epc_potential, COUNT(*) FROM listings GROUP BY 1 ORDER BY 1"))
+    split_rows = con.execute("SELECT postcode, split FROM listings").fetchall()
     media_kinds = dict(con.execute("SELECT kind, COUNT(*) FROM listing_media GROUP BY 1 ORDER BY 1"))
     fk = con.execute("PRAGMA foreign_key_check").fetchall()
     integrity = con.execute("PRAGMA integrity_check").fetchall()
@@ -152,7 +231,9 @@ def main():
               "  epc_current: " + ", ".join("%s %d" % kv for kv in epc_cur.items()),
               "  epc_potential: " + ", ".join("%s %d" % kv for kv in epc_pot.items()),
               "  media rows by kind: " + ", ".join("%s %d" % kv for kv in media_kinds.items()),
-              "== seed.sql ==",
+              "== train/eval split (seed %d, groups by coordinates) ==" % SPLIT_SEED]
+    lines += split_lines(split_rows)
+    lines += ["== seed.sql ==",
               "  statements: %d" % len(statements),
               "  size: %d bytes" % len(seed.encode("utf-8")),
               "  largest statement: %d bytes (D1 limit about 100000)" % max(sizes),

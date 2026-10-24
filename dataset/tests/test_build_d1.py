@@ -13,6 +13,7 @@ DATASET = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(DATASET / "scripts"))
 
 import build_d1 as b  # noqa: E402
+from test_sanitise import BUILD_ONLY  # noqa: E402
 
 LETTERS = list("ABCDE")
 WEIGHTS = [1, 20, 40, 25, 3]
@@ -151,6 +152,35 @@ def build(records, tmp):
     return ds
 
 
+def build_raw(records, tmp):
+    """Like build, but return the finished process instead of raising when the build fails."""
+    ds = Path(tmp)
+    (ds / "d1").mkdir(parents=True, exist_ok=True)
+    (ds / "d1" / "schema.sql").write_text((DATASET / "d1" / "schema.sql").read_text(encoding="utf-8"), encoding="utf-8")
+    with open(ds / "listings.jsonl", "w", encoding="utf-8", newline="\n") as f:
+        for r in records:
+            f.write(json.dumps(r, ensure_ascii=False) + "\n")
+    return subprocess.run([sys.executable, "-I", "-B", str(DATASET / "scripts" / "build_d1.py"), "--dataset", str(ds)],
+                          capture_output=True, text=True)
+
+
+def split_by_id(ds):
+    con = sqlite3.connect(str(ds / "listings.sqlite"))
+    try:
+        return dict(con.execute("SELECT id, split FROM listings"))
+    finally:
+        con.close()
+
+
+def all_records():
+    with open(DATASET / "listings.jsonl", encoding="utf-8") as f:
+        return [json.loads(line) for line in f if line.strip()]
+
+
+def geo(i, lat, lon, postcode="SE1 1AA"):
+    return {"id": "rm-%d" % i, "lat": lat, "lon": lon, "postcode": postcode}
+
+
 def epc_by_id(ds):
     con = sqlite3.connect(str(ds / "listings.sqlite"))
     try:
@@ -228,6 +258,148 @@ class BuildTests(unittest.TestCase):
             want[o["id"]] = (o["epc_current"], o["epc_potential"])
         with tempfile.TemporaryDirectory() as tmp:
             self.assertEqual(epc_by_id(build(recs, tmp)), want)
+
+
+class SplitTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.recs = all_records()
+        cls.tmp = tempfile.TemporaryDirectory()
+        cls.split = split_by_id(build(cls.recs, cls.tmp.name))
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.tmp.cleanup()
+
+    def share(self, ids):
+        return 100.0 * sum(self.split[i] == "eval" for i in ids) / len(ids)
+
+    def test_every_listing_has_a_side(self):
+        self.assertEqual(set(self.split), {r["id"] for r in self.recs})
+        self.assertEqual(set(self.split.values()), {"train", "eval"})
+
+    def test_eval_share_overall_and_by_london(self):
+        self.assertAlmostEqual(self.share(list(self.split)), 25, delta=2)
+        london = [r["id"] for r in self.recs if b.area_of(r) in b.LONDON_AREAS]
+        outside = [r["id"] for r in self.recs if b.area_of(r) not in b.LONDON_AREAS]
+        self.assertAlmostEqual(self.share(london), 25, delta=5)
+        self.assertAlmostEqual(self.share(outside), 25, delta=5)
+
+    def test_same_coordinates_share_a_side(self):
+        sides = {}
+        for r in self.recs:
+            sides.setdefault((round(r["lat"], 4), round(r["lon"], 4)), set()).add(self.split[r["id"]])
+        self.assertTrue(all(len(v) == 1 for v in sides.values()))
+
+    def test_split_ignores_input_order(self):
+        shuffled = self.recs[:]
+        random.Random(5).shuffle(shuffled)
+        with tempfile.TemporaryDirectory() as tmp:
+            self.assertEqual(split_by_id(build(shuffled, tmp)), self.split)
+
+    def test_split_is_repeatable(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.assertEqual(split_by_id(build(self.recs, tmp)), self.split)
+
+    def test_grouping_keeps_big_groups_together(self):
+        recs = [geo(i, 51.5, -0.1) for i in range(30)] + [geo(100 + i, 51.5 + i / 100.0, -0.1) for i in range(1, 71)]
+        out = b.assign_split(recs)
+        self.assertEqual(len({out["rm-%d" % i] for i in range(30)}), 1)
+        # coordinates equal to 4 dp are one group
+        out = b.assign_split([geo(1, 51.50001, -0.1), geo(2, 51.50002, -0.1)] + [geo(10 + i, 51.6 + i / 100.0, -0.2) for i in range(40)])
+        self.assertEqual(out["rm-1"], out["rm-2"])
+
+    def test_adding_listings_never_moves_existing_ones(self):
+        base = self.recs[:559]
+        rest = self.recs[559:]
+        before = b.assign_split(base)
+        # new coordinate groups arrive in two different amounts and orders
+        for extra in (rest, rest[::-1][:30]):
+            after = b.assign_split(base + extra)
+            self.assertEqual({i: after[i] for i in before}, before)
+        # and the full build agrees with the direct call
+        self.assertEqual({i: self.split[i] for i in before}, before)
+
+    def test_group_side_ignores_other_listings(self):
+        r = self.recs[0]
+        alone = b.assign_split([r])[r["id"]]
+        self.assertEqual(self.split[r["id"]], alone)
+
+    def test_split_seed_does_not_touch_epc_seed(self):
+        self.assertNotEqual(b.SPLIT_SEED, b.EPC_SEED)
+
+
+class DuplicateGuardTests(unittest.TestCase):
+    def pair(self, **second):
+        recs = sample_records(3)
+        recs[2]["epc_current"] = "C"  # the EPC pass needs at least one real letter
+        a, c = recs[0], copy.deepcopy(recs[1])
+        c.update(second)
+        return [a, c] + recs[2:], a, c
+
+    def abort(self, recs):
+        with tempfile.TemporaryDirectory() as tmp:
+            res = build_raw(recs, tmp)
+        self.assertEqual(res.returncode, 1)
+        return res.stderr
+
+    def test_shared_photo_url_aborts(self):
+        recs, a, c = self.pair()
+        photo = next(m for m in a["media"] if m["kind"] == "photo")
+        next(m for m in c["media"] if m["kind"] == "photo")["url"] = photo["url"]
+        err = self.abort(recs)
+        self.assertIn(a["id"], err)
+        self.assertIn(c["id"], err)
+        self.assertIn("photo URL", err)
+
+    def test_same_coordinates_beds_price_different_agents_aborts(self):
+        recs, a, c = self.pair()
+        for k in ("lat", "lon", "bedrooms", "price_gbp"):
+            c[k] = a[k]
+        a["agent_name"], c["agent_name"] = "Agent One", "Agent Two"
+        err = self.abort(recs)
+        self.assertIn(a["id"], err)
+        self.assertIn(c["id"], err)
+        self.assertIn("coordinates + bedrooms + price", err)
+
+    def test_same_coordinates_beds_price_no_agent_aborts(self):
+        recs, a, c = self.pair()
+        for k in ("lat", "lon", "bedrooms", "price_gbp"):
+            c[k] = a[k]
+        a["agent_name"] = c["agent_name"] = None
+        self.abort(recs)
+
+    def test_same_coordinates_beds_price_same_agent_builds(self):
+        recs, a, c = self.pair()
+        for k in ("lat", "lon", "bedrooms", "price_gbp"):
+            c[k] = a[k]
+        a["agent_name"] = c["agent_name"] = "Agent One"
+        with tempfile.TemporaryDirectory() as tmp:
+            self.assertEqual(build_raw(recs, tmp).returncode, 0)
+
+    def test_same_agent_does_not_excuse_shared_photo(self):
+        recs, a, c = self.pair()
+        a["agent_name"] = c["agent_name"] = "Agent One"
+        photo = next(m for m in a["media"] if m["kind"] == "photo")
+        next(m for m in c["media"] if m["kind"] == "photo")["url"] = photo["url"]
+        self.abort(recs)
+
+    def test_shared_id_aborts(self):
+        recs, a, c = self.pair(id="x")
+        c["id"] = a["id"]
+        err = self.abort(recs)
+        self.assertIn(a["id"], err)
+        self.assertIn("id", err)
+
+
+class BuildOnlyColumnTests(unittest.TestCase):
+    def test_build_only_columns_are_in_schema_and_written(self):
+        schema = (Path(__file__).resolve().parent.parent / "d1" / "schema.sql").read_text()
+        listings = schema.split("CREATE TABLE IF NOT EXISTS listings (")[1].split("\n);")[0]
+        for col in BUILD_ONLY:
+            with self.subTest(col=col):
+                self.assertIn(col, b.LISTING_COLS)
+                self.assertRegex(listings, r"(?m)^  %s " % col)
 
 
 if __name__ == "__main__":

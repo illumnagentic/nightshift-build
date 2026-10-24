@@ -1,20 +1,45 @@
 == row counts (listings.sqlite) ==
-  listings: 398
-  listing_media: 4248
-  listing_stations: 1194
+  listings: 635
+  listing_media: 6841
+  listing_stations: 1889
 == pragma results ==
   foreign_key_check: clean
   integrity_check: ok
 == epc (demo values, see README) ==
-  epc_current: A 6, B 83, C 196, D 105, E 8
-  epc_potential: A 135, B 148, C 89, D 23, E 3
-  media rows by kind: floorplan 416, photo 3832
+  epc_current: A 4, B 143, C 281, D 184, E 23
+  epc_potential: A 200, B 227, C 159, D 43, E 6
+  media rows by kind: floorplan 672, photo 6169
+== train/eval split (seed 20261025, groups by coordinates) ==
+  all: 635 listings, train 488, eval 147 (23.1% eval)
+  London: 401 listings, train 301, eval 100 (24.9% eval)
+  outside London: 234 listings, train 187, eval 47 (20.1% eval)
+  area AL: 24 listings, train 21, eval 3 (12.5% eval)
+  area BN: 28 listings, train 20, eval 8 (28.6% eval)
+  area BR: 2 listings, train 2, eval 0 (0.0% eval)
+  area CB: 29 listings, train 22, eval 7 (24.1% eval)
+  area CM: 28 listings, train 23, eval 5 (17.9% eval)
+  area CR: 15 listings, train 13, eval 2 (13.3% eval)
+  area E: 66 listings, train 54, eval 12 (18.2% eval)
+  area EC: 15 listings, train 10, eval 5 (33.3% eval)
+  area GU: 25 listings, train 19, eval 6 (24.0% eval)
+  area IG: 2 listings, train 2, eval 0 (0.0% eval)
+  area KT: 26 listings, train 21, eval 5 (19.2% eval)
+  area N: 69 listings, train 58, eval 11 (15.9% eval)
+  area NW: 17 listings, train 13, eval 4 (23.5% eval)
+  area OX: 27 listings, train 23, eval 4 (14.8% eval)
+  area RG: 24 listings, train 20, eval 4 (16.7% eval)
+  area SE: 92 listings, train 60, eval 32 (34.8% eval)
+  area SW: 64 listings, train 47, eval 17 (26.6% eval)
+  area TN: 28 listings, train 24, eval 4 (14.3% eval)
+  area W: 30 listings, train 20, eval 10 (33.3% eval)
+  area WC: 3 listings, train 1, eval 2 (66.7% eval)
+  area WD: 21 listings, train 15, eval 6 (28.6% eval)
 == seed.sql ==
-  statements: 5840
-  size: 2140264 bytes
-  largest statement: 11004 bytes (D1 limit about 100000)
+  statements: 9365
+  size: 3655077 bytes
+  largest statement: 13327 bytes (D1 limit about 100000)
 == self-check: schema.sql then seed.sql into empty in-memory db, foreign_keys=ON ==
-  listings: 398 (listings.sqlite 398)
-  listing_media: 4248 (listings.sqlite 4248)
-  listing_stations: 1194 (listings.sqlite 1194)
+  listings: 635 (listings.sqlite 635)
+  listing_media: 6841 (listings.sqlite 6841)
+  listing_stations: 1889 (listings.sqlite 1889)
   result: PASS
