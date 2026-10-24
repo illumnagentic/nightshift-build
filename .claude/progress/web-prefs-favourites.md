@@ -199,11 +199,11 @@ the app yet.
 
 **Evidence location**: `evidence/web-prefs-favourites/step-3.md`.
 
-- [ ] Implemented
-- [ ] Tested — evidence: (date)
-- [ ] Best practices met — evidence: (date)
-- [ ] Matches locked requirements — evidence: (date)
-- [ ] No scope drift — evidence: (date)
+- [x] Implemented — FavouritesScreen.tsx, favourites.css; sending lifted to screen, Cancel disabled and Escape blocked while sending (2026-10-24)
+- [x] Tested — evidence: reviewer re-run typecheck, npm test (178 passed), build, process-refs all exit 0; no component test env per scope (2026-10-24)
+- [x] Best practices met — evidence: sending cleared on success, error and userId change; late responses ignored; no new deps (2026-10-24)
+- [x] Matches locked requirements — evidence: DELETE via removeFavourite with trimmed reason, error.message shown, placeholder for empty photos, exact empty text (2026-10-24)
+- [x] No scope drift — evidence: only favourites/ files, evidence/step-3.md, progress file (2026-10-24)
 
 ### Step 4 — Tabs and wiring
 
@@ -238,6 +238,8 @@ process-wording check exits 0.
 - Step 1 | The client accepts zero and negative whole numbers as a commute limit and rejects an explicit plus sign ("+5") | the backend owns range checks (422); the form only parses what it can put in the JSON | add a range check or accept "+" if the backend contract defines one
 - Step 2 | Polling has no time limit and keeps retrying after any error, including a 4xx, while the status is pending | the contract defines no timeout and a transient failure should not strand the user; leaving the screen or saving again stops it | add a cap with a visible 'taking too long' message once the backend gives an expected time
 - Step 2 | The parsed result is shown only when it has at least one hard limit or soft preference, and a failed load shows the error with empty fields | nothing useful to show otherwise | none needed unless the eye test finds it confusing
+- Step 3 | After a successful removal focus is not moved anywhere (the Remove button is gone) | no next target was specified | move focus to the next entry's Remove button or the screen heading
+- Step 3 | The thumbnail shows only the first photo, with no handling for an image that fails to load | brief asks for the first photo only | add an onError fallback to the placeholder
 
 ---
 
