@@ -225,11 +225,11 @@ process-wording check exits 0.
 
 **Evidence location**: `evidence/web-prefs-favourites/step-4.md`.
 
-- [ ] Implemented
-- [ ] Tested — evidence: (date)
-- [ ] Best practices met — evidence: (date)
-- [ ] Matches locked requirements — evidence: (date)
-- [ ] No scope drift — evidence: (date)
+- [x] Implemented — App.tsx tabs with aria-current, hidden DeckScreen wrapper keyed user:deckKey, active-gated keydown, onNeedPrefs + Set preferences button, nav.css (2026-10-24)
+- [x] Tested — evidence: reviewer re-run typecheck, npm test, build, check-process-refs all exit 0; smoke.test.ts unchanged; no component test env per scope (2026-10-24)
+- [x] Best practices met — evidence: onNeedPrefs omitted from deps is safe (App's callback only calls stable setTab); no CSS overrides hidden wrapper; no new deps (2026-10-24)
+- [x] Matches locked requirements — evidence: onReady bumps deckKey and sets Deck tab; switchUser resets tab; Prefs/Favourites mount only when active; no source shown (2026-10-24)
+- [x] No scope drift — evidence: only App.tsx, DeckScreen.tsx, nav.css, evidence/step-4.md plus progress file; minimal hunks (2026-10-24)
 
 ---
 
@@ -240,6 +240,8 @@ process-wording check exits 0.
 - Step 2 | The parsed result is shown only when it has at least one hard limit or soft preference, and a failed load shows the error with empty fields | nothing useful to show otherwise | none needed unless the eye test finds it confusing
 - Step 3 | After a successful removal focus is not moved anywhere (the Remove button is gone) | no next target was specified | move focus to the next entry's Remove button or the screen heading
 - Step 3 | The thumbnail shows only the first photo, with no handling for an image that fails to load | brief asks for the first photo only | add an onError fallback to the placeholder
+- Step 4 | Saving preferences remounts the deck, so a feedback screen left pending (including compulsory onboarding feedback) is dropped and that card's feedback is lost | the contract says to discard the local deck after a re-save, and a remount is the simplest way to do it | persist pending feedback in App or the API, or only remount once no feedback is pending
+- Step 4 | The deck is kept mounted while hidden, so a prefs_missing redirect and its Set preferences button fire from a hidden screen, and the onNeedPrefs effect ignores callback changes | needed to keep the local deck and pending feedback across tab switches | none needed unless the hidden deck causes trouble
 
 ---
 

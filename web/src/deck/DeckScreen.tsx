@@ -35,13 +35,21 @@ const FAVOURITES_NOTE = (
   </p>
 );
 
-export default function DeckScreen({ userId }: { userId: string }) {
+export default function DeckScreen({
+  userId,
+  active,
+  onNeedPrefs,
+}: {
+  userId: string;
+  active: boolean;
+  onNeedPrefs: () => void;
+}) {
   const { state, phase, card, swipe, continueAfterFeedback, retry } =
     useDeck(userId);
   const busy = state.swiping;
 
   useEffect(() => {
-    if (phase !== "card" || busy) return;
+    if (!active || phase !== "card" || busy) return;
     function onKey(e: KeyboardEvent) {
       if (
         e.repeat ||
@@ -60,9 +68,17 @@ export default function DeckScreen({ userId }: { userId: string }) {
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [phase, busy, swipe]);
+  }, [active, phase, busy, swipe]);
 
   const failure = state.failure;
+  const needsPrefs =
+    phase === "blocked" &&
+    failure?.kind === "blocked" &&
+    failure.code === "prefs_missing";
+
+  useEffect(() => {
+    if (needsPrefs) onNeedPrefs();
+  }, [needsPrefs]);
 
   return (
     <div className="deck-screen">
@@ -143,6 +159,11 @@ export default function DeckScreen({ userId }: { userId: string }) {
         <div role="alert">
           <p>{failure.message}</p>
           <p>{BLOCKED_LINES[failure.code]}</p>
+          {failure.code === "prefs_missing" && (
+            <button type="button" className="deck-action" onClick={onNeedPrefs}>
+              Set preferences
+            </button>
+          )}
           {failure.code === "commute_pending" && (
             <button type="button" className="deck-action" onClick={retry}>
               Retry

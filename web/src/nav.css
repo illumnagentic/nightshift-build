@@ -1,0 +1,27 @@
+.app-nav {
+  display: flex;
+  gap: 0.5rem;
+  margin: 0 0 1rem;
+}
+
+.app-nav .app-nav__tab {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 1rem;
+  border: 2px solid transparent;
+  border-bottom-color: currentColor;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.app-nav .app-nav__tab:focus-visible {
+  outline: 3px solid currentColor;
+  outline-offset: 2px;
+}
+
+.app-nav .app-nav__tab[aria-current="page"] {
+  border-color: currentColor;
+  font-weight: 700;
+}
