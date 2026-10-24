@@ -7,9 +7,10 @@ Usage (from the dataset/ directory):
 """
 import argparse
 import collections
+import contextlib
 import csv
 import glob
-import html as htmllib
+import io
 import json
 import os
 import re
@@ -19,6 +20,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import rm_common as rm  # noqa: E402
+from sanitise import COLUMNS, sanitise_record, strip_html  # noqa: E402
 
 FIELDS = [
     "id", "source", "source_id", "url", "price_gbp", "price_qualifier", "bedrooms", "bathrooms",
@@ -28,8 +30,7 @@ FIELDS = [
     "photo_urls", "floorplan_urls", "nearest_stations", "agent_name", "listed_date",
     "fetched_at", "parsed_fields",
 ]
-LIST_FIELDS = {"key_features", "photo_urls", "floorplan_urls", "nearest_stations",
-               "epc_image_urls", "parsed_fields"}
+LIST_FIELDS = {"key_features", "parsed_fields", "media", "stations"}
 INT_FIELDS = {"price_gbp", "bedrooms", "bathrooms", "lease_years_remaining"}
 REAL_FIELDS = {"lat", "lon", "service_charge_gbp_pa", "ground_rent_gbp_pa"}
 MAX_PHOTOS = 10
@@ -38,17 +39,6 @@ TENURE_MAP = {
     "FREEHOLD": "freehold", "LEASEHOLD": "leasehold", "SHARE_OF_FREEHOLD": "share_of_freehold",
     "COMMONHOLD": "commonhold", "FEUDAL": "feudal",
 }
-
-
-def strip_html(s):
-    if not s:
-        return ""
-    s = re.sub(r"<br\s*/?>|</p>|</li>", "\n", s, flags=re.I)
-    s = re.sub(r"<[^>]+>", " ", s)
-    s = htmllib.unescape(s)
-    s = re.sub(r"[ \t\r\f\v]+", " ", s)
-    s = re.sub(r"\n\s*\n+", "\n\n", s)
-    return s.strip()
 
 
 # ---- text parsers. Each returns a value or None; callers record provenance. ----
@@ -431,7 +421,7 @@ def build_rapid(d, card, fetched_at):
         "floor_level": floor, "key_features": kf, "description": desc or None,
         "photo_urls": photos[:MAX_PHOTOS],
         "floorplan_urls": [f.get("url") for f in (d.get("floorplans") or []) if f.get("url")],
-        # this API does not state the distance unit, so it is left null
+        # this API gives no distance unit; sanitise reads a missing unit as miles
         "nearest_stations": [{"name": s.get("station"), "distance": s.get("distance"), "unit": None,
                               "types": []} for s in (d.get("stations") or [])],
         "agent_name": (d.get("branch") or {}).get("displayName"),
@@ -533,25 +523,25 @@ def thin_reason(r):
 def write_outputs(ds, records):
     with open(os.path.join(ds, "listings.jsonl"), "w", encoding="utf-8") as f:
         for r in records:
-            f.write(json.dumps({k: r[k] for k in FIELDS}, ensure_ascii=False) + "\n")
+            f.write(json.dumps({k: r[k] for k in COLUMNS}, ensure_ascii=False) + "\n")
     with open(os.path.join(ds, "listings.csv"), "w", encoding="utf-8", newline="") as f:
         w = csv.writer(f)
-        w.writerow(FIELDS)
+        w.writerow(COLUMNS)
         for r in records:
             w.writerow([json.dumps(r[k], ensure_ascii=False) if k in LIST_FIELDS
-                        else ("" if r[k] is None else r[k]) for k in FIELDS])
+                        else ("" if r[k] is None else r[k]) for k in COLUMNS])
     db = os.path.join(ds, "listings.sqlite")
     if os.path.exists(db):
         os.remove(db)
     con = sqlite3.connect(db)
     cols = []
-    for k in FIELDS:
+    for k in COLUMNS:
         t = "INTEGER" if k in INT_FIELDS else "REAL" if k in REAL_FIELDS else "TEXT"
         cols.append("%s %s%s" % (k, t, " PRIMARY KEY" if k == "id" else ""))
     con.execute("CREATE TABLE listings (%s)" % ", ".join(cols))
     con.executemany(
-        "INSERT INTO listings VALUES (%s)" % ",".join("?" * len(FIELDS)),
-        [[json.dumps(r[k], ensure_ascii=False) if k in LIST_FIELDS else r[k] for k in FIELDS] for r in records],
+        "INSERT INTO listings VALUES (%s)" % ",".join("?" * len(COLUMNS)),
+        [[json.dumps(r[k], ensure_ascii=False) if k in LIST_FIELDS else r[k] for k in COLUMNS] for r in records],
     )
     con.commit()
     con.close()
@@ -561,18 +551,22 @@ def pct(n, d):
     return "%d (%.0f%%)" % (n, 100.0 * n / d) if d else "0"
 
 
-def report(records, stats):
+def report(records, stats, events, n_in):
     n = len(records)
     print("\n== pipeline counts ==")
     for k in sorted(stats):
         print("  %-40s %d" % (k, stats[k]))
+    print("\n== sanitise ==")
+    print("  records in: %d  kept: %d  dropped: %d" % (n_in, n, n_in - n))
+    for k in sorted(events):
+        print("  %-60s %d" % (k, events[k]))
     print("\n== final listings: %d ==" % n)
     print("  by source: " + ", ".join("%s %d" % kv for kv in collections.Counter(r["source"] for r in records).most_common()))
     cov = [
         ("epc_current (any)", lambda r: r["epc_current"]),
         ("epc_potential", lambda r: r["epc_potential"]),
-        ("epc image url", lambda r: r["epc_image_urls"]),
-        ("floorplan", lambda r: r["floorplan_urls"]),
+        ("epc image url", lambda r: any(m["kind"] == "epc" for m in r["media"])),
+        ("floorplan", lambda r: any(m["kind"] == "floorplan" for m in r["media"])),
         ("tenure", lambda r: r["tenure"]),
         ("tenure from text", lambda r: "tenure" in r["parsed_fields"]),
         ("lease years (of leasehold/SoF)", None),
@@ -584,7 +578,7 @@ def report(records, stats):
         (">=10 photos", lambda r: r["_photo_count"] >= 10),
         ("lat/lon", lambda r: r["lat"] is not None and r["lon"] is not None),
         ("full postcode", lambda r: r["postcode"] and " " in r["postcode"]),
-        ("nearest stations", lambda r: r["nearest_stations"]),
+        ("nearest stations", lambda r: r["stations"]),
         ("listed_date", lambda r: r["listed_date"]),
     ]
     lease_pool = [r for r in records if r["tenure"] in ("leasehold", "share_of_freehold")]
@@ -656,8 +650,22 @@ def main():
     records.extend(load_rapid(ds, stats))
     records = dedupe(records, stats)
     records.sort(key=lambda r: r["id"])
-    write_outputs(ds, records)
-    report(records, stats)
+    events = collections.Counter()
+    clean = []
+    for r in records:
+        c, ev = sanitise_record(r)
+        events.update(ev)
+        if c is not None:
+            c["_photo_count"] = r["_photo_count"]
+            clean.append(c)
+    write_outputs(ds, clean)
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        report(clean, stats, events, len(records))
+    sys.stdout.write(buf.getvalue())
+    os.makedirs(os.path.join(ds, "reports"), exist_ok=True)
+    with open(os.path.join(ds, "reports", "normalise-report.txt"), "w", encoding="utf-8") as f:
+        f.write(buf.getvalue())
 
 
 if __name__ == "__main__":
