@@ -49,6 +49,10 @@ Leave blank if the repo has none. Never invent one.
 <!-- Things every step brief in this repo must carry, e.g. files that pin figures and
      must be updated when tests are added. -->
 
+- On Yewen's laptop a PostToolUse hook runs Prettier on every Edit and Write. After
+  editing, check `git diff`. If unrelated lines were reformatted, restore the file
+  and apply the change with a shell edit.
+
 ## Manual verification hints
 
 Anything the human should know when eyeballing work in this repo. The qa-gate agent
