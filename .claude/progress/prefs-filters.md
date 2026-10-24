@@ -5,7 +5,7 @@
 - **Started**: 2026-10-24
 - **Branch**: feat/prefs-filters
 - **BASE_SHA**: 0755bcb39f9d837b2b4285cd495adf7101cea35d
-- **Status**: in progress
+- **Status**: complete (2026-10-24)
 - **Mode**: full automation (on since 2026-10-24)
 
 ---
@@ -448,7 +448,7 @@ Q13: Optional Worker vars `GEMINI_BASE` / `TFL_BASE` overriding the upstream hos
 2026-10-24 | step 3 | Anonymous TfL throughput is roughly 12 calls per 3 to 5 s poll until throttled, then 30 s waits; a 96-listing pool needed 12 polls across a throttle, ~366 London listings will take minutes | Q5 says build no key support unless the pilot shows one is needed; the limit slows the commute step, it does not block it | a TfL app key (new secret) or fewer pairs per poll; ESCALATE decision left to the caller — accepted by arbiter 2026-10-24: the pilot does not show a key is needed (Q5): throughput slows the commute step but every postcode reached `ready`; a new postcode costs minutes, once, and the cache is shared (≤635 listings × ~5 persona destinations, about 15–60 min of polling in total at the measured 45–190 calls/min), which fits Saturday afternoon; Step 4's README must say: (1) a new commute postcode takes minutes to reach `ready` on anonymous TfL; (2) save each persona destination and the demo postcode once and poll to `ready` before the persona batch and before recording (warming is a run-book step, not code in B3); (3) poll `GET /prefs` no faster than every 2–3 s, and a run of quick `pending` polls means the TfL throttle, wait ~30 s; (4) the test-mode command needs `--var TFL_BASE:http://127.0.0.1:8799` as well as `GEMINI_BASE`; revisit (escalate for a key) only if B6's batch stalls on commute
 2026-10-24 | step 3 | Date fallback: `london_today` falls back to UTC if `zoneinfo` fails in the runtime; not observed which path ran | UTC is at most an hour off London, which never moves a Tuesday | none — accepted by arbiter 2026-10-24: either path yields a coming Tuesday at 08:30 (a weekday, as decisions.md Commute requires) and a test asserts it; the only edge (London Tuesday 00:00–01:00 BST) picks the following Tuesday, still valid
 2026-10-24 | step 3 | A concurrent poll can run a second batch for the same user; the status write is skipped if the prefs row changed, but two simultaneous batches may both count a fail | cache writes are idempotent (INSERT OR REPLACE); a client polls one request at a time | a per-user lock if clients ever poll in parallel — accepted by arbiter 2026-10-24: cache writes are idempotent, the status write is guarded, the frontend and the planned persona swiper poll one request at a time; worst case is an early `failed` the user clears by re-saving
-2026-10-24 | step 3 | `test_commute.py` holds two pure unit tests (classify, URL and Tuesday) that need the server because of the module `pytestmark` | the step's file scope has no other test file for tfl.py | move them to a server-less module in a later step — FIX_NOW by arbiter 2026-10-24: cheap (a file move, under 30 lines), and it lets the unit-only run cover tfl.py; see AMENDMENTS (arbiter) Step 5
+2026-10-24 | step 3 | `test_commute.py` holds two pure unit tests (classify, URL and Tuesday) that need the server because of the module `pytestmark` | the step's file scope has no other test file for tfl.py | move them to a server-less module in a later step — FIX_NOW by arbiter 2026-10-24: cheap (a file move, under 30 lines), and it lets the unit-only run cover tfl.py; see AMENDMENTS (arbiter) Step 5 — resolved by Step 5 2026-10-24
 2026-10-24 | step 6 | the new tests prove "cached" and "unknown" from the fake's request log, not a D1 read | the fake runs in the test process and the server's D1 file is not reachable from pytest | a test-only endpoint or opening the .wrangler sqlite by path; one direct D1 read recorded in evidence instead — accepted by arbiter 2026-10-24: the fake's request log shows which listings got an answer, and the evidence records a direct read of the local D1 (95 rows with one failing listing, 83 with 13 failing, 96 for a full postcode) that matches it; a test-only endpoint would be new code with no other use
 2026-10-24 | step 6 | with 13 failing head listings the postcode needs ~20+ polls: each progress poll resets the streak and the offset, so a wasted poll on the failing head follows | the rule as ruled | keep the offset while the head is known bad (needs per-postcode state, a schema change) — accepted by arbiter 2026-10-24: at worst it doubles the polls for an affected postcode (one wasted poll per productive one), it never fails the postcode, and the pilot had no failing listings in 96; no checkpoint is blocked, as warming is a manual run-book step done once per destination; fixing it needs per-postcode state, which is not cheap; revisit only if B6's warm-up stalls, and the main agent should add to HANDOVER that listings TfL keeps failing slow warm-up by up to 2x
 2026-10-24 | step 6 | no explicit TfL `mode=`: the docs state no default; six observed journeys used only walking, bus and tube legs; four free TfL calls made where one was allowed | small sample, undocumented default | send an explicit mode list if a cycle or taxi leg shows up | resolved by Step 6 redo 2026-10-24
@@ -458,7 +458,7 @@ Q13: Optional Worker vars `GEMINI_BASE` / `TFL_BASE` overriding the upstream hos
 
 2026-10-24 | step 6 redo 3 | The new control-call test relies on the first 12 pool listings being cached by the first poll and on no uncached listing sharing the control listing's coordinates | it asserts both, so a change to batch order or to the dump fails it loudly rather than passing for the wrong reason | key the test on the cache rows instead of the dump order if the batch order ever changes — accepted by arbiter 2026-10-24: both assumptions are asserted (the first poll's 12 starts match the first 12 pool rows; the control coordinates are not among the uncached rows), so a change to batch order or the dump fails the test loudly and never passes it for the wrong reason; the dump is frozen (635 listings, 626 distinct coordinates); test-only, so no later step or checkpoint depends on it
 
-2026-10-24 | step 3 (qa-gate finding 1) | `tfl.classify` reads any 200 JSON object with no `journeys` and no disambiguation as "no journey" and caches null for good; a degraded TfL answering 200 `{}` gave `ready` with 84 of 96 null on the fake, and a re-save does not retry them | Step 3 design, asserted in test_tfl_unit.py | classify a 200 without a `journeys` key as transient — FIX_NOW by arbiter 2026-10-24: a permanent wrong null drops listings from every deck under a max commute and poisons the shared cache that B6's warm-up and the Sat afternoon checkpoint rely on; TfL documents 404 for no journey, a 200 without `journeys` is not a documented answer, and the pilot did not record the status of its two nulls, so nothing shows the current reading is needed; under 20 lines; see AMENDMENTS (arbiter) Step 7
+2026-10-24 | step 3 (qa-gate finding 1) | `tfl.classify` reads any 200 JSON object with no `journeys` and no disambiguation as "no journey" and caches null for good; a degraded TfL answering 200 `{}` gave `ready` with 84 of 96 null on the fake, and a re-save does not retry them | Step 3 design, asserted in test_tfl_unit.py | classify a 200 without a `journeys` key as transient — FIX_NOW by arbiter 2026-10-24: a permanent wrong null drops listings from every deck under a max commute and poisons the shared cache that B6's warm-up and the Sat afternoon checkpoint rely on; TfL documents 404 for no journey, a 200 without `journeys` is not a documented answer, and the pilot did not record the status of its two nulls, so nothing shows the current reading is needed; under 20 lines; see AMENDMENTS (arbiter) Step 7 — resolved by Step 7 2026-10-24
 
 2026-10-24 | step 6 (qa-gate finding 3) | with timeouts, a second user with a different pool caching listings on the same postcode between this user's polls shrinks the uncached list, so the rotation offset can step past a never-asked listing before `ready` | the offset is computed from the current uncached list, with no per-postcode state | track tried ids per postcode (schema change) — accepted by arbiter 2026-10-24: a variant of the accepted step 6 redo 2 timeout tradeoff, needing timeouts, a shared postcode and overlapping polls at once; no deterministic route found; outcome is at most a few unknown listings, same as the accepted case; warm-up is a manual run-book step with one user per destination (HANDOVER item 3 already says so); the fix needs per-postcode state, not cheap
 
@@ -473,24 +473,24 @@ Q13: Optional Worker vars `GEMINI_BASE` / `TFL_BASE` overriding the upstream hos
 2026-10-24 | `worker/src/entry.py` GET /prefs | the status-write race guard compares `updated_at`, which has one-second resolution; a re-save in the same second as the previous save could be overwritten by a stale batch, and no test covers the guard | low (a PUT includes an LLM call, so same-second re-saves are not realistic) | step 3 review — accepted by arbiter 2026-10-24: unreachable in practice (each PUT waits on an LLM call); the worst case is a stale status the next poll or re-save corrects; nothing later depends on it
 2026-10-24 | `worker/src/tfl.py` run_batch | a permanent TfL 429 leaves a user `pending` for ever (by design, tradeoff logged); the user can still re-save, but the frontend has no timeout | low to medium, B4/F4 may want a poll cap | step 3 review — accepted by arbiter 2026-10-24: not observed (the pilot's 429 cleared in ~30 s); re-saving resets it; no `web/` change is made or needed now; if B4 or F4 wants a poll cap, that work escalates there (any `web/` change does)
 2026-10-24 | `.claude/kit-config.md` Test line | the backend test command targets `BASE_URL=http://localhost:8788`, while the qa-gate run used :8790 in a second worktree | low (qa-gate finding) — accepted by arbiter 2026-10-24: 8788 is the test-mode port worker/README.md documents for the normal case; another port only matters when two servers run at once, and BASE_URL (plus FAKE_PORT, which Step 6 documents) already overrides it
-2026-10-24 | `worker/README.md` TfL commute times | says the status becomes `ready` "when every listing has a cached time", untrue since Step 6 (an unroutable listing is left unknown) | low (qa-gate finding 2) — FIX_NOW by arbiter 2026-10-24: one sentence, and the README is what the warm-up run-book is read from; folded into AMENDMENTS (arbiter) Step 7
+2026-10-24 | `worker/README.md` TfL commute times | says the status becomes `ready` "when every listing has a cached time", untrue since Step 6 (an unroutable listing is left unknown) | low (qa-gate finding 2) — FIX_NOW by arbiter 2026-10-24: one sentence, and the README is what the warm-up run-book is read from; folded into AMENDMENTS (arbiter) Step 7 — resolved by Step 7 2026-10-24
 2026-10-24 | this file, AMENDMENTS Step 6 | rule (b) was edited in place (dated, attributed) rather than kept with the replacement appended | low (qa-gate note 4) — accepted by arbiter 2026-10-24: the progress file is committed, so the original rule (b) is intact in git history, the in-place note is dated, attributed and points to Step 6 Redo 2, which states the replacement in full; restoring it changes no behaviour. Not a precedent: future amendment changes are appended, never edited in place, and REQUIREMENTS (LOCKED) is untouched
 
 ---
 
 ## VERIFICATION
 
-- [x] All step checkboxes ticked with evidence — steps 1–6 and the redos of steps 1, 4 and 6 (Redo, Redo 2, Redo 3), all dated 2026-10-24, in order (2026-10-24)
-- [x] Every evidence path in this file exists — evidence/prefs-filters/step-1.md to step-6.md (2026-10-24)
-- [x] Test suite run — result: fresh worktree at bcd9805, fresh D1 (`worker/scripts/seed.sh` exit 0), `uv sync --group dev` exit 0, `npm ci` exit 0; test-mode server :8790 / inspector 9241, fake on 8801: `FAKE_PORT=8801 BASE_URL=http://localhost:8790 uv run --group dev pytest tests -q` 178 passed, exit 0, run twice on one D1, both exit 0; server-less modules (test_filters, test_prefs_unit, test_mubit, test_tfl_unit) 99 passed, exit 0; web `npm test` 121 passed, exit 0 (2026-10-24)
+- [x] All step checkboxes ticked with evidence — steps 1–7 and the redos of steps 1, 4 and 6 (Redo, Redo 2, Redo 3), all dated 2026-10-24, in order (2026-10-24)
+- [x] Every evidence path in this file exists — evidence/prefs-filters/step-1.md to step-7.md (2026-10-24)
+- [x] Test suite run — result: fresh worktree at d1f8deb, fresh D1 (`worker/scripts/seed.sh` exit 0), `uv sync --group dev` exit 0, `npm ci` exit 0; test-mode server :8790 / inspector 9241, fake on 8801: `FAKE_PORT=8801 BASE_URL=http://localhost:8790 uv run --group dev pytest tests -q` 179 passed, exit 0, run twice on one D1, both exit 0; server-less modules (test_filters, test_prefs_unit, test_mubit, test_tfl_unit) 99 passed, exit 0; web `npm test` 121 passed, exit 0 (2026-10-24)
 - [x] Lint run — result: not configured in kit-config (2026-10-24)
 - [x] Typecheck run — result: web `npm run typecheck` exit 0; no backend typecheck configured (2026-10-24)
 - [x] Build run — result: web `npm run build` exit 0 (2026-10-24)
 - [x] Diff contains no files outside declared scope — every file maps to a step's Files in scope, an Evidence location or this file; docs/api-contract.md changes only the ruled parse_failed line; check-process-refs exit 0 (2026-10-24)
 - [x] Tradeoff ledger reviewed — signed by arbiter (full automation); every TRADEOFFS and SPOTTED entry carries an arbiter verdict or a resolved marker, all inside their sections (2026-10-24)
-- [ ] Human eye test completed — not human-verified (full automation) — smoke check: 9 of 9 as expected, against the test-mode server with the fake upstream. 401 without header; user created; GET all-null; PUT `wc1e7ht` max 45 → 200 pending `WC1E 7HT`; `ready` on poll 8, 96 of 96 cached; `Liverpool Street` → 422 invalid_postcode; one always-failing listing (rm-93826380), `NW3 4AB` → `ready` after 12 polls, never `failed`, 95 of 96 cached; outage after the first poll, `EC4M 7AN` → `pending, pending, pending, failed`, no TfL call on a further GET; re-save after the outage → `ready` in 7 polls, 84 new TfL calls (96 − 12), none for the 12 already cached. Counts read from the local D1. Fake saw 4 Gemini calls, fake key only; no live call made.
+- [ ] Human eye test completed — not human-verified (full automation) — smoke check: 12 of 12 as expected, against the test-mode server with the fake upstream, counts read from the local D1. 401 without header; user created; GET all-null; PUT `wc1e6bt` max 45 → 200 pending `WC1E 6BT`; `ready` on poll 8, 96 of 96 cached, 0 null; `Liverpool Street` → 422 invalid_postcode; one always-failing listing (rm-93826380), `NW3 4AB` → `ready` after 12 polls, never `failed`, 95 of 96 cached, the failing one not cached; 500 outage after the first poll, `EC4M 7AN` → `pending, pending, pending, failed`, 12 cached, no TfL call on a further GET; re-save → `ready` in 7 polls, 84 new TfL calls (96 − 12); 200 `{}` outage after the first poll, `EC3M 4AJ` → `pending, pending, pending, failed`, cache 12 rows before and after, 0 null, no TfL call on a further GET; re-save → `ready` in 7 polls, 84 new TfL calls, 96 cached, 0 null; 200 `{}` from the start, `EC2A 4NE` → `pending, pending, failed`, nothing cached. Fake saw 7 Gemini calls, fake key only; no live call made.
 
-QA-GATE: PASS WITH FINDINGS 2026-10-24 — every command green, every requirement met, smoke check 9 of 9, ledger signed by arbiter. Not PASS: three items need an arbiter verdict first. (1) `tfl.classify` reads any 200 JSON reply with no `journeys` and no disambiguation as "no journey" and caches it as null for good; a degraded TfL answering 200 `{}` after the first poll gave `ready` with 84 of 96 null (reproduced on the fake, `EC3M 4AJ`); this is not in TRADEOFFS. (2) `worker/README.md` still says the status becomes `ready` "when every listing has a cached time", untrue since Step 6. (3) A low variant of the accepted timeout tradeoff: with flaky failures and a second user on the same postcode with a different pool, caching by that user can shift the rotation offset and skip an untried listing before `ready`. See HANDOVER, What could bite you.
+QA-GATE: PASS 2026-10-24
 
 ---
 
@@ -512,23 +512,30 @@ Full automation was on, so no human has looked at this. The QA smoke check below
 instead, against a test-mode server with a fake Mubit and a fake TfL
 (`worker/tests/fake_upstream.py`). Nothing reached Mubit or TfL.
 
-1. Fresh worktree at bcd9805, `worker/scripts/seed.sh` (exit 0), then in `worker/`:
+1. Fresh worktree at d1f8deb, `worker/scripts/seed.sh` (exit 0), then in `worker/`:
    `uvx --from workers-py pywrangler dev --port 8790 --inspector-port 9241 --var MUBIT_API_KEY:test-key-not-a-real-key --var GEMINI_BASE:http://127.0.0.1:8801 --var TFL_BASE:http://127.0.0.1:8801`,
    with the fake running on 8801 inside the smoke script.
 2. `GET http://localhost:8790/api/prefs` with no header → 401 `unknown_user`. Pass.
-3. `POST /api/users` `{"username":"qa_gate4_main"}` → 201. Pass.
+3. `POST /api/users` `{"username":"qa_gate5b_main"}` → 201. Pass.
 4. `GET /api/prefs` with `X-User-Id` → 200, all five fields null. Pass.
-5. `PUT /api/prefs` `{"text":"Two bed flat under 550k, near a tube station","commute_postcode":"wc1e7ht","max_commute_min":45}`
-   → 200, `WC1E 7HT`, `pending`, `parsed.hard.max_commute_min` 45. Pass.
-6. Polled `GET /api/prefs`: `ready` on poll 8. 96 of 96 pool listings cached. Pass.
+5. `PUT /api/prefs` `{"text":"Two bed flat under 550k, near a tube station","commute_postcode":"wc1e6bt","max_commute_min":45}`
+   → 200, `WC1E 6BT`, `pending`, `parsed.hard.max_commute_min` 45. Pass.
+6. Polled `GET /api/prefs`: `ready` on poll 8. 96 of 96 pool listings cached, none null. Pass.
 7. `PUT /api/prefs` with `"commute_postcode":"Liverpool Street"` → 422 `invalid_postcode`. Pass.
 8. One pool listing (rm-93826380) always failing on the fake, postcode `NW3 4AB` → `ready`
-   after 12 polls, never `failed`, 95 of 96 cached. Pass.
+   after 12 polls, never `failed`, 95 of 96 cached, the failing one left unknown. Pass.
 9. Postcode `EC4M 7AN`: first poll answered, then every journey to it answered 500.
    Result `pending, pending, pending, failed`. A further GET stayed `failed` and made no
    TfL call. Pass.
 10. Outage cleared, same prefs re-saved → `ready` in 7 polls, with 84 new TfL calls
     (96 − 12). None of the 12 listings cached before the outage was asked again. Pass.
+11. Postcode `EC3M 4AJ`: first poll answered, then every journey answered 200 with body
+    `{}`. Result `pending, pending, pending, failed`. The cache held 12 rows, none null,
+    before and after: nothing was cached from the `{}` replies. A further GET stayed
+    `failed` with no TfL call. Re-saved after clearing → `ready` in 7 polls, 84 new TfL
+    calls, 96 cached, none null. Pass.
+12. Postcode `EC2A 4NE` answering 200 `{}` from the first call → `pending, pending,
+    failed`, nothing cached. Pass.
 
 If you want to look yourself with real services: start the normal dev server
 (`cd worker && uvx --from workers-py pywrangler dev`). Each `PUT /api/prefs` there is a
@@ -543,7 +550,7 @@ every 3 seconds until `ready`. Expect a few minutes for a new postcode.
 - A D1 client (`npx wrangler d1 execute haka --local --command "..."` in `worker/`):
   `SELECT postcode, count(*), sum(minutes IS NULL) FROM commute_cache GROUP BY 1` shows
   how far each postcode has got and how many listings have no journey. Compare the count
-  with the pool size before trusting a `ready`, and treat a high null count as suspect.
+  with the pool size before trusting a `ready`.
   `SELECT commute_status, commute_fail_streak FROM prefs` shows why a user is stuck.
 - The `pywrangler dev` console: `TfL call failed` warnings, and `Prefs parser` warnings
   when a save returns 502.
@@ -560,13 +567,15 @@ every 3 seconds until `ready`. Expect a few minutes for a new postcode.
   its 12 listings. Once TfL answers the check call, the postcode can then end `ready`
   with up to about half of the last 7 to 36 uncached listings never asked. A re-save
   asks only the uncached ones again.
+- The same can happen when a second user with a different pool warms the same postcode
+  at the same time as TfL times out: the rotation can step past a listing never asked.
 - If TfL recovers in the seconds between the third failing batch and the check call,
   the postcode can end `ready` early, with up to 36 listings never answered. Re-save to
   retry them.
 - The poll that decides `failed` or `ready` after three failing batches can take about
   10 seconds, up to about 15. Polls are one at a time, so it only delays the next one.
-- The check-call test (Redo 3) depends on the frozen dump's id order and coordinates. It
-  asserts both, so a change makes it fail loudly, not pass wrongly.
+- The check-call test (Step 6 Redo 3) depends on the frozen dump's id order and
+  coordinates. It asserts both, so a change makes it fail loudly, not pass wrongly.
 - Listings TfL keeps failing make warm-up slower, up to about twice the polls for that
   postcode.
 - A soft wish over 120 characters is dropped, not shortened.
@@ -584,40 +593,35 @@ every 3 seconds until `ready`. Expect a few minutes for a new postcode.
   poll one at a time today.
 - If zoneinfo is missing, "today" is taken in UTC. Still a Tuesday at 08:30.
 - The status-write guard compares `updated_at` to the second, and no test covers it.
-- The Step 6 tests prove "cached" from the fake's request log, not a D1 read.
+- The Step 6 and Step 7 tests prove "cached" from the fake's request log, not a D1 read.
+  This gate's smoke check read the D1 directly and it matched.
 - The kit-config Test line names :8788. Use `BASE_URL` and `FAKE_PORT` when another server
   holds that port.
+- AMENDMENTS Step 6 rule (b) was edited in place, not appended. The original is in git
+  history.
 - Every entry above was accepted by the arbiter, not by a person.
-- Not yet ruled on (found by this gate): a TfL 200 reply with no journeys is cached as
-  "no journey" for good (What could bite you, item 1); the README's `ready` sentence is
-  out of date; the flaky-failure offset shift (item 3).
+- Not yet ruled on: nothing. The previous gate's three findings were ruled: the 200 `{}`
+  reading and the README sentence were fixed in Step 7; the offset shift was accepted.
 
 ### What could bite you
 
-1. **A degraded TfL that answers 200 with no journeys fills the cache with "no journey".**
-   `tfl.classify` treats any 200 JSON object without `journeys` (and without a
-   disambiguation) as no journey, and the null is cached for good. On the fake, a
-   postcode whose replies turned into 200 `{}` after the first poll went `ready` with 84
-   of 96 listings null. With a maximum commute set, all 84 drop out of the deck. A
-   re-save does not retry them, because they are cached. Only deleting the rows does.
-   Nobody knows whether real TfL ever answers like this. The pilot's two nulls were not
-   recorded by status code. If a warmed postcode shows many nulls, check this first.
-2. **Warming the commute cache is a manual job, and it is slow.** About 366 London
+1. **Warming the commute cache is a manual job, and it is slow.** About 366 London
    listings, and up to 635, × 5 destinations on anonymous TfL is 15 to 60 minutes of
    polling. Poll faster than every 2 to 3 seconds and you hit the 30-second block. If
    this is left until Saturday afternoon, the persona batch waits on it. A `ready` can
    still hide a few unasked listings (see What is not done), so check the cache count
-   against the pool after warming.
-3. **Two users warming the same postcode at once, while TfL is flaky.** The rotation
-   that skips failing listings works out its offset from the current list of uncached
-   listings. If another user with a different pool caches some of the listings this user
-   saw fail by chance (timeouts), the list shrinks and the offset can step past one that
-   was never asked. It needs flaky failures, shared postcodes and overlapping polls at
-   once, so it is unlikely. The persona swiper should warm each destination with one
-   user, alone.
-4. **`worker/README.md` says `ready` means every listing has a cached time.** Since Step 6
-   it does not: a listing TfL never answers is left unknown and the postcode still goes
-   `ready`. Anyone reading the README will expect a full cache.
+   against the pool after warming. Warm each destination with one user, alone.
+2. **A real TfL "no journey" answer we have not seen.** Since Step 7, only a 404 or a 200
+   with an explicit empty `journeys` list is cached as "no journey". Anything else odd is
+   retried, and if it persists the postcode ends `failed`. That is the safe way round,
+   but if real TfL answers some unroutable listing in a third shape, that postcode will
+   keep failing instead of going `ready`. The pilot did not record the status code of its
+   two nulls. If a real postcode ends `failed` while TfL is plainly up, look at the
+   `TfL call failed` lines and the raw reply for the listings that never cache.
+3. **`failed` is the only signal of a TfL problem, and there is no poll cap.** A permanent
+   429 keeps a user `pending` for ever, and nothing in `web/` yet shows `failed` or times
+   out (F4). The persona swiper (B6) must handle both: stop after a sensible number of
+   polls, and re-save on `failed`.
 
 ### B4 HOOKS
 

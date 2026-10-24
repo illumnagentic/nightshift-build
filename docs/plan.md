@@ -31,7 +31,7 @@ Branch names are proposals; set them at feature-kickoff.
   Listing dump (635) and train/eval split merged (PRs #1, #2, #5). Still open: photo
   and floorplan textualisation, own branch `feat/photo-flags` (needs its own kickoff);
   workflow in decisions.md under Image textualisation workflow.
-- [ ] **B3 Preferences and filters** — `feat/prefs-filters` — natural-language prefs
+- [x] **B3 Preferences and filters** — `feat/prefs-filters` — natural-language prefs
   to hard limits + soft prefs, hard filters in code, TfL commute cached per
   (listing, postcode).
 - [ ] **B4 Curator and deck** — `feat/curator-deck` — fixed-prompt curator on
