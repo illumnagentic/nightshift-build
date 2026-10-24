@@ -28,7 +28,8 @@ CREATE TABLE IF NOT EXISTS listings (
   agent_name TEXT,                           -- estate agent and branch; NULL = unknown
   listed_date TEXT CHECK (listed_date GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]*'), -- ISO 8601 UTC; NULL = unknown
   fetched_at TEXT NOT NULL CHECK (fetched_at GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]*'), -- ISO 8601 UTC, when we pulled the record
-  parsed_fields TEXT NOT NULL DEFAULT '[]' CHECK (json_valid(parsed_fields) AND json_type(parsed_fields) = 'array') -- JSON array of field names parsed from free text; '[]' = none
+  parsed_fields TEXT NOT NULL DEFAULT '[]' CHECK (json_valid(parsed_fields) AND json_type(parsed_fields) = 'array'), -- JSON array of field names parsed from free text; '[]' = none
+  split TEXT NOT NULL CHECK (split IN ('train', 'eval')) -- evaluation holdout; listings at the same coordinates share a side
 );
 
 CREATE TABLE IF NOT EXISTS listing_media (

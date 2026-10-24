@@ -10,6 +10,8 @@ sys.path.insert(0, str(DATASET / "scripts"))
 import sanitise as s  # noqa: E402
 
 SCHEMA = DATASET / "d1" / "schema.sql"
+# Columns the D1 build assigns; they are in the schema but not in the sanitised records.
+BUILD_ONLY = {"split"}
 
 
 def record(**over):
@@ -365,7 +367,7 @@ class RecordShapeTests(unittest.TestCase):
         text = SCHEMA.read_text()
         listings = text.split("CREATE TABLE IF NOT EXISTS listings (")[1].split("\n);")[0]
         cols = re.findall(r"^  (\w+) (?:TEXT|INTEGER|REAL)\b", listings, flags=re.M)
-        self.assertEqual(s.COLUMNS[:-2], cols)
+        self.assertEqual(s.COLUMNS[:-2], [c for c in cols if c not in BUILD_ONLY])
         self.assertEqual(s.COLUMNS[-2:], ["media", "stations"])
 
     def test_media_kinds_and_positions_in_order(self):

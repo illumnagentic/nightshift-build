@@ -1,73 +1,84 @@
+== append ==
+  existing listings kept unchanged: 559
+  new records built from raw/rapidapi: 239
+  new records dropped before building (rejection and thin rules): 10
+  new records dropped, duplicate by id: 161
+  new records dropped, duplicate by dp: 0
+  new records dropped, duplicate by geo: 2
+  new records dropped, duplicate by photo: 0
+  new records dropped by sanitise: 0
+  new records added: 76
+  new by postcode area: CB 9, BN 9, TN 9, CM 9, KT 8, SE 8, OX 8, N 6, CR 5, W 4, SW 1
 
 == pipeline counts ==
-  card_drop_auction                        14
-  card_drop_thin_no_floorplan              5
-  card_drop_thin_photos                    9
-  cards_duplicate_across_searches          5
-  cards_kept                               392
-  cards_seen                               425
-  detail_pages                             392
-  dropped_duplicate_property               14
-  dropped_thin_no_tenure                   6
-  rapid_cards_seen                         50
-  rapid_detail_files                       26
+  append_dropped_duplicate_geo             2
+  append_dropped_duplicate_id              161
+  append_new_built                         239
+  rapid_cards_seen                         800
+  rapid_detail_files                       249
+  rapid_dropped_thin_no_tenure             10
 
 == sanitise ==
-  records in: 398  kept: 398  dropped: 0
-  nulled:council_tax_band:tbc                                  52
+  records in: 635  kept: 635  dropped: 0
+  nulled:lease_years_remaining:zero_means_none                 3
   nulled:property_type:not specified                           1
-  station_unit:rapidapi_uk_real_estate_rightmove:none:miles    78
-  station_unit:rightmove:miles:miles                           1116
+  station_unit:rapidapi_uk_real_estate_rightmove:none:miles    222
+  unknown_enum:price_qualifier:From                            1
+  unknown_enum:property_type:Cottage                           1
 
-== final listings: 398 ==
-  by source: rightmove 372, rapidapi_uk_real_estate_rightmove 26
+== final listings: 635 ==
+  by source: rightmove 372, rapidapi_uk_real_estate_rightmove 263
 == coverage ==
-  epc_current (any)                    93 (23%)
+  epc_current (any)                    148 (23%)
   epc_potential                        0 (0%)
-  epc image url                        313 (79%)
-  floorplan                            398 (100%)
-  tenure                               398 (100%)
-  tenure from text                     2 (1%)
-  lease years (of leasehold/SoF)       193 (75%) of 257; from text: 5
-  service charge (of leasehold/SoF)    175 (68%) of 257; from text: 7
-  ground rent (of leasehold/SoF)       138 (54%) of 257; from text: 6
-  council tax band                     302 (76%)
-  floor level                          147 (37%)
-  >=6 photos                           398 (100%)
-  >=10 photos                          329 (83%)
-  lat/lon                              398 (100%)
-  full postcode                        398 (100%)
-  nearest stations                     398 (100%)
-  listed_date                          398 (100%)
-  (all epc_current values are text-derived: 93)
+  epc image url                        515 (81%)
+  floorplan                            635 (100%)
+  tenure                               635 (100%)
+  tenure from text                     2 (0%)
+  lease years (of leasehold/SoF)       225 (76%) of 296; from text: 5
+  service charge (of leasehold/SoF)    207 (70%) of 296; from text: 10
+  ground rent (of leasehold/SoF)       159 (54%) of 296; from text: 8
+  council tax band                     506 (80%)
+  floor level                          212 (33%)
+  >=6 photos                           635 (100%)
+  >=10 photos                          548 (86%)
+  lat/lon                              635 (100%)
+  full postcode                        635 (100%)
+  nearest stations                     635 (100%)
+  listed_date                          635 (100%)
+  (all epc_current values are text-derived: 148)
 
 == price ==
-  min 250000  median 600000  max 1195000
-  £250k-£400k: 63
-  £400k-£550k: 99
-  £550k-£700k: 74
-  £700k-£900k: 125
-  £900k-£1200k: 37
+  min 250000  median 700000  max 1200000
+  £250k-£400k: 74
+  £400k-£550k: 142
+  £550k-£700k: 79
+  £700k-£900k: 150
+  £900k-£1200k: 190
 == bedrooms ==
-  1: 67
-  2: 161
-  3: 106
-  4: 47
-  5: 17
+  0: 1
+  1: 73
+  2: 196
+  3: 168
+  4: 117
+  5: 64
+  6: 14
+  7: 1
+  8: 1
 == property type ==
-  flat: 240
-  terraced: 41
-  semi_detached: 35
-  detached: 31
-  end_of_terrace: 20
-  maisonette: 16
-  house: 11
-  bungalow: 2
-  other: 1
-  None: 1
+  flat: 279
+  detached: 102
+  semi_detached: 80
+  terraced: 77
+  end_of_terrace: 36
+  house: 29
+  maisonette: 17
+  bungalow: 7
+  other: 5
+  None: 3
 == tenure ==
-  leasehold: 205
-  freehold: 141
-  share_of_freehold: 52
+  freehold: 339
+  leasehold: 236
+  share_of_freehold: 60
 == postcode area ==
-  SE 72, E 66, SW 53, N 53, GU 25, AL 24, RG 24, WD 21, W 21, NW 17, EC 15, WC 3, BR 2, IG 2
+  SE 92, N 69, E 66, SW 64, W 30, CB 29, CM 28, TN 28, BN 28, OX 27, KT 26, GU 25, AL 24, RG 24, WD 21, NW 17, EC 15, CR 15, WC 3, BR 2, IG 2

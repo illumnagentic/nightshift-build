@@ -3,7 +3,10 @@
 Reads only files already on disk. Makes no network requests.
 
 Usage (from the dataset/ directory):
-  python3 -I scripts/normalise.py --dataset .
+  python3 -I scripts/normalise.py --dataset .            rebuild from all of raw/
+  python3 -I scripts/normalise.py --dataset . --append   add raw/rapidapi records to listings.jsonl
+
+A rebuild refuses to write fewer listings than listings.jsonl already holds.
 """
 import argparse
 import collections
@@ -464,6 +467,16 @@ def richness(r):
     return sum(1 for f in FIELDS if r.get(f) not in (None, [], "")) + min(r["_photo_count"], 20) / 100
 
 
+def dup_keys(r):
+    """The keys under which two records are the same home. Existing records read from
+    listings.jsonl carry no delivery point, so that key is simply absent for them."""
+    keys = [("id", r["id"]),
+            ("geo", round(r["lat"] or 0, 4), round(r["lon"] or 0, 4), r["bedrooms"], r["price_gbp"])]
+    if r.get("_delivery_point"):
+        keys.append(("dp", r["_delivery_point"]))
+    return keys
+
+
 def dedupe(records, stats):
     """One record per property. Records are linked if they share a Rightmove id,
     a Royal Mail delivery point id, or the same rounded lat/lon + beds + price.
@@ -478,11 +491,7 @@ def dedupe(records, stats):
 
     seen = {}
     for i, r in enumerate(records):
-        keys = [("id", r["id"]),
-                ("geo", round(r["lat"] or 0, 4), round(r["lon"] or 0, 4), r["bedrooms"], r["price_gbp"])]
-        if r["_delivery_point"]:
-            keys.append(("dp", r["_delivery_point"]))
-        for k in keys:
+        for k in dup_keys(r):
             if k in seen:
                 other = records[seen[k]]
                 # One agent listing two units in a new-build shares a placeholder
@@ -517,6 +526,75 @@ def thin_reason(r):
     return None
 
 
+def photo_urls_of(r):
+    """Photo URLs of a built record, or of a clean one (whose photos sit in media)."""
+    if "photo_urls" in r:
+        return r["photo_urls"]
+    return [m["url"] for m in r["media"] if m["kind"] == "photo"]
+
+
+def load_existing(ds):
+    """Clean records already in listings.jsonl, in file order. Each line must survive a
+    parse and dump unchanged, otherwise rewriting the file would alter existing records."""
+    out = []
+    path = os.path.join(ds, "listings.jsonl")
+    if not os.path.exists(path):
+        return out
+    for n, line in enumerate(open(path, encoding="utf-8"), 1):
+        r = json.loads(line)
+        if json.dumps(r, ensure_ascii=False) + "\n" != line:
+            raise SystemExit("listings.jsonl line %d would change on rewrite; refusing" % n)
+        r["_photo_count"] = len(photo_urls_of(r))
+        out.append(r)
+    return out
+
+
+def check_not_shrinking(ds, n_new):
+    """Refuse to replace listings.jsonl with fewer listings than it holds."""
+    path = os.path.join(ds, "listings.jsonl")
+    if os.path.exists(path):
+        n_old = sum(1 for _ in open(path, encoding="utf-8"))
+        if n_new < n_old:
+            raise SystemExit("refusing to write %d listings over the %d already in listings.jsonl; "
+                             "use --append to add to them" % (n_new, n_old))
+
+
+def drop_clashes(existing, new, stats):
+    """The new records that are not a home already seen. Existing records always win;
+    among new records the richest is kept. A shared photo URL means the same home. Every
+    other rule is waived for two records from the same agent, as in dedupe()."""
+    seen = {}
+
+    def keys(r):
+        return dup_keys(r) + [("photo", u) for u in photo_urls_of(r)]
+
+    def register(r):
+        for k in keys(r):
+            seen.setdefault(k, r)
+
+    def clash(r):
+        for k in sorted(keys(r), key=lambda k: ["id", "dp", "geo", "photo"].index(k[0])):
+            other = seen.get(k)
+            if other is None:
+                continue
+            if k[0] in ("geo", "dp") and r["agent_name"] and r["agent_name"] == other["agent_name"]:
+                continue
+            return k[0]
+        return None
+
+    for r in existing:
+        register(r)
+    kept = []
+    for r in sorted(new, key=lambda r: (-richness(r), r["id"])):
+        rule = clash(r)
+        if rule:
+            stats["append_dropped_duplicate_" + rule] += 1
+        else:
+            register(r)
+            kept.append(r)
+    return kept
+
+
 def write_outputs(ds, records):
     with open(os.path.join(ds, "listings.jsonl"), "w", encoding="utf-8") as f:
         for r in records:
@@ -527,6 +605,11 @@ def write_outputs(ds, records):
         for r in records:
             w.writerow([json.dumps(r[k], ensure_ascii=False) if k in LIST_FIELDS
                         else ("" if r[k] is None else r[k]) for k in COLUMNS])
+
+
+def postcode_areas(records):
+    return collections.Counter(re.match(r"[A-Z]+", r["postcode"]).group(0) if r["postcode"] else "?"
+                               for r in records)
 
 
 def pct(n, d):
@@ -592,18 +675,12 @@ def report(records, stats, events, n_in):
     for k, v in collections.Counter(r["tenure"] for r in records).most_common():
         print("  %s: %d" % (k, v))
     print("== postcode area ==")
-    areas = collections.Counter(re.match(r"[A-Z]+", r["postcode"] or "?").group(0) if r["postcode"] else "?"
-                                for r in records)
-    print("  " + ", ".join("%s %d" % kv for kv in areas.most_common()))
+    print("  " + ", ".join("%s %d" % kv for kv in postcode_areas(records).most_common()))
 
 
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--dataset", required=True, help="dataset/ directory")
-    a = ap.parse_args()
-    ds = a.dataset
+def build_from_raw(ds, stats):
+    """Every record that raw/rightmove and raw/rapidapi give, before dedupe."""
     raw = os.path.join(ds, "raw", "rightmove")
-    stats = collections.Counter()
     cards = load_cards(raw, stats)
     fetched = load_manifest(raw)
     records = []
@@ -630,9 +707,28 @@ def main():
             continue
         records.append(r)
     records.extend(load_rapid(ds, stats))
-    records = dedupe(records, stats)
-    records.sort(key=lambda r: r["id"])
+    return records
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--dataset", required=True, help="dataset/ directory")
+    ap.add_argument("--append", action="store_true",
+                    help="keep listings.jsonl as it is and add new records from raw/rapidapi")
+    a = ap.parse_args()
+    ds = a.dataset
+    stats = collections.Counter()
     events = collections.Counter()
+    existing = []
+    if a.append:
+        existing = load_existing(ds)
+        built = load_rapid(ds, stats)
+        stats["append_new_built"] = len(built)
+        records = drop_clashes(existing, built, stats)
+    else:
+        records = build_from_raw(ds, stats)
+        records = dedupe(records, stats)
+    records.sort(key=lambda r: r["id"])
     clean = []
     for r in records:
         c, ev = sanitise_record(r)
@@ -640,10 +736,24 @@ def main():
         if c is not None:
             c["_photo_count"] = r["_photo_count"]
             clean.append(c)
-    write_outputs(ds, clean)
+    final = existing + clean
+    check_not_shrinking(ds, len(final))
+    write_outputs(ds, final)
     buf = io.StringIO()
     with contextlib.redirect_stdout(buf):
-        report(clean, stats, events, len(records))
+        if a.append:
+            print("== append ==")
+            print("  existing listings kept unchanged: %d" % len(existing))
+            print("  new records built from raw/rapidapi: %d" % stats["append_new_built"])
+            print("  new records dropped before building (rejection and thin rules): %d" % sum(
+                v for k, v in stats.items() if k.startswith("rapid_dropped_")))
+            for k in ("id", "dp", "geo", "photo"):
+                print("  new records dropped, duplicate by %s: %d" % (k, stats["append_dropped_duplicate_" + k]))
+            print("  new records dropped by sanitise: %d" % (len(records) - len(clean)))
+            print("  new records added: %d" % len(clean))
+            print("  new by postcode area: " + ", ".join(
+                "%s %d" % kv for kv in postcode_areas(clean).most_common()))
+        report(final, stats, events, len(existing) + len(records))
     sys.stdout.write(buf.getvalue())
     os.makedirs(os.path.join(ds, "reports"), exist_ok=True)
     with open(os.path.join(ds, "reports", "normalise-report.txt"), "w", encoding="utf-8") as f:
