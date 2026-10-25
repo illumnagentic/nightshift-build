@@ -447,6 +447,17 @@ state it); decisions.md Commute line says stretch, dated 2026-10-25; B4 HOOKS up
 - [x] Matches locked requirements — human amendment 2026-10-25: PUT without postcode 200 nulls, deck 409 commute_* removed, decisions.md Commute dated stretch (2026-10-25)
 - [x] No scope drift — diff limited to declared files; contract hunks only in GET/PUT /prefs and Deck; no web/ change; check-process-refs exit 0 (2026-10-25)
 
+**Redo (arbiter FIX_NOW, 2026-10-25)**: re-seed note and re-wrap. Files:
+`worker/README.md` (TfL commute times section: one sentence — after pulling this
+change each laptop re-runs `worker/scripts/seed.sh` with the dev server stopped, or a
+save without a postcode fails on the old NOT NULL columns) and `docs/decisions.md`
+(re-wrap the Commute paragraph to the file's ~88-character width, wording and date
+unchanged). Done when both are present, check-process-refs exits 0, and the diff
+touches only those two hunks.
+
+- [x] Redo implemented — README.md re-seed sentence added; decisions.md Commute re-wrapped, word-for-word identical when whitespace-collapsed; check-process-refs exit 0 (2026-10-25)
+- [x] Redo reviewed — evidence: diff limited to worker/README.md and docs/decisions.md hunks, max added line 86 chars, no banned words (2026-10-25)
+
 ---
 
 ## KICKOFF RULINGS
@@ -505,7 +516,7 @@ Q13: Optional Worker vars `GEMINI_BASE` / `TFL_BASE` overriding the upstream hos
 
 2026-10-25 | step 8 | Existing test cases that expected 422 for a missing or null `commute_postcode` were changed to the new behaviour | human ruling made `commute_postcode` optional; those two cases are now covered as 200 in new tests | none: the parametrised 422 list keeps the non-string postcode and max-commute-without-postcode cases — accepted by arbiter 2026-10-25: a spec change ruled by the human amendment of 2026-10-25 (commute optional), not a loosening; the old shapes are now asserted as exact 200 responses with both fields null and no TfL call, and the replacement 422 cases are still exact
 
-2026-10-25 | step 8 | `schema.sql` changed with no migration | local D1 is rebuilt by `seed.sh`; a stale local D1 with the old NOT NULL columns rejects postcode-less saves until re-seeded | re-run seed.sh on each laptop — FIX_NOW by arbiter 2026-10-25: no migration is right for a local-only D1 that seed.sh rebuilds from scratch, but a stale D1 turns a postcode-less PUT into a 500 on a NOT NULL column, which would hit Yewen's F4 prefs work against the real API with no clue why; the README must say it, the PR body alone is not durable; one sentence in the README TfL section, which is in Step 8's scope, so this is a Step 8 redo; fold in re-wrapping the decisions.md Commute paragraph (also in scope) so no line runs past the file's width
+2026-10-25 | step 8 | `schema.sql` changed with no migration | local D1 is rebuilt by `seed.sh`; a stale local D1 with the old NOT NULL columns rejects postcode-less saves until re-seeded | re-run seed.sh on each laptop — FIX_NOW by arbiter 2026-10-25: no migration is right for a local-only D1 that seed.sh rebuilds from scratch, but a stale D1 turns a postcode-less PUT into a 500 on a NOT NULL column, which would hit Yewen's F4 prefs work against the real API with no clue why; the README must say it, the PR body alone is not durable; one sentence in the README TfL section, which is in Step 8's scope, so this is a Step 8 redo; fold in re-wrapping the decisions.md Commute paragraph (also in scope) so no line runs past the file's width — resolved by Step 8 redo 2026-10-25
 
 ---
 

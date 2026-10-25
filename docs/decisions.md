@@ -83,9 +83,10 @@ docs suggest, not a decision.
   Doc proposes: stretch.
   Decided: 2026-10-25 — stretch goal. No TfL API key; keyless access works but is slow.
   The code stays and is optional: nothing depends on it, and the deck never waits for
-  it. The details below apply only when a user gives a postcode. The user enters one location (workplace or
-  anywhere else). The TfL Journey Planner API returns the commute time between that
-  location and each property. A calculated fact, not an LLM guess.
+  it. The details below apply only when a user gives a postcode. The user enters one
+  location (workplace or anywhere else). The TfL Journey Planner API returns the
+  commute time between that location and each property. A calculated fact, not an LLM
+  guess.
   - **Input:** postcode. Free-text place names make TfL return candidate matches
     instead of a journey.
   - **Assumptions:** weekday, arrive 08:30, public transport. Shown next to the time

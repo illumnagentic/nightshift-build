@@ -53,6 +53,9 @@ Do not run the API tests against it.
 Commute is optional. Prefs saved without a `commute_postcode` make no TfL calls, and
 `commute_status` stays `null`. The warm-up below applies only to users who give a postcode.
 
+After pulling this change, each laptop must re-run `worker/scripts/seed.sh` with the dev server
+stopped; otherwise a save without a postcode fails on the old NOT NULL columns.
+
 Saving prefs with a postcode starts the commute lookup for it. Each `GET /api/prefs` while
 `commute_status` is `pending` runs one batch of TfL calls; the status becomes `ready`
 once every listing has a cached time or TfL was asked and could not route it, so a few
