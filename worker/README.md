@@ -111,7 +111,7 @@ with the server started with `--var GEMINI_BASE:http://127.0.0.1:8801 --var TFL_
 test-mode server. Before the API tests run, a guard sends one probe save and one probe
 poll. If the fake upstream did not receive them with the fake key, or the server is not
 running, the run stops with exit code 3 and prints the command above. The guard covers
-`test_prefs.py` and `test_commute.py`.
+`test_prefs.py`, `test_commute.py` and `test_deck.py`.
 
 These modules need no server and no network, and run with a plain
 `uv run --group dev pytest tests/test_filters.py tests/test_prefs_unit.py tests/test_mubit.py tests/test_tfl_unit.py -q`:
@@ -121,11 +121,35 @@ These modules need no server and no network, and run with a plain
 - `tests/test_mubit.py`: the Mubit client.
 - `tests/test_tfl_unit.py`: reading TfL answers and building the journey URL.
 
-`tests/test_users.py`, `tests/test_prefs.py` and `tests/test_commute.py` call the API and
+`tests/test_users.py`, `tests/test_prefs.py`, `tests/test_commute.py` and `tests/test_deck.py` call the API and
 need the seeded test-mode server. Each run adds users to the local D1. The fake answers
 a few postcodes with 500 so the suite can be repeated without re-seeding, but re-seed
-to clear the users. Stop the dev server before running `worker/scripts/seed.sh` and
+to clear the users. `test_deck.py` also reads the local D1 with `npx wrangler d1 execute` from this directory, so the server under test must have been started from this same `worker/` directory. Stop the dev server before running `worker/scripts/seed.sh` and
 start it again afterwards, or the server returns 500.
+
+## Curator and deck
+
+`GET /api/deck` serves unswiped cards first, then new ones. New cards come from one
+curator call: a seeded sample of 30 train-split listings that pass the user's hard
+filters is sent to `gemini-3.8-flash` through Mubit, which returns them as an ordered
+list of ids. The system prompt, response schema and low thinking setting are fixed;
+everything per user goes in the user message. About 1 card in 5 is an `exploration`
+card, drawn from the 50th to 80th percentile of that ranking. Every call is stored in
+`curator_calls` (candidates, full ranking, status, `mreq_` id, token counts) and each
+served card in `decisions`.
+
+A `GET /api/deck` that needs new cards is a PAID Gemini call through Mubit on the
+normal dev server. A request whose unswiped cards already cover `n` makes no call.
+Measured on 2026-10-25 (one call, 30 candidates): 6,995 prompt tokens, 335 output
+tokens, 5.3 seconds. At an assumed Flash-class price (unconfirmed for
+`gemini-3.8-flash`) that is about 0.002 GBP per call, and about 0.011 GBP if the price is
+five times higher. See `evidence/curator-deck/step-4.md`.
+
+Under React StrictMode (`web/src/main.tsx`), a dev deck load fires two concurrent
+`GET /api/deck` for one user, so it can make two curator calls. No duplicate card is
+served, but both calls are paid and both become kept examples. Persona runs must keep
+one `GET /api/deck` in flight per persona. Never run the API tests against the normal
+dev server.
 
 ## Mubit ping
 
@@ -142,7 +166,8 @@ when checking the gateway.
 - `src/entry.py`: the FastAPI app and the `/api` routes.
 - `src/mubit.py`: the Mubit gateway client.
 - `src/prefs.py`, `src/tfl.py`, `src/filters.py`: prefs parsing, TfL commute times, hard filters.
-- `schema.sql`: app tables (`users`, `prefs`, `commute_cache`).
+- `src/chips.py`, `src/curator.py`, `src/deck.py`: chips per card, the curator request and reply, `GET /api/deck`.
+- `schema.sql`: app tables (`users`, `prefs`, `commute_cache`, `curator_calls`, `decisions`).
 - `../dataset/d1/`: listings schema and data, loaded by `seed.sh`.
 - `scripts/`: `seed.sh` and `mubit_ping.py`.
 - `tests/`: unit and API tests, and the fake upstream (`fake_upstream.py`).

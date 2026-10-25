@@ -4,7 +4,7 @@ import re
 import secrets
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Body, Depends, FastAPI, Header, Request
+from fastapi import APIRouter, Body, Depends, FastAPI, Header, Query, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -12,6 +12,7 @@ from starlette.exceptions import HTTPException
 from workers import WorkerEntrypoint
 import asgi
 
+import deck
 import mubit
 import prefs
 import tfl
@@ -181,7 +182,19 @@ async def put_prefs(request: Request, body: dict = Body(...), user_id: str = Dep
         " parse_request_id = excluded.parse_request_id, commute_status = excluded.commute_status, commute_fail_streak = 0,"
         " updated_at = excluded.updated_at"
     ).bind(user_id, text, normalised, max_commute, json.dumps(parsed), result.request_id, status, updated_at).run()
+    # Served cards the user has not swiped were chosen for the old prefs: drop them so they return to the pool.
+    await env.DB.prepare("DELETE FROM decisions WHERE user_id = ? AND swiped_at IS NULL").bind(user_id).run()
     return {"text": text, "commute_postcode": normalised, "max_commute_min": max_commute, "parsed": parsed, "commute_status": status}
+
+
+@api.get("/deck")
+async def get_deck(request: Request, n: int = Query(10, ge=1, le=10), user_id: str = Depends(current_user)):
+    try:
+        return await deck.serve(request.scope["env"], user_id, n)
+    except deck.PrefsMissing:
+        raise ApiError(409, "prefs_missing", "Save your preferences before asking for a deck.")
+    except deck.CuratorFailed:
+        raise ApiError(502, "curator_failed", "We could not pick properties for you. Please try again.")
 
 
 app.include_router(api)

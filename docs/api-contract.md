@@ -44,7 +44,10 @@ Not part of the frontend contract:
 - Mubit's `x-middleware-request-id` (`mreq_...`) and the profile version used are stored
   per decision in D1.
 - The chips offered on each card are logged when the deck is served (see `GET /deck`).
-- The listing `split` column (train / eval) is never exposed.
+- The listing `split` column (train / eval) is never exposed. Decks serve train-split
+  listings only, so no held-out listing reaches any user.
+- Each curator call is stored as its own record: the candidates sent, the full ranking
+  returned, status, the `mreq_` id and the token counts.
 
 The only place these surface is `GET /profile`, whose `history` references decisions.
 
@@ -290,7 +293,10 @@ Response 200 (`empty_reason` is `null` here; an empty deck is
 - `photos` is an ordered list of URLs.
 
 Errors: 409 `prefs_missing` (no prefs saved), 422 `invalid_request` (`n` out of range or
-not an integer).
+not an integer), 502 `curator_failed` (the ranking call failed or its reply was unusable).
+A 502 happens only when new cards are needed and the call fails, and the user has no
+outstanding cards to serve. If there are outstanding cards, they are served as a normal
+200 with fewer than `n` cards. No cards are created on a failure, so a retry is safe.
 
 ## Listings
 
@@ -477,13 +483,13 @@ factor of every chip are exactly those written here.
 | -: | --------- | ----- | ------------ | ------------- |
 | 1 | `garden` | Garden | property type is a house type, or mentions `garden`, or (once flags exist) a photo flag has `room` `garden` | mentions `garden`, or (once flags exist) a photo flag has `room` `garden` |
 | 2 | `parking` | Parking | mentions `parking\|garage\|driveway\|off[- ]street\|car ?port\|car ?park` | whenever offered |
-| 3 | `natural_light` | Natural light inside | every listing | mentions `\b(bright\|light\|sunny\|airy\|south[- ]facing)\b`, or (once flags exist) a `light` flag with value `bright` or `poor` and confidence `high` or `medium` |
+| 3 | `natural_light` | Natural light inside | every listing | mentions `\b(bright\|light\|sunny\|airy\|south[- ]facing)\b`, or (once flags exist) a `light` flag with value `poor` and confidence `high` or `medium` |
 | 4 | `balcony_terrace` | Balcony or terrace | mentions `balcon\|roof terrace`, or mentions `\bterrace\b` and property type is flat-like | whenever offered |
 | 5 | `price_value` | Price and value | every listing | whenever offered |
 | 6 | `commute` | Commute | `commute.minutes` is not null | whenever offered |
 | 7 | `station_access` | Station access | nearest station exists | nearest station is 0.8 km or less, or mentions `station\|tube\|underground\|\bdlr\b\|overground` |
 | 8 | `area_busyness` | Area and street feel | every listing | mentions `quiet\|peaceful\|tranquil\|cul[- ]de[- ]sac\|vibrant\|bustling\|lively\|high street\|village` |
-| 9 | `space` | Space and room sizes | every listing | mentions `spacious\|generous\|large\|ample\|\bhuge\b\|sq\.? ?ft\|sq\.? ?m\b\|sqm`, or (once flags exist) a `sqm_estimate` flag exists |
+| 9 | `space` | Space and room sizes | every listing | mentions `spacious\|generous\|large\|ample\|\bhuge\b\|sq\.? ?ft\|sq\.? ?m\b\|sqm` |
 | 10 | `kitchen` | Kitchen | every listing | mentions `kitchen` |
 | 11 | `layout` | Layout | every listing | mentions `open[- ]plan` |
 | 12 | `condition` | Condition and decor | every listing | mentions `refurbish\|renovat\|modern\|newly\|new build\|immaculate\|redecorat\|updating\|in need of`, or (once flags exist) a `defects` flag exists |
@@ -510,14 +516,15 @@ Notes:
 
 ### Photo-flag-dependent chips
 
-No photo flags exist yet. Until then every rule is evaluated as if the flags were
-absent: the "(once flags exist)" clauses are skipped, and nothing else changes.
+Photo flags now exist for every listing, so the "(once flags exist)" clauses apply. A
+listing with no flag rows is evaluated as if the clauses were absent, and nothing else
+changes.
 
-| Chip | Until flags exist | Once flags exist |
-| ---- | -------------------- | ---------------- |
+| Chip | With no flags | With flags |
+| ---- | ------------- | ---------- |
 | `garden` | offered on house types or a `garden` mention | also offered when any photo flag has `room` `garden` |
-| `natural_light` | offered on every listing, featured on the text mention only | still offered on every listing; a `light` flag adds the featured clause |
-| `space` | offered on every listing, featured on the text mention only | still offered on every listing; a `sqm_estimate` flag adds the featured clause |
+| `natural_light` | offered on every listing, featured on the text mention only | still offered on every listing; a `light` flag with value `poor` and confidence `high` or `medium` adds the featured clause |
+| `space` | offered on every listing, featured on the text mention only | unchanged: flags add no featured clause |
 | `condition` | offered on every listing, featured on the text mention only | still offered on every listing; a `defects` flag adds the featured clause |
 
 A user's correction to a flag (`corrected_text`) does not change which chips are offered.

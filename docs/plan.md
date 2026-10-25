@@ -33,7 +33,7 @@ Branch names are proposals; set them at feature-kickoff.
 - [x] **B3 Preferences and filters** — `feat/prefs-filters` — natural-language prefs
   to hard limits + soft prefs, hard filters in code; TfL commute (cached per
   (listing, postcode)) is an optional stretch.
-- [ ] **B4 Curator and deck** — `feat/curator-deck` — fixed-prompt curator on
+- [x] **B4 Curator and deck** — `feat/curator-deck` — fixed-prompt curator on
   `gemini-3.8-flash`, deck with percentile-band exploration (seeded per user), decision
   IDs and `mreq_` IDs stored.
 - [ ] **B5 Feedback and taste profile** — `feat/feedback-profile` — swipe / superlike /

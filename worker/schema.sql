@@ -27,3 +27,36 @@ CREATE TABLE IF NOT EXISTS commute_cache (
   fetched_at TEXT NOT NULL,                  -- ISO 8601 UTC
   PRIMARY KEY (listing_id, postcode)         -- shared by every user with that postcode
 );
+
+CREATE TABLE IF NOT EXISTS curator_calls (
+  call_id TEXT PRIMARY KEY,                  -- 'c_' + hex; one per curator request, failures included
+  user_id TEXT NOT NULL REFERENCES users(user_id),
+  created_at TEXT NOT NULL,                  -- ISO 8601 UTC
+  model TEXT NOT NULL,                       -- the model the request named
+  profile_version INTEGER NOT NULL,          -- taste profile version in the request; 0 = empty profile
+  prefs_updated_at TEXT NOT NULL,            -- prefs.updated_at the request was built from
+  candidate_ids TEXT NOT NULL CHECK (json_valid(candidate_ids) AND json_type(candidate_ids) = 'array'), -- the sampled candidates, as sent
+  ranking TEXT CHECK (ranking IS NULL OR (json_valid(ranking) AND json_type(ranking) = 'array')), -- full returned order after repair; NULL = failed
+  status TEXT NOT NULL CHECK (status IN ('ok', 'incomplete', 'failed')), -- incomplete = reply repaired
+  mreq_id TEXT,                              -- Mubit x-middleware-request-id; NULL = none came back
+  error TEXT,                                -- why a failed call failed; NULL otherwise
+  prompt_tokens INTEGER,                     -- usageMetadata; NULL = not reported
+  output_tokens INTEGER,
+  thought_tokens INTEGER
+);
+
+CREATE TABLE IF NOT EXISTS decisions (
+  decision_id TEXT PRIMARY KEY,              -- 'd_' + hex; one per served card
+  user_id TEXT NOT NULL REFERENCES users(user_id),
+  listing_id TEXT NOT NULL REFERENCES listings(id),
+  source TEXT NOT NULL CHECK (source IN ('ranked', 'exploration')),
+  served_at TEXT NOT NULL,                   -- ISO 8601 UTC; shared by every card of one serve
+  position INTEGER NOT NULL,                 -- 0-based order within its serve
+  rank INTEGER NOT NULL,                     -- 1-based place in the curator call's ranking
+  curator_call_id TEXT NOT NULL REFERENCES curator_calls(call_id),
+  profile_version INTEGER NOT NULL,          -- taste profile version the curator call used
+  offered_chips TEXT NOT NULL CHECK (json_valid(offered_chips) AND json_type(offered_chips) = 'array'), -- chip ids shown, in order
+  action TEXT CHECK (action IN ('left', 'right', 'superlike')), -- NULL = not swiped yet
+  swiped_at TEXT,                            -- ISO 8601 UTC; NULL = not swiped yet
+  UNIQUE (user_id, listing_id)               -- a listing is served to a user once
+);

@@ -11,6 +11,11 @@ can make one listing's journeys answer 429 whatever the postcode. EC2N and SW1A 
 commute pending, and caches nothing, however often the suite is run against one database.
 Both routes are served on one port.
 
+A curator call is told apart by "ranking" in its response schema. It answers with the candidate ids sorted by id, unless the
+buyer's stated text carries a marker: [[curator_http_500]] answers 500, [[curator_not_json]] answers text that is not JSON,
+[[curator_bad_ids]] answers mostly ids that are not candidates. Each curator call is recorded in `curator_requests`, with the
+request id header it was answered with: a different `mreq_` id for every curator response, failures included.
+
 The answer is chosen by a marker in the user's text, e.g. "[[bad_values]]". It refuses any
 key other than FAKE_KEY, so a real key sent by mistake shows up as a 401 and a recorded request.
 """
@@ -46,6 +51,20 @@ def _wrap(text) -> dict:
     return {"modelVersion": "fake-model", "candidates": [{"content": {"role": "model", "parts": [{"text": text}]}}]}
 
 
+def curator_answer(user_message: dict) -> tuple[int, str, list[str]]:
+    """(status, body, returned ids) for a curator call."""
+    ids = sorted(c["id"] for c in user_message["candidates"])
+    text = user_message["stated_prefs"]["text"]
+    if "[[curator_http_500]]" in text:
+        return 500, json.dumps({"error": {"code": 500, "message": "upstream broke", "status": "INTERNAL"}}), []
+    if "[[curator_not_json]]" in text:
+        return 200, json.dumps(_wrap("this is not json")), []
+    if "[[curator_bad_ids]]" in text:
+        ids = ids[:1] + [f"rm-unknown-{n}" for n in range(len(ids))]
+    return 200, json.dumps({**_wrap(json.dumps({"ranking": ids})), "usageMetadata": {
+        "promptTokenCount": 1000, "candidatesTokenCount": 40, "thoughtsTokenCount": 20}}), ids
+
+
 def answer_for(user_text: str) -> tuple[int, str]:
     """(status, body) for the marker in the user's text."""
     if "[[http_500]]" in user_text:
@@ -69,8 +88,10 @@ class FakeUpstream(HTTPServer):
     def __init__(self, port: int):
         super().__init__(("127.0.0.1", port), _Handler)
         self.requests: list[dict] = []  # one per Gemini call: path, key, body
+        self.curator_requests: list[dict] = []  # one per curator call: stated text, candidate ids, returned ids
         self.tfl_requests: list[str] = []  # one per TfL call: the request path and query
         self._tfl_seen: set[str] = set()
+        self._curator_count = 0
 
     def start(self) -> None:
         threading.Thread(target=self.serve_forever, daemon=True).start()
@@ -123,16 +144,27 @@ class _Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         body = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0))) or b"{}")
         key = self.headers.get("x-goog-api-key")
+        request_id = FAKE_REQUEST_ID
         self.server.requests.append({"path": self.path, "key": key, "body": body})
         if key != FAKE_KEY:
             status, text = 401, json.dumps({"error": {"type": "middleware_gateway_error", "code": "invalid_key", "message": "bad key"}})
+        elif "ranking" in body.get("generationConfig", {}).get("responseSchema", {}).get("properties", {}):
+            message = json.loads(body["contents"][0]["parts"][0]["text"])
+            status, text, returned = curator_answer(message)
+            self.server._curator_count += 1
+            request_id = f"mreq_{self.server._curator_count:032x}"
+            self.server.curator_requests.append({
+                "request_id": request_id,
+                "stated_text": message["stated_prefs"]["text"],
+                "candidate_ids": [c["id"] for c in message["candidates"]], "returned": returned,
+            })
         else:
             status, text = answer_for(body["contents"][0]["parts"][0]["text"])
         payload = text.encode()
         self.send_response(status)
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(payload)))
-        self.send_header("x-middleware-request-id", FAKE_REQUEST_ID)
+        self.send_header("x-middleware-request-id", request_id)
         self.end_headers()
         self.wfile.write(payload)
 
