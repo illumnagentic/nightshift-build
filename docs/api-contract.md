@@ -118,7 +118,8 @@ After prefs are saved:
 - `commute_status`: `pending` while TfL times are being calculated, `ready` when done,
   `failed` if the calculation as a whole failed. On `failed` the frontend shows an
   error and lets the user re-save prefs. A TfL failure for a single listing is not
-  `failed`: that card has `commute.minutes: null` and the status stays `ready`.
+  `failed`: the status stays `ready`. With no `max_commute_min` set, that card is served
+  with `commute.minutes: null`. With a limit set, that listing is not served.
   Commute is optional: when no `commute_postcode` was saved, `commute_postcode` and
   `commute_status` are `null` and `hard.max_commute_min` is `null`.
 
@@ -156,8 +157,8 @@ or `failed`.
 Re-saving prefs mid-session discards every served card that has not been swiped. Their
 `decision_id`s are dropped, and swiping or sending feedback on one returns 404
 `decision_not_found`. Already swiped decisions are kept. The frontend should discard its
-local deck and fetch a new one once `commute_status` is `ready`. The dropped cards
-return to the pool and can be served again.
+local deck and fetch a new one at once, without waiting for `commute_status`. The
+dropped cards return to the pool and can be served again.
 
 Errors: 422 `invalid_postcode`. 502 `parse_failed` if the preferences could not be read
 (the stored prefs are unchanged; the frontend shows the message and lets the user retry).
@@ -275,6 +276,10 @@ Response 200 (`empty_reason` is `null` here; an empty deck is
 - `commute` is `null` when the user saved no `commute_postcode`. With a postcode,
   `commute.minutes` is `null` until that listing's time is cached, and stays `null` if
   TfL had no answer. The deck never waits for commute.
+  When `max_commute_min` is set, a listing with no cached time (still pending, or TfL
+  had no answer) does not pass the hard filters. The deck is therefore short while
+  `commute_status` is `pending`, and an empty deck on `failed` has
+  `empty_reason: "no_matches"`.
 - `chips[]` is chosen by the backend per listing, from the photo flags and listing
   fields, by the rules in [Chip catalogue](#chip-catalogue). The frontend renders
   `chips[]` as sent, in the order sent, and never filters, adds or reorders chips. A

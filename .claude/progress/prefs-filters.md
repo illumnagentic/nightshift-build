@@ -458,6 +458,21 @@ touches only those two hunks.
 - [x] Redo implemented — README.md re-seed sentence added; decisions.md Commute re-wrapped, word-for-word identical when whitespace-collapsed; check-process-refs exit 0 (2026-10-25)
 - [x] Redo reviewed — evidence: diff limited to worker/README.md and docs/decisions.md hunks, max added line 86 chars, no banned words (2026-10-25)
 
+ESCALATED (arbiter) 2026-10-25: qa-gate finding 2 — `web/` on main still requires a commute postcode (`prefsForm.ts` `canSave`), its mock refuses a missing postcode and returns 409 `commute_pending` / `commute_failed` from `getDeck`, and `deckState.ts` / `DeckScreen.tsx` handle those codes; after this merge the mock contradicts the contract. Any `web/` change escalates, and `web/` is Yewen's. This escalation covers that `web/` follow-up only. It does not block B3: B3 changes nothing under `web/`, the contract change only loosens it (a postcode is still accepted; the removed codes are never sent), and the real backend works with today's frontend. B3 may merge once the Step 8 contract redo (findings 1 and 3) passes review. The human must tell Yewen: postcode optional in the prefs form and mock, drop the commute 409s from the mock and the blocked deck state, cards may have `commute: null`.
+
+**Redo 2 (arbiter FIX_NOW, 2026-10-25)**: contract matches optional commute. Files:
+`docs/api-contract.md` (PUT /prefs re-save sentence: fetch a new deck at once, not
+"once `commute_status` is `ready`"; Deck commute bullet: with `max_commute_min` set,
+listings with no cached time do not pass, so the deck is short while `pending` and
+empty with `no_matches` on `failed`; align the GET /prefs "`commute.minutes: null`"
+sentence to apply only without a limit), this file (B4 HOOKS bullet replacing the
+qa-gate "not yet ruled" note), `evidence/prefs-filters/step-8.md`. No error code or
+enum added or removed. Done when no contract sentence makes the deck depend on
+`commute_status`, the short/empty deck is stated, and check-process-refs exits 0.
+
+- [x] Redo 2 implemented — docs/api-contract.md three hunks (GET /prefs commute_status bullet, PUT /prefs re-save, Deck commute bullet), B4 HOOKS bullet, evidence/prefs-filters/step-8.md note; check-process-refs exit 0 (2026-10-25)
+- [x] Redo 2 reviewed — step-reviewer PASS: `git diff HEAD -- docs/api-contract.md` is exactly three hunks; wording matches `passes` / `matching_listing_ids_for_postcode` in worker/src/filters.py; no enum or error code changed; nothing under web/; check-process-refs exit 0 (2026-10-25)
+
 ---
 
 ## KICKOFF RULINGS
@@ -531,22 +546,31 @@ Q13: Optional Worker vars `GEMINI_BASE` / `TFL_BASE` overriding the upstream hos
 2026-10-24 | `.claude/kit-config.md` Test line | the backend test command targets `BASE_URL=http://localhost:8788`, while the qa-gate run used :8790 in a second worktree | low (qa-gate finding) — accepted by arbiter 2026-10-24: 8788 is the test-mode port worker/README.md documents for the normal case; another port only matters when two servers run at once, and BASE_URL (plus FAKE_PORT, which Step 6 documents) already overrides it
 2026-10-24 | `worker/README.md` TfL commute times | says the status becomes `ready` "when every listing has a cached time", untrue since Step 6 (an unroutable listing is left unknown) | low (qa-gate finding 2) — FIX_NOW by arbiter 2026-10-24: one sentence, and the README is what the warm-up run-book is read from; folded into AMENDMENTS (arbiter) Step 7 — resolved by Step 7 2026-10-24
 2026-10-24 | this file, AMENDMENTS Step 6 | rule (b) was edited in place (dated, attributed) rather than kept with the replacement appended | low (qa-gate note 4) — accepted by arbiter 2026-10-24: the progress file is committed, so the original rule (b) is intact in git history, the in-place note is dated, attributed and points to Step 6 Redo 2, which states the replacement in full; restoring it changes no behaviour. Not a precedent: future amendment changes are appended, never edited in place, and REQUIREMENTS (LOCKED) is untouched
+2026-10-25 | `docs/api-contract.md` PUT /prefs re-save paragraph | says the frontend fetches a new deck "once `commute_status` is `ready`"; without a postcode the status is `null` and the Deck section says the deck never waits | low (qa-gate finding 1) — FIX_NOW by arbiter 2026-10-25: one sentence inside Step 8's declared contract scope, and it is the contract Yewen builds F3/F4 against; Step 8 redo — resolved by Step 8 Redo 2 2026-10-25
+2026-10-25 | `web/src/prefs/prefsForm.ts`, `web/src/api/mock.ts`, `web/src/deck/deckState.ts`, `web/src/deck/DeckScreen.tsx` (origin/main) | frontend still requires a postcode and the mock still returns 409 `commute_pending` / `commute_failed`; mock contradicts the contract after merge | medium (qa-gate finding 2) — ESCALATED by arbiter 2026-10-25: any `web/` change escalates; follow-up for Yewen; does not block B3's merge (see Step 8)
+2026-10-25 | `docs/api-contract.md` Deck commute line; B4 HOOKS | with `max_commute_min` set, listings without a cached time are excluded, so the deck is short while `pending` and empty (`no_matches`) on `failed`; "the deck never waits" reads as if the limit had no effect | low (qa-gate finding 3) — FIX_NOW by arbiter 2026-10-25: state today's behaviour in the contract now (two sentences, in Step 8's Deck commute scope) so neither B4 nor F3 builds on a wrong reading; exclusion stays (zero hard-constraint violations is decided); whether B4 adds a commute-specific `empty_reason` is B4's call, and a new enum value the frontend must handle escalates there; replace the "not yet ruled" B4 HOOKS note; Step 8 redo — resolved by Step 8 Redo 2 2026-10-25
 
 ---
 
 ## VERIFICATION
 
-- [x] All step checkboxes ticked with evidence — steps 1–7 and the redos of steps 1, 4 and 6 (Redo, Redo 2, Redo 3), all dated 2026-10-24, in order (2026-10-24)
-- [x] Every evidence path in this file exists — evidence/prefs-filters/step-1.md to step-7.md (2026-10-24)
-- [x] Test suite run — result: fresh worktree at d1f8deb, fresh D1 (`worker/scripts/seed.sh` exit 0), `uv sync --group dev` exit 0, `npm ci` exit 0; test-mode server :8790 / inspector 9241, fake on 8801: `FAKE_PORT=8801 BASE_URL=http://localhost:8790 uv run --group dev pytest tests -q` 179 passed, exit 0, run twice on one D1, both exit 0; server-less modules (test_filters, test_prefs_unit, test_mubit, test_tfl_unit) 99 passed, exit 0; web `npm test` 121 passed, exit 0 (2026-10-24)
-- [x] Lint run — result: not configured in kit-config (2026-10-24)
-- [x] Typecheck run — result: web `npm run typecheck` exit 0; no backend typecheck configured (2026-10-24)
-- [x] Build run — result: web `npm run build` exit 0 (2026-10-24)
-- [x] Diff contains no files outside declared scope — every file maps to a step's Files in scope, an Evidence location or this file; docs/api-contract.md changes only the ruled parse_failed line; check-process-refs exit 0 (2026-10-24)
-- [x] Tradeoff ledger reviewed — signed by arbiter (full automation); every TRADEOFFS and SPOTTED entry carries an arbiter verdict or a resolved marker, all inside their sections (2026-10-24)
-- [ ] Human eye test completed — not human-verified (full automation) — smoke check: 12 of 12 as expected, against the test-mode server with the fake upstream, counts read from the local D1. 401 without header; user created; GET all-null; PUT `wc1e6bt` max 45 → 200 pending `WC1E 6BT`; `ready` on poll 8, 96 of 96 cached, 0 null; `Liverpool Street` → 422 invalid_postcode; one always-failing listing (rm-93826380), `NW3 4AB` → `ready` after 12 polls, never `failed`, 95 of 96 cached, the failing one not cached; 500 outage after the first poll, `EC4M 7AN` → `pending, pending, pending, failed`, 12 cached, no TfL call on a further GET; re-save → `ready` in 7 polls, 84 new TfL calls (96 − 12); 200 `{}` outage after the first poll, `EC3M 4AJ` → `pending, pending, pending, failed`, cache 12 rows before and after, 0 null, no TfL call on a further GET; re-save → `ready` in 7 polls, 84 new TfL calls, 96 cached, 0 null; 200 `{}` from the start, `EC2A 4NE` → `pending, pending, failed`, nothing cached. Fake saw 7 Gemini calls, fake key only; no live call made.
+- [x] All step checkboxes ticked with evidence — steps 1–8 and the redos of steps 1, 4, 6 (Redo, Redo 2, Redo 3) and 8; steps 1–7 dated 2026-10-24, step 8 and its redo 2026-10-25, in order (2026-10-25)
+- [x] Every evidence path in this file exists — evidence/prefs-filters/step-1.md to step-8.md (2026-10-25)
+- [x] Test suite run — result: fresh worktree at c5cf55d, fresh D1 (`worker/scripts/seed.sh` exit 0), `uv sync --group dev` exit 0; test-mode server :8790 / inspector 9241, fake on 8801: `FAKE_PORT=8801 BASE_URL=http://localhost:8790 uv run --group dev pytest tests -q` 183 passed, exit 0, run twice on one D1, both exit 0; server-less modules (test_filters, test_prefs_unit, test_mubit, test_tfl_unit) 99 passed, exit 0; web on the branch: `npm ci` exit 0, `npm test` 121 passed, exit 0; web on the merge result with origin/main d1dc2c8 (`git merge-tree` clean, tree 994f60d): `npm ci` exit 0, `npm test` 178 passed, exit 0 (2026-10-25)
+- [x] Lint run — result: not configured in kit-config (2026-10-25)
+- [x] Typecheck run — result: web `npm run typecheck` exit 0 on the branch and on the merge result; no backend typecheck configured (2026-10-25)
+- [x] Build run — result: web `npm run build` exit 0 on the branch and on the merge result (2026-10-25)
+- [x] Diff contains no files outside declared scope — every file maps to a step's Files in scope, an Evidence location or this file; `docs/api-contract.md` changes only the parse_failed line and the Step 8 Preferences and Deck hunks; `docs/decisions.md` only Commute; `docs/plan.md` only B3; check-process-refs exit 0 (2026-10-25)
+- [x] Tradeoff ledger reviewed — signed by arbiter (full automation); every TRADEOFFS and SPOTTED entry carries an arbiter verdict or a resolved marker (2026-10-25)
+- [ ] Human eye test completed — not human-verified (full automation) — smoke check: 11 of 11 as expected, against a test-mode server (:8790) with the fake upstream (:8801), cache counts read from the local D1. 401 with no header and with an unknown id; user created; GET all-null; PUT with no postcode → 200, `commute_postcode` and `commute_status` null, three GETs stay null, 0 TfL calls; PUT with `commute_postcode: null` → same; `max_commute_min` 45 with no postcode, and with a null postcode → 422 `invalid_request`, no Gemini call, prefs unchanged; same user re-saved with `wc2h7la` max 45 → 200 `WC2H 7LA` `pending`, `ready` on poll 8, 96 of 96 cached, 0 null; `Liverpool Street` → 422 `invalid_postcode`; one always-failing listing, `NW5 1TL` → `ready` on poll 12, never `failed`, 95 of 96 cached, the failing one not cached; 500 outage after the first poll, `EC4A 1BR` → `pending, pending, pending, failed`, 12 cached, no TfL call on a further GET; re-save → `ready` in 7 polls, 84 new TfL calls, 96 cached; 200 `{}` outage after the first poll, `EC3V 3NG` → `pending, pending, pending, failed`, 12 rows before and after, 0 null; re-save → `ready` in 7 polls, 84 new TfL calls, 96 cached, 0 null; 200 `{}` from the start, `EC1V 9HX` → `pending, pending, failed`, nothing cached. Fake saw 9 Gemini calls, fake key only; no live Mubit or TfL call.
 
-QA-GATE: PASS 2026-10-24
+QA-GATE: PASS WITH FINDINGS 2026-10-25
+
+Findings for a ruling (not yet in SPOTTED, NOT FIXED):
+
+1. `docs/api-contract.md` line 158–159 (PUT /prefs, re-save paragraph) still says the frontend fetches a new deck "once `commute_status` is `ready`". Without a postcode the status is `null` and never becomes `ready`, and the Deck section now says the deck never waits for commute. A Step 8 leftover inside Step 8's declared contract scope.
+2. `web/` on origin/main still treats commute as required and the deck as blocking on it: `web/src/prefs/prefsForm.ts` `canSave` needs a postcode; `web/src/api/mock.ts` refuses a missing postcode ("A commute postcode is required.") and returns 409 `commute_pending` / `commute_failed` from `getDeck`; `web/src/deck/deckState.ts` `BLOCKED_CODES` and `DeckScreen.tsx` handle both. After merge the mock contradicts the contract. Against the real backend the web still works (it always sends a postcode; the extra codes are never sent), so nothing breaks, but the frontend cannot use the optional commute and its mock teaches the old behaviour. Any `web/` change escalates, so this is for Yewen.
+3. B4 HOOKS does not say what a deck looks like when `max_commute_min` is set and commute is `pending` or `failed`: `matching_listing_ids_for_postcode` excludes every listing without a cached time, so the deck is thin while warming and empty (`no_matches`) on `failed`. Consistent with zero hard-constraint violations, but at odds with "the deck never waits for commute" as a user would read it. B4 needs to decide whether that is acceptable or whether `empty_reason` needs a commute-specific value.
 
 ---
 
@@ -554,130 +578,142 @@ QA-GATE: PASS 2026-10-24
 
 ### What was built
 
-A user can now save their house-hunting wishes in plain English, with a commute postcode
-and an optional maximum commute. The backend sends the text through Mubit to Gemini and
-stores firm limits (price, bedrooms, type, EPC, tenure, lease) apart from softer wishes.
-It then works out public-transport commute times from every matching listing to that
-postcode with TfL, one batch per `GET /api/prefs` poll, and caches them so the next user
-with that postcode pays nothing. A filter function in code drops any listing that breaks
-a firm limit. B4 will use it to build the deck.
+A user can save their house-hunting wishes in plain English. The backend sends the text
+through Mubit to Gemini and stores firm limits (price, bedrooms, type, EPC, tenure,
+lease) apart from softer wishes. A filter in code drops any listing that breaks a firm
+limit; B4 will use it to build the deck. A commute postcode is now optional. With one,
+the backend works out public-transport times from every matching listing to it with
+TfL, one batch per `GET /api/prefs` poll, cached per (listing, postcode). Without one,
+no TfL work runs and nothing waits for it.
 
 ### What to check yourself
 
-Full automation was on, so no human has looked at this. The QA smoke check below ran
+Full automation was on, so no human has looked at this. The smoke check below ran
 instead, against a test-mode server with a fake Mubit and a fake TfL
 (`worker/tests/fake_upstream.py`). Nothing reached Mubit or TfL.
 
-1. Fresh worktree at d1f8deb, `worker/scripts/seed.sh` (exit 0), then in `worker/`:
+1. Fresh worktree at c5cf55d, `worker/scripts/seed.sh` (exit 0), then in `worker/`:
    `uvx --from workers-py pywrangler dev --port 8790 --inspector-port 9241 --var MUBIT_API_KEY:test-key-not-a-real-key --var GEMINI_BASE:http://127.0.0.1:8801 --var TFL_BASE:http://127.0.0.1:8801`,
    with the fake running on 8801 inside the smoke script.
-2. `GET http://localhost:8790/api/prefs` with no header → 401 `unknown_user`. Pass.
-3. `POST /api/users` `{"username":"qa_gate5b_main"}` → 201. Pass.
-4. `GET /api/prefs` with `X-User-Id` → 200, all five fields null. Pass.
-5. `PUT /api/prefs` `{"text":"Two bed flat under 550k, near a tube station","commute_postcode":"wc1e6bt","max_commute_min":45}`
-   → 200, `WC1E 6BT`, `pending`, `parsed.hard.max_commute_min` 45. Pass.
-6. Polled `GET /api/prefs`: `ready` on poll 8. 96 of 96 pool listings cached, none null. Pass.
-7. `PUT /api/prefs` with `"commute_postcode":"Liverpool Street"` → 422 `invalid_postcode`. Pass.
-8. One pool listing (rm-93826380) always failing on the fake, postcode `NW3 4AB` → `ready`
-   after 12 polls, never `failed`, 95 of 96 cached, the failing one left unknown. Pass.
-9. Postcode `EC4M 7AN`: first poll answered, then every journey to it answered 500.
-   Result `pending, pending, pending, failed`. A further GET stayed `failed` and made no
-   TfL call. Pass.
-10. Outage cleared, same prefs re-saved → `ready` in 7 polls, with 84 new TfL calls
-    (96 − 12). None of the 12 listings cached before the outage was asked again. Pass.
-11. Postcode `EC3M 4AJ`: first poll answered, then every journey answered 200 with body
-    `{}`. Result `pending, pending, pending, failed`. The cache held 12 rows, none null,
-    before and after: nothing was cached from the `{}` replies. A further GET stayed
-    `failed` with no TfL call. Re-saved after clearing → `ready` in 7 polls, 84 new TfL
-    calls, 96 cached, none null. Pass.
-12. Postcode `EC2A 4NE` answering 200 `{}` from the first call → `pending, pending,
-    failed`, nothing cached. Pass.
+2. `GET http://localhost:8790/api/prefs` with no header, and with `X-User-Id: u_nope` →
+   401 `unknown_user`. Pass.
+3. `POST /api/users` with a new username → 201. `GET /api/prefs` → 200, all five fields
+   null. Pass.
+4. `PUT /api/prefs` `{"text":"Two bed flat under 550k, near a tube station"}` → 200,
+   `commute_postcode` null, `commute_status` null, `parsed.hard.max_commute_min` null.
+   Three GETs stay null. The fake saw no TfL call. Same with `"commute_postcode": null`.
+   Pass.
+5. `PUT /api/prefs` `{"text":"…","max_commute_min":45}`, and with
+   `"commute_postcode": null` added → 422 `invalid_request` ("max_commute_min needs a
+   commute_postcode."). No Gemini call. Stored prefs unchanged. Pass.
+6. Same user re-saved with `"commute_postcode":"wc2h7la","max_commute_min":45` → 200,
+   `WC2H 7LA`, `pending`, `hard.max_commute_min` 45. Polled: `ready` on poll 8, 96 of
+   96 pool listings cached, none null. Pass.
+7. `"commute_postcode":"Liverpool Street"` → 422 `invalid_postcode`. Pass.
+8. One pool listing always failing on the fake, `NW5 1TL` → `ready` on poll 12, never
+   `failed`, 95 of 96 cached, the failing one not cached. Pass.
+9. `EC4A 1BR`: first poll answered, then every journey answered 500 →
+   `pending, pending, pending, failed`, 12 cached. A further GET stayed `failed` with no
+   TfL call. Re-saved after clearing → `ready` in 7 polls, 84 new TfL calls, 96 cached.
+   Pass.
+10. `EC3V 3NG`: first poll answered, then every journey answered 200 `{}` →
+    `pending, pending, pending, failed`. 12 rows before and after, none null. Re-saved
+    after clearing → `ready` in 7 polls, 84 new TfL calls, 96 cached, none null. Pass.
+11. `EC1V 9HX` answering 200 `{}` from the first call → `pending, pending, failed`,
+    nothing cached. Pass.
 
-If you want to look yourself with real services: start the normal dev server
+The branch merges into origin/main (d1dc2c8) with no conflicts, including
+`docs/api-contract.md`, `docs/decisions.md` and `docs/plan.md`. The web tests (178),
+typecheck and build pass on the merge result.
+
+If you want to look yourself with real services: re-seed first (`worker/scripts/seed.sh`
+with the dev server stopped), then start the normal dev server
 (`cd worker && uvx --from workers-py pywrangler dev`). Each `PUT /api/prefs` there is a
-paid Gemini call and real TfL traffic. Save one postcode, then poll `GET /api/prefs`
-every 3 seconds until `ready`. Expect a few minutes for a new postcode.
+paid Gemini call. Save once with no postcode and confirm `commute_status` is `null`. A
+save with a postcode makes real TfL traffic; poll `GET /api/prefs` every 3 seconds and
+expect a few minutes to `ready`.
 
 ### Tools that will help
 
-- curl, for the requests above. Always send `X-User-Id`. Watch `commute_status` across
-  polls. One poll in a failing run can take 10 to 15 seconds; that is the extra check
-  call, not a hang.
+- curl, for the requests above. Always send `X-User-Id`. With a postcode, watch
+  `commute_status` across polls. One poll in a failing run can take 10 to 15 seconds;
+  that is the extra check call, not a hang.
 - A D1 client (`npx wrangler d1 execute haka --local --command "..."` in `worker/`):
   `SELECT postcode, count(*), sum(minutes IS NULL) FROM commute_cache GROUP BY 1` shows
-  how far each postcode has got and how many listings have no journey. Compare the count
-  with the pool size before trusting a `ready`.
-  `SELECT commute_status, commute_fail_streak FROM prefs` shows why a user is stuck.
+  how far each postcode has got. Compare the count with the pool size before trusting a
+  `ready`. `SELECT user_id, commute_postcode, commute_status, commute_fail_streak FROM prefs`
+  shows who has a postcode and why a user is stuck.
 - The `pywrangler dev` console: `TfL call failed` warnings, and `Prefs parser` warnings
-  when a save returns 502.
+  when a save returns 502. A 500 on a postcode-less save means the local D1 predates
+  Step 8: re-seed.
 - The Mubit console: each real save shows one call on `gemini-3.8-flash`. Its `mreq_` id
   is in `prefs.parse_request_id`.
 
 ### What is not done
 
+- Three findings from this gate are not yet ruled (see VERIFICATION): the stale "once
+  `commute_status` is `ready`" line in the contract; `web/` and its mock still require a
+  postcode and still model the deck's removed 409 `commute_pending` / `commute_failed`;
+  B4 HOOKS is silent on a thin or empty deck while a commute limit is warming or failed.
+- The frontend cannot save prefs without a postcode yet. That is a `web/` change for
+  Yewen.
 - Re-saving prefs does not yet drop unswiped served cards. B4 must add it to `PUT /prefs`.
 - The commute time is not on a card yet, and the curator does not weigh it yet (B4).
 - No poll cap. A TfL block that never lifts leaves a user `pending` for ever. The user
   can re-save.
 - When TfL times out rather than failing fast, a failing batch may try only about 6 of
-  its 12 listings. Once TfL answers the check call, the postcode can then end `ready`
-  with up to about half of the last 7 to 36 uncached listings never asked. A re-save
-  asks only the uncached ones again.
+  its 12 listings. Once TfL answers the check call, the postcode can end `ready` with up
+  to about half of the last 7 to 36 uncached listings never asked. A re-save asks only
+  the uncached ones again.
 - The same can happen when a second user with a different pool warms the same postcode
-  at the same time as TfL times out: the rotation can step past a listing never asked.
-- If TfL recovers in the seconds between the third failing batch and the check call,
-  the postcode can end `ready` early, with up to 36 listings never answered. Re-save to
-  retry them.
+  at the same time as TfL times out.
+- If TfL recovers in the seconds between the third failing batch and the check call, the
+  postcode can end `ready` early, with up to 36 listings never answered. Re-save to retry.
 - The poll that decides `failed` or `ready` after three failing batches can take about
-  10 seconds, up to about 15. Polls are one at a time, so it only delays the next one.
+  10 seconds, up to about 15.
 - The check-call test (Step 6 Redo 3) depends on the frozen dump's id order and
-  coordinates. It asserts both, so a change makes it fail loudly, not pass wrongly.
-- Listings TfL keeps failing make warm-up slower, up to about twice the polls for that
-  postcode.
+  coordinates. It asserts both, so a change makes it fail loudly.
+- Listings TfL keeps failing make warm-up slower, up to about twice the polls.
+- `schema.sql` changed with no migration. Every laptop must re-run `worker/scripts/seed.sh`
+  (server stopped) after pulling, or a postcode-less save returns 500. The README says so.
 - A soft wish over 120 characters is dropped, not shortened.
 - Test mode depends on `wrangler dev --var` beating `.dev.vars` (checked on wrangler
-  4.152.0). An upgrade could change that. The probe and the fake's 401 would catch it.
+  4.152.0). The probe and the fake's 401 would catch a change.
 - The test-mode guard covers only `test_prefs.py` and `test_commute.py`. A new API test
   module must use the `fake` fixture.
 - The probe leaves a `probe_*` user in the local D1. Re-seed to clear it.
 - The filter loads all 635 listings and filters in Python. Fine at this size.
 - Unknown tenure with unknown lease is excluded under a lease limit. There are none today.
 - Anonymous TfL is slow: about 12 calls per poll, then a 30-second block after about 50
-  calls. Every persona postcode and the demo postcode must be warmed by hand before the
-  persona batch and the recording.
-- If two polls for one user run at the same time, both can count a failure. Clients
-  poll one at a time today.
+  calls. Any postcode used in the persona batch or the recording must be warmed by hand
+  first.
+- If two polls for one user run at the same time, both can count a failure.
 - If zoneinfo is missing, "today" is taken in UTC. Still a Tuesday at 08:30.
 - The status-write guard compares `updated_at` to the second, and no test covers it.
-- The Step 6 and Step 7 tests prove "cached" from the fake's request log, not a D1 read.
-  This gate's smoke check read the D1 directly and it matched.
-- The kit-config Test line names :8788. Use `BASE_URL` and `FAKE_PORT` when another server
-  holds that port.
+- The Step 6 and 7 tests prove "cached" from the fake's request log, not a D1 read. This
+  gate's smoke check read the D1 directly and it matched.
+- The kit-config Test line names :8788. Use `BASE_URL` and `FAKE_PORT` when another
+  server holds that port.
 - AMENDMENTS Step 6 rule (b) was edited in place, not appended. The original is in git
   history.
-- Every entry above was accepted by the arbiter, not by a person.
-- Not yet ruled on: nothing. The previous gate's three findings were ruled: the 200 `{}`
-  reading and the README sentence were fixed in Step 7; the offset shift was accepted.
+- The header line `Status` still reads "in progress (reopened 2026-10-25 for Step 8)".
+- Every tradeoff above was accepted by the arbiter, not by a person.
 
 ### What could bite you
 
-1. **Warming the commute cache is a manual job, and it is slow.** About 366 London
-   listings, and up to 635, × 5 destinations on anonymous TfL is 15 to 60 minutes of
-   polling. Poll faster than every 2 to 3 seconds and you hit the 30-second block. If
-   this is left until Saturday afternoon, the persona batch waits on it. A `ready` can
-   still hide a few unasked listings (see What is not done), so check the cache count
-   against the pool after warming. Warm each destination with one user, alone.
-2. **A real TfL "no journey" answer we have not seen.** Since Step 7, only a 404 or a 200
-   with an explicit empty `journeys` list is cached as "no journey". Anything else odd is
-   retried, and if it persists the postcode ends `failed`. That is the safe way round,
-   but if real TfL answers some unroutable listing in a third shape, that postcode will
-   keep failing instead of going `ready`. The pilot did not record the status code of its
-   two nulls. If a real postcode ends `failed` while TfL is plainly up, look at the
-   `TfL call failed` lines and the raw reply for the listings that never cache.
-3. **`failed` is the only signal of a TfL problem, and there is no poll cap.** A permanent
-   429 keeps a user `pending` for ever, and nothing in `web/` yet shows `failed` or times
-   out (F4). The persona swiper (B6) must handle both: stop after a sensible number of
-   polls, and re-save on `failed`.
+1. **Old local databases.** Step 8 made two `prefs` columns nullable with no migration. A
+   laptop that pulls this and does not re-seed returns 500 on any save without a
+   postcode. Yewen's laptop is the likely one, as soon as the frontend allows a blank
+   postcode.
+2. **A commute limit with commute not ready.** The deck no longer waits for commute, but
+   a set `max_commute_min` still excludes every listing without a cached time. A user
+   who sets a limit and opens the deck while TfL is still working sees a short deck, and
+   on `failed` an empty one with `no_matches`. B4 has to decide what to show.
+3. **Warming is still manual and slow when a postcode is used.** About 366 London
+   listings, up to 635, per destination on anonymous TfL is minutes each. If personas or
+   the recording use postcodes, warm them before Saturday afternoon, one user at a time,
+   polling no faster than every 2 to 3 seconds. If they do not use postcodes, none of
+   this applies.
 
 ### B4 HOOKS
 
@@ -705,6 +741,11 @@ B4 must also:
   `matching_listing_ids_for_postcode`; without one (`commute_postcode` null), call
   `matching_listing_ids(db, hard)` with `commutes=None`. The card `commute` is `null`
   with no postcode; with one, `commute.minutes` is `null` until that listing is cached.
+- Commute exclusion stands (arbiter 2026-10-25, zero hard-constraint violations) and the
+  contract now states it: with `max_commute_min` set, a listing with no cached time is not
+  served, so the deck is short while `pending` and empty (`no_matches`) on `failed`. B4
+  decides whether to add a commute-specific `empty_reason`; a new enum value means a
+  `web/` change, which escalates.
 - Put the delete of the user's unswiped served cards in `PUT /prefs`, in the same handler
   that stores the new prefs, once B4 creates the decisions table (kickoff ruling Q10).
 - Poll cap: a permanent TfL 429 leaves a user `pending` for ever (see SPOTTED).

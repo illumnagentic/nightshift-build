@@ -33,3 +33,11 @@ removed shapes are now asserted as 200 in `test_no_postcode_is_saved_with_null_c
 - Server-less modules (test_filters, test_prefs_unit, test_mubit, test_tfl_unit): 99 passed, exit 0.
 - Full suite `FAKE_PORT=8801 BASE_URL=http://localhost:8790 uv run --group dev pytest tests -q`:
   183 passed (179 before, plus 4 new), exit 0.
+
+## Contract wording on commute and the deck
+
+With `max_commute_min` set, a listing with no cached time does not pass the hard filters
+(`passes` in `worker/src/filters.py`), so the deck is short while the status is `pending`
+and empty on `failed`. The contract now says so, and says the frontend refetches the deck
+at once after a re-save instead of waiting for `commute_status`. No error code or enum value
+changed.
