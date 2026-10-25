@@ -1,7 +1,10 @@
 """Black-box tests for GET /api/deck and the deck drop on PUT /api/prefs, against `pywrangler dev` in test mode
 (see worker/README.md). The fake upstream answers the curator by sorting the candidate ids."""
+import json
+import re
 import secrets
 import sqlite3
+import subprocess
 import sys
 from pathlib import Path
 
@@ -222,3 +225,51 @@ def test_place_gives_a_ranked_card_when_the_band_is_empty_or_used_up():
     picks = deck.place(ranking, 3, 3, "u")
     assert [p[1] for p in picks] == ["ranked", "exploration", "ranked"]
     assert sorted(p[0] for p in picks) == ["a", "b", "c"]
+
+
+WORKER_DIR = Path(__file__).resolve().parent.parent
+
+
+def d1_rows(sql):
+    """Rows of a SELECT against the local D1 in worker/.wrangler. This reads the database of the server under test
+    only when that server was started from this same worker directory (the BASE_URL server)."""
+    run = subprocess.run(["npx", "--yes", "wrangler", "d1", "execute", "haka", "--local", "--json", "--command", sql],
+                         cwd=WORKER_DIR, capture_output=True, check=True)
+    return json.loads(run.stdout)[0]["results"]
+
+
+def stored_rows(user, table):
+    assert re.fullmatch(r"u_[0-9a-f]+", user)
+    return d1_rows(f"SELECT * FROM {table} WHERE user_id = '{user}'")
+
+
+def test_stored_mreq_id_is_the_id_the_curator_call_returned(fake):
+    first, second = new_user(), new_user()
+    save(first), save(second)
+    before = len(fake.curator_requests)
+    get_deck(first)
+    sent = fake.curator_requests[before]["request_id"]
+    get_deck(second)
+    other = fake.curator_requests[before + 1]["request_id"]
+    assert len(fake.curator_requests) == before + 2 and sent != other
+    (row,) = stored_rows(first, "curator_calls")
+    assert row["mreq_id"] == sent and sent.startswith("mreq_")
+    assert row["profile_version"] == deck.EMPTY_PROFILE_VERSION
+    decisions = stored_rows(first, "decisions")
+    assert len(decisions) == 10
+    assert {d["curator_call_id"] for d in decisions} == {row["call_id"]}
+    assert {d["profile_version"] for d in decisions} == {row["profile_version"]}
+    (row_two,) = stored_rows(second, "curator_calls")
+    assert row_two["mreq_id"] == other
+    assert other not in json.dumps([row, *decisions])
+
+
+def test_failed_curator_call_stores_the_id_it_returned(fake):
+    user = new_user()
+    save(user, text="[[curator_http_500]] " + TEXT)
+    before = len(fake.curator_requests)
+    status, payload = call("GET", "/api/deck?n=10", user_id=user)
+    assert status == 502, payload
+    (row,) = stored_rows(user, "curator_calls")
+    assert row["status"] == "failed"
+    assert row["mreq_id"] == fake.curator_requests[before]["request_id"]

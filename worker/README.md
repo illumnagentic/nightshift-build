@@ -124,7 +124,7 @@ These modules need no server and no network, and run with a plain
 `tests/test_users.py`, `tests/test_prefs.py`, `tests/test_commute.py` and `tests/test_deck.py` call the API and
 need the seeded test-mode server. Each run adds users to the local D1. The fake answers
 a few postcodes with 500 so the suite can be repeated without re-seeding, but re-seed
-to clear the users. Stop the dev server before running `worker/scripts/seed.sh` and
+to clear the users. `test_deck.py` also reads the local D1 with `npx wrangler d1 execute` from this directory, so the server under test must have been started from this same `worker/` directory. Stop the dev server before running `worker/scripts/seed.sh` and
 start it again afterwards, or the server returns 500.
 
 ## Curator and deck
