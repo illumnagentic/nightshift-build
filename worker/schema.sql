@@ -60,3 +60,23 @@ CREATE TABLE IF NOT EXISTS decisions (
   swiped_at TEXT,                            -- ISO 8601 UTC; NULL = not swiped yet
   UNIQUE (user_id, listing_id)               -- a listing is served to a user once
 );
+
+CREATE TABLE IF NOT EXISTS favourites (
+  user_id TEXT NOT NULL REFERENCES users(user_id),
+  listing_id TEXT NOT NULL REFERENCES listings(id),
+  decision_id TEXT NOT NULL,                 -- the superliked decision; no foreign key, a prefs re-save never drops a swiped one
+  added_at TEXT NOT NULL,                    -- ISO 8601 UTC
+  PRIMARY KEY (user_id, listing_id)
+);
+
+CREATE TABLE IF NOT EXISTS profile_versions (
+  user_id TEXT NOT NULL REFERENCES users(user_id),
+  version INTEGER NOT NULL,                  -- 1, 2, 3 ... per user; no row = version 0
+  created_at TEXT NOT NULL,                  -- ISO 8601 UTC
+  cause_type TEXT NOT NULL CHECK (cause_type IN ('swipe', 'feedback', 'flag_correction', 'favourite_removed')),
+  decision_id TEXT,                          -- set for swipe and feedback
+  flag_id TEXT,                              -- set for flag_correction
+  listing_id TEXT,                           -- set for favourite_removed
+  factors_json TEXT NOT NULL CHECK (json_valid(factors_json) AND json_type(factors_json) = 'array'), -- the profile at this version
+  UNIQUE (user_id, version)
+);

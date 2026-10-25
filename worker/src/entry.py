@@ -15,6 +15,7 @@ import asgi
 import deck
 import mubit
 import prefs
+import taste
 import tfl
 
 USERNAME_RE = re.compile(r"[A-Za-z0-9_-]{1,32}")
@@ -195,6 +196,39 @@ async def get_deck(request: Request, n: int = Query(10, ge=1, le=10), user_id: s
         raise ApiError(409, "prefs_missing", "Save your preferences before asking for a deck.")
     except deck.CuratorFailed:
         raise ApiError(502, "curator_failed", "We could not pick properties for you. Please try again.")
+
+
+@api.post("/decisions/{decision_id}/swipe")
+async def swipe(decision_id: str, request: Request, body: dict = Body(...), user_id: str = Depends(current_user)):
+    action = body.get("action")
+    if action not in ("left", "right", "superlike"):
+        raise ApiError(422, "invalid_request", "action must be left, right or superlike.")
+    db = request.scope["env"].DB
+    rows = await deck._all(db, "SELECT listing_id, swiped_at FROM decisions WHERE decision_id = ? AND user_id = ?", decision_id, user_id)
+    if not rows:
+        raise ApiError(404, "decision_not_found", "No such decision.")
+    if rows[0]["swiped_at"] is not None:
+        raise ApiError(409, "already_swiped", "That card has already been swiped.")
+    swiped = (await deck._all(db, "SELECT COUNT(*) AS n FROM decisions WHERE user_id = ? AND swiped_at IS NOT NULL", user_id))[0]["n"]
+    now = deck._now()
+    # The condition decides, so two simultaneous swipes cannot both win.
+    updated = await db.prepare(
+        "UPDATE decisions SET action = ?, swiped_at = ? WHERE decision_id = ? AND user_id = ? AND swiped_at IS NULL"
+    ).bind(action, now, decision_id, user_id).run()
+    if updated.meta.changes != 1:
+        raise ApiError(409, "already_swiped", "That card has already been swiped.")
+    if action == "superlike":
+        await db.prepare(
+            "INSERT INTO favourites (user_id, listing_id, decision_id, added_at) VALUES (?, ?, ?, ?) ON CONFLICT (user_id, listing_id) DO NOTHING"
+        ).bind(user_id, rows[0]["listing_id"], decision_id, now).run()
+    version = await taste.bump(db, user_id, "swipe", decision_id=decision_id)
+    return {"decision_id": decision_id, "action": action, "feedback_required": swiped < deck.ONBOARDING_CARDS,
+            "favourited": action == "superlike", "profile_version": version}
+
+
+@api.get("/profile")
+async def get_profile(request: Request, user_id: str = Depends(current_user)):
+    return await taste.read(request.scope["env"].DB, user_id)
 
 
 app.include_router(api)
