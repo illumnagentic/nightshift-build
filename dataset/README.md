@@ -669,6 +669,22 @@ writing `__pycache__`. Real environment variables take precedence over `.env`. T
 `details` command skips search results that fail the selection rules and homes already
 in `listings.jsonl`, because the detail response holds the same data.
 
+## Downloading the images
+
+Photos and floorplans are fetched once from the Rightmove CDN, so later steps read local
+files and never call Rightmove again. From `dataset/`:
+
+```bash
+python3 -I -B scripts/fetch_images.py --dataset .
+```
+
+Files land in `photos/<listing_id>/<kind>-<position>.<ext>`. `photos/` is gitignored
+(about 6,800 images). Existing files are skipped, so an interrupted run resumes and a
+second run downloads nothing. `images-manifest.csv` is committed: one row per image with
+`listing_id, kind, position, url, path, sha256, bytes, status`. A failed image has status
+`failed: <reason>` and an empty path; the script lists failures and carries on. The
+manifest is the same after a re-run unless a failed image is fetched on the retry.
+
 ## Loading into D1
 
 **Not yet run.** No D1 database exists yet, so these commands have not been tried. Create
