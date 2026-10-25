@@ -140,3 +140,25 @@
 .dashboard .chart__table td {
   font-variant-numeric: tabular-nums;
 }
+
+.dashboard .dashboard__banner {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #0b0b0b;
+  font-weight: 600;
+}
+
+.dashboard .dashboard__note {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #c9c8c4;
+}
+
+.dashboard .dashboard__caption {
+  margin: 0.25rem 0;
+  max-width: 480px;
+  color: #52514e;
+  font-size: 0.9rem;
+}
+
+.dashboard section {
+  margin-bottom: 2rem;
+}

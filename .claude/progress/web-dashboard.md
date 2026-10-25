@@ -82,27 +82,27 @@ This session's conversation, quoted above. `docs/plan.md`, `docs/decisions.md`,
 
 ## RULES IN FORCE
 
-| Rule                                                                                                                                                                                 | Source                                                  | Applies to              |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------- | ----------------------- |
-| Commits only via `.claude/scripts/safe-commit.sh`, title only, no signature; step commits approved by the orchestrator under delegation                                              | `.claude/CLAUDE.md`, kickoff answer 3                   | commits                 |
-| Commit title `type(scope): message`; scope `web` (progress-only commits `kit`)                                                                                                       | `.claude/CLAUDE.md`, `.claude/kit-config.md`            | commits                 |
-| Plain British English, short sentences, banned marketing words                                                                                                                       | `.claude/CLAUDE.md`                                     | docs, comments, UI text |
-| No scope creep: touch only the step's declared files                                                                                                                                 | `.claude/CLAUDE.md` #1                                  | code, docs              |
-| No new dependencies                                                                                                                                                                  | `.claude/CLAUDE.md` #2, kickoff answer 1                | code                    |
-| Never weaken a test to make it pass                                                                                                                                                  | `.claude/CLAUDE.md` #3                                  | tests                   |
-| No speculative generalisation; walk the ladder                                                                                                                                       | `.claude/CLAUDE.md` #4                                  | code                    |
-| Every tradeoff inserted as the last entry of TRADEOFFS (above `## SPOTTED, NOT FIXED`) when made, and the report says so                                                             | `.claude/CLAUDE.md` #5, `.claude/agents/implementer.md` | progress file           |
-| Implementer never ticks its own boxes                                                                                                                                                | `.claude/CLAUDE.md` #6                                  | progress file           |
-| Evidence has no process wording; the process-wording check runs last and exits 0                                                                                                     | kit check script                                        | evidence                |
-| This laptop runs Prettier on every Edit/Write; `web/src` is now Prettier-formatted, but check `git diff` for unrelated hunks                                                         | `.claude/kit-config.md` brief note                      | code                    |
-| Use the existing `api` client and types; do not duplicate them                                                                                                                       | ladder rung 2                                           | code                    |
-| Arms always in the fixed order base / base + memory / updated + memory, with fixed labels; a `null` arm is shown as missing, never as zero                                           | `docs/decisions.md`, `docs/api-contract.md` (Stats)     | code                    |
-| One measure per chart, never two y-axes; hits on a 0–5 scale, false-exclude rate as a percentage on 0–100%                                                                           | `dataviz` non-negotiables                               | code                    |
-| Error bars show ±1 standard deviation, clipped to the axis range; `n_personas` shown                                                                                                 | `docs/decisions.md` (Headline metric)                   | code                    |
-| Thin marks, recessive grid and axes, text in text colours not bar colours, a hover tooltip per bar, a table view of the numbers, colours validated with the dataviz validator script | `dataviz` skill                                         | code                    |
-| In mock mode only, a visible "Sample numbers from the mock, not real results" banner above the charts; gated on `VITE_API_MODE === "mock"` and absent from other builds | advisor at kickoff (the dashboard is the project's proof) | code |
-| Done-when checks restate rules a step depends on; the human eye test is in VERIFICATION                                                                                              | F3 retro                                                | plan                    |
-| `docs/plan.md` changes only to tick F5, in the merging PR                                                                                                                            | `docs/decisions.md` (Overview)                          | docs                    |
+| Rule                                                                                                                                                                                 | Source                                                    | Applies to              |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------- | ----------------------- |
+| Commits only via `.claude/scripts/safe-commit.sh`, title only, no signature; step commits approved by the orchestrator under delegation                                              | `.claude/CLAUDE.md`, kickoff answer 3                     | commits                 |
+| Commit title `type(scope): message`; scope `web` (progress-only commits `kit`)                                                                                                       | `.claude/CLAUDE.md`, `.claude/kit-config.md`              | commits                 |
+| Plain British English, short sentences, banned marketing words                                                                                                                       | `.claude/CLAUDE.md`                                       | docs, comments, UI text |
+| No scope creep: touch only the step's declared files                                                                                                                                 | `.claude/CLAUDE.md` #1                                    | code, docs              |
+| No new dependencies                                                                                                                                                                  | `.claude/CLAUDE.md` #2, kickoff answer 1                  | code                    |
+| Never weaken a test to make it pass                                                                                                                                                  | `.claude/CLAUDE.md` #3                                    | tests                   |
+| No speculative generalisation; walk the ladder                                                                                                                                       | `.claude/CLAUDE.md` #4                                    | code                    |
+| Every tradeoff inserted as the last entry of TRADEOFFS (above `## SPOTTED, NOT FIXED`) when made, and the report says so                                                             | `.claude/CLAUDE.md` #5, `.claude/agents/implementer.md`   | progress file           |
+| Implementer never ticks its own boxes                                                                                                                                                | `.claude/CLAUDE.md` #6                                    | progress file           |
+| Evidence has no process wording; the process-wording check runs last and exits 0                                                                                                     | kit check script                                          | evidence                |
+| This laptop runs Prettier on every Edit/Write; `web/src` is now Prettier-formatted, but check `git diff` for unrelated hunks                                                         | `.claude/kit-config.md` brief note                        | code                    |
+| Use the existing `api` client and types; do not duplicate them                                                                                                                       | ladder rung 2                                             | code                    |
+| Arms always in the fixed order base / base + memory / updated + memory, with fixed labels; a `null` arm is shown as missing, never as zero                                           | `docs/decisions.md`, `docs/api-contract.md` (Stats)       | code                    |
+| One measure per chart, never two y-axes; hits on a 0–5 scale, false-exclude rate as a percentage on 0–100%                                                                           | `dataviz` non-negotiables                                 | code                    |
+| Error bars show ±1 standard deviation, clipped to the axis range; `n_personas` shown                                                                                                 | `docs/decisions.md` (Headline metric)                     | code                    |
+| Thin marks, recessive grid and axes, text in text colours not bar colours, a hover tooltip per bar, a table view of the numbers, colours validated with the dataviz validator script | `dataviz` skill                                           | code                    |
+| In mock mode only, a visible "Sample numbers from the mock, not real results" banner above the charts; gated on `VITE_API_MODE === "mock"` and absent from other builds              | advisor at kickoff (the dashboard is the project's proof) | code                    |
+| Done-when checks restate rules a step depends on; the human eye test is in VERIFICATION                                                                                              | F3 retro                                                  | plan                    |
+| `docs/plan.md` changes only to tick F5, in the merging PR                                                                                                                            | `docs/decisions.md` (Overview)                            | docs                    |
 
 ---
 
@@ -185,11 +185,11 @@ measure per chart; switching user still resets to Deck; the rate chart passes a 
 
 **Evidence location**: `evidence/web-dashboard/step-3.md`.
 
-- [ ] Implemented
-- [ ] Tested — evidence: (date)
-- [ ] Best practices met — evidence: (date)
-- [ ] Matches locked requirements — evidence: (date)
-- [ ] No scope drift — evidence: (date)
+- [x] Implemented — DashboardScreen.tsx, App.tsx Results tab; typecheck/build exit 0, bundle check mock=1 plain=0 http=0 (2026-10-25)
+- [x] Tested — evidence: npm test exit 0; no screen test, logged as tradeoff; browser checks in evidence/web-dashboard/step-3.md (2026-10-25)
+- [x] Best practices met — evidence: cancelled-fetch guard, error with Retry, role=alert, banner gated on VITE_API_MODE; check-process-refs exit 0 (2026-10-25)
+- [x] Matches locked requirements — evidence: done-when as amended; texts exact, percent format passed to rate chart, n shown only when shared (2026-10-25)
+- [x] No scope drift — evidence: git status shows only DashboardScreen.tsx, dashboard.css, App.tsx, evidence step-3.md, progress file; RULES table diff is padding only (2026-10-25)
 
 ---
 
@@ -198,6 +198,8 @@ measure per chart; switching user still resets to Deck; the rate chart passes a 
 - Step 2, `web/src/dashboard/BarChart.tsx` | no automated test for the chart (no test file in scope, no DOM test library installed) | rendering, hover, focus and table toggle are unchecked until the browser pass | add a DOM test environment (new dependency, needs approval) or rely on the browser checks in Step 3
 - Step 2, `BarChart.tsx` | tooltip is drawn in SVG at a fixed height over the plot and can cover the value text of neighbouring bars | simplest placement without measuring text | HTML tooltip positioned from the pointer
 - Step 2, `BarChart.tsx` | ticks are 0 to 5 in steps of 1 for hits (six gridlines), 0, 50%, 100% for the rate, keyed on `axisMax` | keeps hit ticks integer | pass ticks as a prop
+- Step 3, `web/src/dashboard/DashboardScreen.tsx` | no automated test for the screen (no test file in scope, no DOM test library installed) | loading, error, empty, fallback and banner states are unchecked until the browser pass | add a DOM test environment (new dependency, needs approval)
+- Step 3 | Chart text scales with the SVG and renders about 9–10 px tall at 375 px wide | the recording is made on a laptop where text is full size; a fixed font size needs per-width layout | render text outside the scaled SVG or set a minimum size at narrow widths
 
 ---
 
@@ -208,6 +210,7 @@ measure per chart; switching user still resets to Deck; the rate chart passes a 
 - `web/src/feedback/ChipDialog.tsx`, `FeedbackScreen.tsx` | strength labels written out in both files (from F3) | low
 - `web/src/deck/deck.css` | orphaned `.deck-feedback` rules (from F3) | low
 - `web/src/prefs/PrefsScreen.tsx`, `web/src/favourites/FavouritesScreen.tsx` | generic network message written out instead of reusing `GENERIC_ERROR_MESSAGE` (from F4 gate) | low
+- `web/src/nav.css` | at 375 px the "Preferences" tab text (87 px) is wider than its button (85 px); four tabs are tight (from F4, seen in the F5 browser check) | low
 
 ---
 
