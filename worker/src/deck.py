@@ -89,10 +89,10 @@ async def _outstanding(db, user_id, n):
     return await _all(db, "SELECT * FROM decisions WHERE user_id = ? AND swiped_at IS NULL ORDER BY served_at, position LIMIT ?", user_id, n)
 
 
-async def _ask_curator(env, user_id, prefs, parsed, sample, listings, flags, commutes):
+async def _ask_curator(env, user_id, prefs, parsed, sample, listings, flags, commutes, profile_version, profile, feedback):
     """One curator call over `sample`, recorded whatever happens. Returns (call_id, ranking); raises CuratorFailed."""
     db = env.DB
-    body = curator.build_body({"text": prefs["text"], "soft": parsed["soft"]}, {}, [],
+    body = curator.build_body({"text": prefs["text"], "soft": parsed["soft"]}, profile, feedback,
                               [curator.candidate_summary(listings[i], flags.get(i, []), commutes.get(i)) for i in sample])
     request_id, ranking, status, usage, error = None, None, "failed", None, None
     try:
@@ -109,7 +109,7 @@ async def _ask_curator(env, user_id, prefs, parsed, sample, listings, flags, com
     await db.prepare(
         "INSERT INTO curator_calls (call_id, user_id, created_at, model, profile_version, prefs_updated_at, candidate_ids, ranking,"
         " status, mreq_id, error, prompt_tokens, output_tokens, thought_tokens) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-    ).bind(call_id, user_id, _now(), curator.MODEL, EMPTY_PROFILE_VERSION, prefs["updated_at"], json.dumps(sample),
+    ).bind(call_id, user_id, _now(), curator.MODEL, profile_version, prefs["updated_at"], json.dumps(sample),
            None if ranking is None else json.dumps(ranking), status, request_id, error,
            usage.get("prompt"), usage.get("candidates"), usage.get("thoughts")).run()
     if ranking is None:
@@ -124,7 +124,10 @@ async def _serve_new(env, user_id, prefs, parsed, available, need, first_positio
     sample = random.Random(f"{user_id}:{count}").sample(available, min(SAMPLE_SIZE, len(available)))
     listings, flags = await _load_listings(db, sample), await _load_flags(db, sample)
     commutes = await filters.load_commutes(db, prefs["commute_postcode"]) if prefs["commute_postcode"] else {}
-    call_id, ranking = await _ask_curator(env, user_id, prefs, parsed, sample, listings, flags, commutes)
+    import taste  # here, not at the top: taste imports this module
+    profile_version, profile = await taste.latest(db, user_id)
+    call_id, ranking = await _ask_curator(env, user_id, prefs, parsed, sample, listings, flags, commutes,
+                                          profile_version, profile, await taste.recent_feedback(db, user_id))
     first_slot = (await _all(db, "SELECT COUNT(*) AS n FROM decisions WHERE user_id = ?", user_id))[0]["n"]
     served_at = _now()
     for i, (listing_id, source, rank) in enumerate(place(ranking, first_slot, need, user_id)):
@@ -134,7 +137,7 @@ async def _serve_new(env, user_id, prefs, parsed, available, need, first_positio
             "INSERT INTO decisions (decision_id, user_id, listing_id, source, served_at, position, rank, curator_call_id,"
             " profile_version, offered_chips) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (user_id, listing_id) DO NOTHING"
         ).bind("d_" + secrets.token_hex(8), user_id, listing_id, source, served_at, first_position + i, rank, call_id,
-               EMPTY_PROFILE_VERSION, json.dumps(offered)).run()
+               profile_version, json.dumps(offered)).run()
 
 
 async def _cards(db, user_id, rows, postcode):

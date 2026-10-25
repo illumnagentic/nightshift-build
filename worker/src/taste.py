@@ -3,7 +3,7 @@ import json
 import re
 
 from chips import CATALOGUE
-from deck import _all, _now
+from deck import EMPTY_PROFILE_VERSION, _all, _now
 
 STRENGTH_WORDS = {"must_have": "must have", "nice_to_have": "nice to have", "would_prefer_not": "would prefer not",
                   "deal_breaker": "deal-breaker"}
@@ -100,6 +100,30 @@ async def bump(db, user_id, cause_type, decision_id=None, flag_id=None, listing_
         " SELECT ?, COALESCE(MAX(version), 0) + 1, ?, ?, ?, ?, ?, ? FROM profile_versions WHERE user_id = ? RETURNING version",
         user_id, _now(), cause_type, decision_id, flag_id, listing_id, factors, user_id)
     return rows[0]["version"]
+
+
+async def latest(db, user_id) -> tuple[int, dict]:
+    """(version, {factor: {direction, weight}}) from the user's latest snapshot, read as one row so they cannot disagree.
+    ({}, version 0) when the user has no version yet."""
+    rows = await _all(db, "SELECT version, factors_json FROM profile_versions WHERE user_id = ? ORDER BY version DESC LIMIT 1", user_id)
+    if not rows:
+        return EMPTY_PROFILE_VERSION, {}
+    return rows[0]["version"], {f["factor"]: {"direction": f["direction"], "weight": f["weight"]} for f in json.loads(rows[0]["factors_json"])}
+
+
+async def recent_feedback(db, user_id, limit=10) -> list:
+    """The last `limit` non-skipped feedback entries with a chip or free text, and favourite removals, newest last,
+    ordered by when each was last written (ties broken by id, so the order is fixed)."""
+    rows = await _all(
+        db,
+        "SELECT d.listing_id, d.action, f.chips_json, f.free_text, NULL AS reason, f.updated_at AS at, f.decision_id AS tie"
+        " FROM feedback f JOIN decisions d ON d.decision_id = f.decision_id"
+        " WHERE f.user_id = ? AND d.swiped_at IS NOT NULL AND f.skipped = 0 AND (f.chips_json != '[]' OR f.free_text IS NOT NULL)"
+        " UNION ALL SELECT listing_id, NULL, NULL, NULL, reason, removed_at, decision_id FROM favourite_removals WHERE user_id = ?"
+        " ORDER BY at DESC, tie, reason LIMIT ?", user_id, user_id, limit)
+    return [{"listing_id": r["listing_id"], "favourite_removed": r["reason"]} if r["reason"] is not None else
+            {"listing_id": r["listing_id"], "action": r["action"], "chips": json.loads(r["chips_json"]), "free_text": r["free_text"]}
+            for r in reversed(rows)]
 
 
 async def read(db, user_id) -> dict:

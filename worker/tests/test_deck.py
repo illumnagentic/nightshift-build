@@ -1,5 +1,6 @@
 """Black-box tests for GET /api/deck and the deck drop on PUT /api/prefs, against `pywrangler dev` in test mode
 (see worker/README.md). The fake upstream answers the curator by sorting the candidate ids."""
+import hashlib
 import json
 import re
 import secrets
@@ -273,3 +274,116 @@ def test_failed_curator_call_stores_the_id_it_returned(fake):
     (row,) = stored_rows(user, "curator_calls")
     assert row["status"] == "failed"
     assert row["mreq_id"] == fake.curator_requests[before]["request_id"]
+
+
+SYSTEM_SHA256 = "9b5a064bb97282a54c8a2c85de7aae3d004592ed8c7f1d993536328864c3c777"
+CONFIG_SHA256 = "10a031b51b80ab09b2ae3d2d5bfb3f17645df9d8659d9de0c6e0b7fc9d928248"
+
+
+def curator_request(fake):
+    """The newest curator request body the fake recorded, and its user message."""
+    body = [r["body"] for r in fake.requests if "ranking" in r["body"].get("generationConfig", {}).get("responseSchema", {}).get("properties", {})][-1]
+    return body, json.loads(body["contents"][0]["parts"][0]["text"])
+
+
+def swipe(user, decision_id, action="right"):
+    status, payload = call("POST", f"/api/decisions/{decision_id}/swipe", user_id=user, body={"action": action})
+    assert status == 200, payload
+
+
+def give(user, decision_id, chips=(), free_text=None, skipped=False):
+    body = {"chips": [{"chip_id": c, "strength": "must_have", "text": t} for c, t in chips], "free_text": free_text}
+    if skipped:
+        body["skipped"] = True
+    status, payload = call("PUT", f"/api/decisions/{decision_id}/feedback", user_id=user, body=body)
+    assert status == 200, payload
+
+
+def profile_of(user):
+    status, payload = call("GET", "/api/profile", user_id=user)
+    assert status == 200, payload
+    return payload
+
+
+def test_a_new_users_first_call_sends_an_empty_profile_and_no_feedback(fake):
+    user = new_user()
+    save(user)
+    get_deck(user)
+    body, message = curator_request(fake)
+    assert message["taste_profile"] == {} and message["recent_feedback"] == []
+    assert hashlib.sha256(body["systemInstruction"]["parts"][0]["text"].encode()).hexdigest() == SYSTEM_SHA256
+    assert hashlib.sha256(json.dumps(body["generationConfig"], sort_keys=True).encode()).hexdigest() == CONFIG_SHA256
+    (row,) = stored_rows(user, "curator_calls")
+    assert row["profile_version"] == 0
+    assert {d["profile_version"] for d in stored_rows(user, "decisions")} == {0}
+
+
+def test_the_next_call_carries_the_profile_and_the_recent_feedback_rules(fake):
+    user = new_user()
+    save(user)
+    cards = get_deck(user, 5)["cards"]
+    chip = [c["chips"][0]["chip_id"] for c in cards]
+    for card, action in zip(cards, ["superlike", "left", "right", "right", "left"]):
+        swipe(user, card["decision_id"], action)
+    give(user, cards[0]["decision_id"], [(chip[0], "Bright and airy")], "A nice flat.")
+    give(user, cards[1]["decision_id"], skipped=True)
+    give(user, cards[2]["decision_id"], [(chip[2], "Gone again")])
+    give(user, cards[2]["decision_id"])  # cleared: no chip, no text
+    give(user, cards[3]["decision_id"], [(chip[3], None)])
+    give(user, cards[4]["decision_id"], free_text="first thought")
+    give(user, cards[4]["decision_id"], free_text="edited thought")
+    status, _ = call("DELETE", f"/api/favourites/{cards[0]['listing']['id']}", user_id=user, body={"reason": "Too far away."})
+    assert status == 200
+    expected = [
+        {"listing_id": cards[0]["listing"]["id"], "action": "superlike", "chips": [{"chip_id": chip[0], "strength": "must_have", "text": "Bright and airy"}], "free_text": "A nice flat."},
+        {"listing_id": cards[3]["listing"]["id"], "action": "right", "chips": [{"chip_id": chip[3], "strength": "must_have", "text": None}], "free_text": None},
+        {"listing_id": cards[4]["listing"]["id"], "action": "left", "chips": [], "free_text": "edited thought"},
+        {"listing_id": cards[0]["listing"]["id"], "favourite_removed": "Too far away."},
+    ]
+    now = profile_of(user)
+    assert now["factors"]
+    get_deck(user, 5)
+    body, message = curator_request(fake)
+    assert message["recent_feedback"] == expected
+    assert message["taste_profile"] == {f["factor"]: {"direction": f["direction"], "weight": f["weight"]} for f in now["factors"]}
+    assert list(message["taste_profile"]) == [f["factor"] for f in now["factors"]]
+    assert profile_of(user)["version"] == now["version"] > 0
+    newest = max(stored_rows(user, "curator_calls"), key=lambda r: r["created_at"])
+    assert newest["profile_version"] == now["version"]
+    new = [d for d in stored_rows(user, "decisions") if d["curator_call_id"] == newest["call_id"]]
+    assert len(new) == 5 and {d["profile_version"] for d in new} == {now["version"]}
+    assert hashlib.sha256(body["systemInstruction"]["parts"][0]["text"].encode()).hexdigest() == SYSTEM_SHA256
+    assert hashlib.sha256(json.dumps(body["generationConfig"], sort_keys=True).encode()).hexdigest() == CONFIG_SHA256
+
+
+def test_recent_feedback_keeps_the_ten_latest_oldest_first(fake):
+    user = new_user()
+    save(user)
+    notes = []
+    for page in (10, 3):
+        for card in get_deck(user, page)["cards"]:
+            swipe(user, card["decision_id"])
+            notes.append(f"note {len(notes)}")
+            give(user, card["decision_id"], free_text=notes[-1])
+    get_deck(user, 1)
+    _, message = curator_request(fake)
+    assert len(notes) == 13
+    assert [e["free_text"] for e in message["recent_feedback"]] == notes[3:]
+
+
+def test_a_corrected_flag_reaches_the_next_candidate_digest(fake):
+    user = new_user()
+    save(user, text=f"{TEXT} [[tight]]")  # 7 train listings, so every one is a candidate of the next call
+    first = get_deck(user, 1)["cards"][0]
+    swipe(user, first["decision_id"])
+    rest = sorted(pool_ids(GOOD_POOL_SQL.replace("550000", "300000"), "train") - {first["listing"]["id"]})
+    marks = ",".join(f"'{i}'" for i in rest)
+    flag = d1_rows(f"SELECT flag_id, listing_id, field, room FROM photo_flags WHERE listing_id IN ({marks})"
+                   " AND field IN ('defects', 'size_tricks', 'missing') ORDER BY flag_id LIMIT 1")[0]
+    text = "Not damp, only a shadow " + secrets.token_hex(4)
+    status, _ = call("POST", f"/api/flags/{flag['flag_id']}/correction", user_id=user, body={"text": text})
+    assert status == 200
+    get_deck(user, 1)
+    _, message = curator_request(fake)
+    (candidate,) = [c for c in message["candidates"] if c["id"] == flag["listing_id"]]
+    assert f"{flag['room']}: {text}" in candidate["photos"][flag["field"]]

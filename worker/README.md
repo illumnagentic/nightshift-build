@@ -114,14 +114,16 @@ running, the run stops with exit code 3 and prints the command above. The guard 
 `test_prefs.py`, `test_commute.py`, `test_deck.py` and `test_swipe.py`.
 
 These modules need no server and no network, and run with a plain
-`uv run --group dev pytest tests/test_filters.py tests/test_prefs_unit.py tests/test_mubit.py tests/test_tfl_unit.py -q`:
+`uv run --group dev pytest tests/test_filters.py tests/test_prefs_unit.py tests/test_mubit.py tests/test_tfl_unit.py tests/test_profile_unit.py -q`:
 
 - `tests/test_filters.py`: the hard filters, including a check over the real listings.
 - `tests/test_prefs_unit.py`: parsing and checking of the model's reply.
 - `tests/test_mubit.py`: the Mubit client.
 - `tests/test_tfl_unit.py`: reading TfL answers and building the journey URL.
+- `tests/test_profile_unit.py`: the taste profile factors, term matching and removal rows.
 
-`tests/test_users.py`, `tests/test_prefs.py`, `tests/test_commute.py`, `tests/test_deck.py` and `tests/test_swipe.py` call the API and
+`tests/test_users.py`, `tests/test_prefs.py`, `tests/test_commute.py`, `tests/test_deck.py`, `tests/test_swipe.py`,
+`tests/test_feedback.py`, `tests/test_favourites.py` and `tests/test_flags.py` call the API and
 need the seeded test-mode server. Each run adds users to the local D1. The fake answers
 a few postcodes with 500 so the suite can be repeated without re-seeding, but re-seed
 to clear the users. `test_deck.py` also reads the local D1 with `npx wrangler d1 execute` from this directory, so the server under test must have been started from this same `worker/` directory. Stop the dev server before running `worker/scripts/seed.sh` and
@@ -152,6 +154,11 @@ card, drawn from the 50th to 80th percentile of that ranking. Every call is stor
 `curator_calls` (candidates, full ranking, status, `mreq_` id, token counts) and each
 served card in `decisions`.
 
+Each call also carries the user's taste profile (`taste_profile`, from their latest profile version) and their ten most
+recent feedback entries and favourite removals (`recent_feedback`, newest last). The profile version used is stored on
+the call and on every card it created. A new user sends `{}`, `[]` and version 0. Flag corrections reach the curator
+through the candidate photo digest.
+
 A `GET /api/deck` that needs new cards is a PAID Gemini call through Mubit on the
 normal dev server. A request whose unswiped cards already cover `n` makes no call.
 Measured on 2026-10-25 (one call, 30 candidates): 6,995 prompt tokens, 335 output
@@ -181,8 +188,8 @@ when checking the gateway.
 - `src/mubit.py`: the Mubit gateway client.
 - `src/prefs.py`, `src/tfl.py`, `src/filters.py`: prefs parsing, TfL commute times, hard filters.
 - `src/chips.py`, `src/curator.py`, `src/deck.py`: chips per card, the curator request and reply, `GET /api/deck`.
-- `src/taste.py`: profile versions and `GET /api/profile`.
-- `schema.sql`: app tables (`users`, `prefs`, `commute_cache`, `curator_calls`, `decisions`, `favourites`, `profile_versions`).
+- `src/taste.py`: profile versions, feedback factors, `GET /api/profile`, and the profile and recent feedback the curator reads.
+- `schema.sql`: app tables (`users`, `prefs`, `commute_cache`, `curator_calls`, `decisions`, `favourites`, `profile_versions`, `feedback`, `favourite_removals`).
 - `../dataset/d1/`: listings schema and data, loaded by `seed.sh`.
 - `scripts/`: `seed.sh` and `mubit_ping.py`.
 - `tests/`: unit and API tests, and the fake upstream (`fake_upstream.py`).

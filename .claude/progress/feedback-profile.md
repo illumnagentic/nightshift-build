@@ -294,11 +294,11 @@ every decision it creates.
 
 **Evidence location**: `evidence/feedback-profile/step-4.md`
 
-- [ ] Implemented
-- [ ] Tested — evidence: (date)
-- [ ] Best practices met — evidence: (date)
-- [ ] Matches locked requirements — evidence: (date)
-- [ ] No scope drift — evidence: (date)
+- [x] Implemented — evidence: taste.latest (one profile_versions row) and taste.recent_feedback in worker/src/taste.py; deck._serve_new passes both and stores the version on curator_calls and decisions (2026-10-25)
+- [x] Tested — evidence: full suite 416 passed twice on one seeded D1 in fresh worktree (:8850, fake :8851); 206 server-less passed exit 0; 4 new test_deck.py tests, no existing test changed (2026-10-25)
+- [x] Best practices met — evidence: parameterised SQL, deterministic ORDER BY at DESC, tie, reason with LIMIT, in-function import justified in TRADEOFFS, check-process-refs exit 0 (2026-10-25)
+- [x] Matches locked requirements — evidence: Q6/Q7/Q8 and Done-when met; curator.py unchanged since 1024f94, SHA-256 9b5a064b.../10a031b5... recomputed and match curator-deck.md; trail query ran on test D1 and returned version 13 with mreq_ id; README lists test_feedback.py, test_profile_unit.py (and favourites/flags) (2026-10-25)
+- [x] No scope drift — evidence: diff touches only deck.py, taste.py, test_deck.py, README.md, step-4.md and this progress file (2026-10-25)
 
 ---
 
@@ -389,6 +389,8 @@ Plan check — arbiter 2026-10-25: 4 steps, coarse vertical slices, within 3–5
 
 2026-10-25 | step 3 | Removing a favourite deletes the favourites row, then writes the reason to `favourite_removals`, then bumps the version, as three separate D1 statements; a failure between them loses the reason or the version bump | D1 calls here are not batched elsewhere either, and a failure needs a D1 error mid-request | Use `db.batch` for the three statements. — accepted by arbiter 2026-10-25: not cheap and not blocking; `bump` computes factors from rows that include the new removal, so it cannot sit in one batch without re-deriving factors in Python, `db.batch` is unused and unproven from Pyodide here, and swipe already writes in separate statements; on a local single-laptop D1 a mid-request failure is unlikely and loses one reason or bump, not data integrity of the favourite.
 2026-10-25 | step 3 | `GET /listings/{id}` filters no photos: the schema has no `skip` marker on `listing_media` and the deck does not filter either | Nothing to filter on; skipped photos were already dropped in data prep | None needed unless a marker is added to the schema. — accepted by arbiter 2026-10-25: contract met upstream; `dataset/scripts/build_d1.py` (`drop_skipped`) removes skip-marked images from `listing_media` before seed, so none reach D1 and there is nothing to filter.
+
+2026-10-25 | step 4 | `deck._serve_new` imports `taste` inside the function, because `taste` imports `deck` (`_all`, `_now`, `EMPTY_PROFILE_VERSION`) and a top-level import would be circular | Moving the shared helpers out of `deck` would touch files outside Step 4's scope | Move `_all` and `_now` to a small shared module and import it from both. — accepted by arbiter 2026-10-25: a function-level import is standard Python and works under Pyodide; the API tests run against `pywrangler dev` and passed (416, twice), and `entry.py` imports `taste` at load so the call is a `sys.modules` lookup; the refactor would touch `entry.py` and a new module outside Step 4's scope, blocks nothing later, and buys only tidiness.
 
 ---
 
