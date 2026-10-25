@@ -510,11 +510,12 @@ Notes:
 
 ### Photo-flag-dependent chips
 
-No photo flags exist yet. Until then every rule is evaluated as if the flags were
-absent: the "(once flags exist)" clauses are skipped, and nothing else changes.
+Photo flags now exist for every listing, so the "(once flags exist)" clauses apply. A
+listing with no flag rows is evaluated as if the clauses were absent, and nothing else
+changes.
 
-| Chip | Until flags exist | Once flags exist |
-| ---- | -------------------- | ---------------- |
+| Chip | With no flags | With flags |
+| ---- | ------------- | ---------- |
 | `garden` | offered on house types or a `garden` mention | also offered when any photo flag has `room` `garden` |
 | `natural_light` | offered on every listing, featured on the text mention only | still offered on every listing; a `light` flag adds the featured clause |
 | `space` | offered on every listing, featured on the text mention only | still offered on every listing; a `sqm_estimate` flag adds the featured clause |
