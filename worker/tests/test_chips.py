@@ -97,9 +97,10 @@ def test_natural_light_text_and_flag():
     assert not featured("natural_light", listing())
     assert featured("natural_light", listing(["South-facing"]))
     assert not featured("natural_light", listing(["Highlights"]))  # whole word only
-    for value in ("bright", "poor"):
-        for conf in ("high", "medium"):
-            assert featured("natural_light", listing(), [flag("light", value, conf)])
+    for conf in ("high", "medium"):
+        assert featured("natural_light", listing(), [flag("light", "poor", conf)])
+        assert not featured("natural_light", listing(), [flag("light", "bright", conf)])
+    assert not featured("natural_light", listing(), [flag("light", "poor", "low")])
     assert not featured("natural_light", listing(), [flag("light", "bright", "low")])
     assert not featured("natural_light", listing(), [flag("light", "ok", "high")])
     assert not featured("natural_light", listing(), [flag("light", "none", "high")])
@@ -148,7 +149,8 @@ def test_space_text_and_flag():
     assert offered("space", listing()) and not featured("space", listing())
     assert featured("space", listing(["Spacious"]))
     assert featured("space", listing(["650 sq ft"]))
-    assert featured("space", listing(), [flag("sqm_estimate", 55.0, "low")])
+    assert not featured("space", listing(), [flag("sqm_estimate", 55.0, "high")])
+    assert not featured("space", listing(), [flag("sqm_estimate", 55.0, "low")])
     assert not featured("space", listing(), [flag("floorplan_notes")])
 
 
@@ -315,15 +317,25 @@ def test_recount_with_flags():
     assert len(rows) == 635
     got = _counts(rows, with_flags=True)
     expected = {
-        "garden": (496, 448, 486), "parking": (264, 264, 264), "natural_light": (635, 635, 635),
-        "balcony_terrace": (124, 124, 124), "station_access": (635, 383, 522), "area_busyness": (635, 68, 253),
-        "space": (635, 623, 628), "kitchen": (635, 257, 350), "layout": (635, 123, 150),
-        "condition": (635, 267, 252), "price_value": (635, 635, 635), "bathrooms": (635, 310, 243),
-        "floor_level": (135, 135, 98), "building_amenities": (99, 99, 53), "lease": (225, 225, 128),
-        "service_charge": (207, 207, 87), "energy_efficiency": (635, 170, 82), "home_office": (561, 57, 32),
-        "building_style": (140, 140, 58), "commute": (0, 0, 0),
+        "garden": (496, 448, 493), "parking": (264, 264, 264), "natural_light": (635, 128, 503),
+        "balcony_terrace": (124, 124, 124), "station_access": (635, 383, 547), "area_busyness": (635, 68, 309),
+        "space": (635, 283, 415), "kitchen": (635, 257, 350), "layout": (635, 123, 152),
+        "condition": (635, 267, 261), "price_value": (635, 635, 635), "bathrooms": (635, 310, 290),
+        "floor_level": (135, 135, 116), "building_amenities": (99, 99, 76), "lease": (225, 225, 171),
+        "service_charge": (207, 207, 130), "energy_efficiency": (635, 170, 118), "home_office": (561, 57, 42),
+        "building_style": (140, 140, 84), "commute": (0, 0, 0),
     }
     assert {k: tuple(v) for k, v in got.items()} == expected
     for lst, fl in rows:
         got_ids = chips.chip_ids_for(lst, fl, None)
         assert len(got_ids) == 8 and len(set(got_ids)) == 8
+
+
+@pytest.mark.parametrize("minutes, expected", [(None, (1, 7, 14, 142)), (20, (2, 8, 15, 212))])
+def test_featured_chips_per_card_with_flags(minutes, expected):
+    counts = []
+    for lst, fl in _load():
+        card = chips._Card(lst, fl, minutes)
+        counts.append(sum(1 for r in chips.CATALOGUE if r[3](card) and (r[4] is None or r[4](card))))
+    counts.sort()
+    assert (counts[0], counts[len(counts) // 2], counts[-1], sum(n > 8 for n in counts)) == expected

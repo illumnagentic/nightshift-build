@@ -18,10 +18,9 @@ class _Card:
         self.commute_minutes = commute_minutes
         self.garden_flag = any(f["room"] == "garden" for f in flags)
         self.light_flag = any(
-            f["field"] == "light" and f["value"] in ("bright", "poor") and f["confidence"] in ("high", "medium")
+            f["field"] == "light" and f["value"] == "poor" and f["confidence"] in ("high", "medium")
             for f in flags
         )
-        self.sqm_flag = any(f["field"] == "sqm_estimate" for f in flags)
         self.defects_flag = any(f["field"] == "defects" for f in flags)
 
     def mentions(self, pattern):
@@ -61,7 +60,7 @@ CATALOGUE = (
     ("space", "Space and room sizes",
      ("Plenty of room", "Good size for the price", "Rooms feel small", "More than I need"),
      lambda c: True,
-     lambda c: c.mentions(r"spacious|generous|large|ample|\bhuge\b|sq\.? ?ft|sq\.? ?m\b|sqm") or c.sqm_flag),
+     lambda c: c.mentions(r"spacious|generous|large|ample|\bhuge\b|sq\.? ?ft|sq\.? ?m\b|sqm")),
     ("kitchen", "Kitchen", ("Great kitchen", "Fine as it is", "Needs replacing", "Too small to cook in"),
      lambda c: True, lambda c: c.mentions("kitchen")),
     ("layout", "Layout",

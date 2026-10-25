@@ -108,11 +108,11 @@ test module and the other unit modules from step 1 pass.
 
 **Evidence location**: `evidence/curator-deck/step-5.md`
 
-- [ ] Implemented
-- [ ] Tested — evidence: (date)
-- [ ] Best practices met — evidence: (date)
-- [ ] Matches locked requirements — evidence: (date)
-- [ ] No scope drift — evidence: (date)
+- [x] Implemented — evidence: chips.py light_flag poor-only, sqm_flag removed; contract rows 3, 9 and Photo-flag-dependent rows edited to match; step-5.md present (2026-10-25)
+- [x] Tested — evidence: 6 unit modules 168 passed, exit 0; new tests fail on old chips.py (5 failed); recount natural_light 128 = 108 text + 20 poor, 24 poor high/medium listings in DB read-only; check-process-refs exit 0 (2026-10-25)
+- [x] Best practices met — evidence: net code removal, no new abstraction, chip ids/labels/phrases/cap/shape unchanged, non-breaking, no web/ change (2026-10-25)
+- [x] Matches locked requirements — evidence: Step 5 Goal/Done-when: bright dropped, poor high/medium kept, sqm clause dropped, garden/condition unchanged, no-flags recount test untouched (2026-10-25)
+- [x] No scope drift — evidence: diff = api-contract.md (4 rows), chips.py, test_chips.py, untracked step-5.md; nothing else (2026-10-25)
 
 2026-10-25 (arbiter): Step 6 added from the SPOTTED, NOT FIXED entry on `curator_calls.mreq_id`
 having no automated test. Not a REQUIREMENTS change.
@@ -349,7 +349,7 @@ Exploration slots: a new card is `exploration` when (user's decision count befor
 
 ## SPOTTED, NOT FIXED
 
-- docs/api-contract.md (Chip catalogue, `natural_light` and `space` featured rules) | With flags, `natural_light` is featured on 635 of 635 listings and `space` on 623 of 635, so "featured" no longer separates listings and the cap cuts by priority number instead (featured chips exceed 8 on 254 of 635 cards, was 117). Evidence: `evidence/curator-deck/step-1.md` | low to medium (product quality of chip choice, not correctness) — FIX_NOW by arbiter 2026-10-25: Step 5 (arbiter) in AMENDMENTS.
+- docs/api-contract.md (Chip catalogue, `natural_light` and `space` featured rules) | With flags, `natural_light` is featured on 635 of 635 listings and `space` on 623 of 635, so "featured" no longer separates listings and the cap cuts by priority number instead (featured chips exceed 8 on 254 of 635 cards, was 117). Evidence: `evidence/curator-deck/step-1.md` | low to medium (product quality of chip choice, not correctness) — FIX_NOW by arbiter 2026-10-25: Step 5 (arbiter) in AMENDMENTS. resolved by Step 5 2026-10-25
 - worker/src/curator.py:63 (light tie-break, step-reviewer note on Step 2) | A corrected free-text light value not in `_LIGHT_ORDER` gets key 1 and wins every tie (above `none`), untested. Wider problem found by the arbiter: a single corrected light flag is dropped whenever the room has more uncorrected readings (e.g. three `bright` and one corrected "not bright at all" gives `bright`), so the curator never reads the correction, against decisions.md (Photo flags: "the curator reads the corrected text") | medium (B5 corrections would be invisible to the curator) — resolved by Step 2 redo 2026-10-25 — FIX_NOW by arbiter 2026-10-25: redo of Step 2 within its files; a corrected light value in a room wins over uncorrected readings, ties among enum readings still go to the worse one; must land before the first persona run.
 - worker/src/deck.py:108–113 (`curator_calls.mreq_id` write, step-reviewer note on Step 4) | No pytest asserts that `curator_calls.mreq_id` holds the `x-middleware-request-id` of the curator call that produced it. `tests/test_mubit.py` covers reading the header; the write in `deck._ask_curator` is covered only by a manual D1 inspection (Step 3 evidence) and the one live row (Step 4 evidence). The fake sends one constant id, so even a D1 read could not tell one call's id from another's. The line is in REQUIREMENTS (LOCKED) and the B4 plan line ("`mreq_` IDs stored"), and the correction trail for the recording and B7 depends on it | medium (an unguarded locked requirement; a later edit to `deck.py` could drop or misattribute the id silently) — FIX_NOW by arbiter 2026-10-25: Step 6 (arbiter) in AMENDMENTS. About 40 lines, stdlib plus the `npx wrangler d1 execute haka --local` route `worker/scripts/seed.sh` already uses; no new dependency, no new endpoint.
 

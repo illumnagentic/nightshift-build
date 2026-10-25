@@ -483,13 +483,13 @@ factor of every chip are exactly those written here.
 | -: | --------- | ----- | ------------ | ------------- |
 | 1 | `garden` | Garden | property type is a house type, or mentions `garden`, or (once flags exist) a photo flag has `room` `garden` | mentions `garden`, or (once flags exist) a photo flag has `room` `garden` |
 | 2 | `parking` | Parking | mentions `parking\|garage\|driveway\|off[- ]street\|car ?port\|car ?park` | whenever offered |
-| 3 | `natural_light` | Natural light inside | every listing | mentions `\b(bright\|light\|sunny\|airy\|south[- ]facing)\b`, or (once flags exist) a `light` flag with value `bright` or `poor` and confidence `high` or `medium` |
+| 3 | `natural_light` | Natural light inside | every listing | mentions `\b(bright\|light\|sunny\|airy\|south[- ]facing)\b`, or (once flags exist) a `light` flag with value `poor` and confidence `high` or `medium` |
 | 4 | `balcony_terrace` | Balcony or terrace | mentions `balcon\|roof terrace`, or mentions `\bterrace\b` and property type is flat-like | whenever offered |
 | 5 | `price_value` | Price and value | every listing | whenever offered |
 | 6 | `commute` | Commute | `commute.minutes` is not null | whenever offered |
 | 7 | `station_access` | Station access | nearest station exists | nearest station is 0.8 km or less, or mentions `station\|tube\|underground\|\bdlr\b\|overground` |
 | 8 | `area_busyness` | Area and street feel | every listing | mentions `quiet\|peaceful\|tranquil\|cul[- ]de[- ]sac\|vibrant\|bustling\|lively\|high street\|village` |
-| 9 | `space` | Space and room sizes | every listing | mentions `spacious\|generous\|large\|ample\|\bhuge\b\|sq\.? ?ft\|sq\.? ?m\b\|sqm`, or (once flags exist) a `sqm_estimate` flag exists |
+| 9 | `space` | Space and room sizes | every listing | mentions `spacious\|generous\|large\|ample\|\bhuge\b\|sq\.? ?ft\|sq\.? ?m\b\|sqm` |
 | 10 | `kitchen` | Kitchen | every listing | mentions `kitchen` |
 | 11 | `layout` | Layout | every listing | mentions `open[- ]plan` |
 | 12 | `condition` | Condition and decor | every listing | mentions `refurbish\|renovat\|modern\|newly\|new build\|immaculate\|redecorat\|updating\|in need of`, or (once flags exist) a `defects` flag exists |
@@ -523,8 +523,8 @@ changes.
 | Chip | With no flags | With flags |
 | ---- | ------------- | ---------- |
 | `garden` | offered on house types or a `garden` mention | also offered when any photo flag has `room` `garden` |
-| `natural_light` | offered on every listing, featured on the text mention only | still offered on every listing; a `light` flag adds the featured clause |
-| `space` | offered on every listing, featured on the text mention only | still offered on every listing; a `sqm_estimate` flag adds the featured clause |
+| `natural_light` | offered on every listing, featured on the text mention only | still offered on every listing; a `light` flag with value `poor` and confidence `high` or `medium` adds the featured clause |
+| `space` | offered on every listing, featured on the text mention only | unchanged: flags add no featured clause |
 | `condition` | offered on every listing, featured on the text mention only | still offered on every listing; a `defects` flag adds the featured clause |
 
 A user's correction to a flag (`corrected_text`) does not change which chips are offered.
