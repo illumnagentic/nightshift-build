@@ -91,6 +91,16 @@ radial gradients, as in the reference's blue card. The pink Love button (the onl
 gradient surface) gets a faint white inner shadow. The blue Like button gets the same
 inner shadow to match. Added as Step 4.
 
+### 2026-10-25 — Step 5 (arbiter): durable evidence
+
+- **Goal**: re-run `npm run typecheck`, `npm test` and `npm run build` in `web/` on the
+  branch head and record metadata only: command, exit code, test file and test counts,
+  CSS and JS bundle sizes, commit SHA, date. No raw logs.
+- **Files**: `evidence/web-design/checks.md`, and this progress file's evidence lines.
+- **Done when**: `evidence/web-design/checks.md` exists, is committed on this branch,
+  and records all three commands with exit 0.
+- **Evidence location**: `evidence/web-design/checks.md`
+
 ---
 
 ## RULES IN FORCE
@@ -139,6 +149,10 @@ Same files as Step 1.
 
 ### Step 2 — Deck and feedback
 
+ESCALATED (arbiter) 2026-10-25: qa-gate findings 1-3. The "glow cards" amendment asks for Like = blue gradient, Dislike = white glass, price large and light; deck.css has solid #4f5fd0 Like, solid white Dislike with hairline, and price weight 600. Trigger: any change under web/. The fix is cheap (about 10-15 lines in web/src/deck/deck.css), but only the human can choose between fixing the CSS and rewording the amendment; an orchestrator report that the human saw these and asked only for depth is not consent.
+
+**Human decision 2026-10-25**: "Match the brief". **Redo of Step 2**: Like as a blue gradient, Dislike as translucent white glass with blur, price at a light weight; contrast rechecked. File: web/src/deck/deck.css.
+
 **Goal**: Restyle the property card (paint chip), swipe actions and cues, deck states,
 feedback screen and chip dialog against the tokens.
 
@@ -150,11 +164,11 @@ with Skip) and chip dialog render in the new design in mock mode at 375px and de
 
 **Evidence location**: the diff, plus command output recorded in the review.
 
-- [x] Implemented — deck.css, feedback.css, DeckScreen.tsx glow-card restyle in diff vs d080bd1 (2026-10-25)
-- [x] Tested — evidence: typecheck exit 0, npm test exit 0, build exit 0, run by reviewer (2026-10-25)
-- [x] Best practices met — evidence: white .92 over #4f5fd0 = 4.85:1, over #4352c6 = 5.72:1; nav 44px; 3px focus outlines; reduced motion kept (2026-10-25)
-- [x] Matches locked requirements — evidence: amendment glow-card tokens used; DeckScreen.tsx hunks className-only (2026-10-25)
-- [x] No scope drift — evidence: Step 2 files only; check-process-refs exit 0 (2026-10-25)
+- [x] Implemented — SUPERSEDES earlier Step 2 ticks (pre-redo 2). deck.css: Like blue gradient (radial highlight + linear #5866d6/income-1/#4352c6), Dislike white glass (translucent fill, blur, white rim), price 300 at 2.25rem; git diff HEAD shows only these hunks, Step 4 intact (2026-10-25)
+- [x] Tested — supersedes earlier tick: typecheck exit 0, npm test exit 0, build exit 0, check-process-refs exit 0, run by reviewer on uncommitted deck.css vs HEAD 15eb378 (2026-10-25)
+- [x] Best practices met — supersedes earlier tick: white on Like gradient incl. radial highlight, computed over label area 4.79-5.08:1 (widths 100-300px; extreme top-right corner 4.06 is outside text); ink on Dislike glass over white 16.85:1; white price 300 weight large text, worst-case 4.27:1 vs 3:1; Retry/Set preferences in .deck-screen__panel, not matched by :first-child (DeckScreen.tsx:157-177) (2026-10-25)
+- [x] Matches locked requirements — supersedes earlier tick: amendment lines Like = blue gradient, Dislike = white glass, price large and light, all in deck.css (2026-10-25)
+- [x] No scope drift — supersedes earlier tick: only web/src/deck/deck.css changed in web/ (2026-10-25)
 
 **Redo (2026-10-25, step-reviewer FAIL)**: `.deck-card__details` (white .85) and
 `.deck-card__assumptions` (white .8) fall to about 4.1–4.4:1 over `#4f5fd0`. Fix: raise
@@ -162,6 +176,10 @@ both to white at .92 or more. Also raise the photo nav circles from 40px to 44px
 Same files as Step 2.
 
 ### Step 3 — Prefs, favourites and dashboard
+
+ESCALATED (arbiter) 2026-10-25: qa-gate finding 4. The unclassed Retry <button> at web/src/dashboard/DashboardScreen.tsx:74 loses its styling under Tailwind preflight and falls under 44px, breaking the 44px-targets rule in RULES IN FORCE. Trigger: any change under web/. Proposed fix, about 15 lines, CSS only, no TSX change: a `.dashboard > button` rule in web/src/dashboard/dashboard.css with min-height 44px, padding, border and fill from the @theme tokens, and a 3px focus-visible outline matching the other buttons.
+
+**Human decision 2026-10-25**: "Yes, fix it". **Redo of Step 3**: the CSS fix above, in web/src/dashboard/dashboard.css.
 
 **Goal**: Restyle preferences, favourites (with remove dialog) and the results dashboard
 against the tokens.
@@ -175,6 +193,9 @@ design in mock mode, chart error-bar halo matches its surface.
 **Evidence location**: the diff, plus command output recorded in the review.
 
 - [x] Implemented — prefs.css, favourites.css, dashboard.css glow restyle in diff vs d080bd1; no TSX changed (2026-10-25)
+- [x] Redo implemented (supersedes earlier Step 3 ticks) — `.dashboard button:not([class])` rule + hover + focus-visible + reduced-motion entry in dashboard.css only; only unclassed button is Retry (DashboardScreen.tsx:74), `.chart__toggle` is classed (BarChart.tsx:189) so not matched (2026-10-25)
+- [x] Redo tested (supersedes earlier) — typecheck exit 0, npm test exit 0, build exit 0, run by reviewer vs HEAD 15eb378 (2026-10-25)
+- [x] Redo best practices (supersedes earlier) — min-height 48px, 3px focus-visible outline income-1 on white (~5.4:1), ink/white 16.85, ink/mist hover 15.36; check-process-refs exit 0 (2026-10-25)
 - [x] Tested — evidence: typecheck exit 0, npm test exit 0, build exit 0, run by reviewer (2026-10-25)
 - [x] Best practices met — evidence: white/#d6246e 4.84, muted/white 5.23, #9d1450/#fdeaf1 6.88, ink/white 16.85; 44px+ targets, 3px focus-visible outlines, reduced-motion blocks kept, .favourites-dialog margin:auto (2026-10-25)
 - [x] Matches locked requirements — evidence: all tokens exist in index.css @theme; no --pf-/--fv-/system-ui left; chart halo uses --color-page matching panel; every TSX class has a selector (favourites-screen__address had none before either) (2026-10-25)
@@ -205,6 +226,24 @@ glow alpha .35 → .25. Same file.
 - [x] Matches locked requirements — evidence: amendment "card depth": faint white inner shadow and radial gradients on blue card, inner shadow on Love and Like in deck.css (2026-10-25)
 - [x] No scope drift — evidence: only web/src/deck/deck.css changed for Step 4; check-process-refs exit 0 (2026-10-25)
 
+### Step 5 — Durable evidence (arbiter)
+
+**Goal**: Re-run typecheck, test and build in `web/` on the branch head and record
+metadata only (command, exit code, test counts, bundle sizes, commit SHA, date).
+
+**Files in scope**: `evidence/web-design/checks.md`, this progress file's evidence lines
+
+**Done when**: `evidence/web-design/checks.md` exists, is committed on this branch, and
+records all three commands with exit 0.
+
+**Evidence location**: `evidence/web-design/checks.md`
+
+- [ ] Implemented
+- [ ] Tested — evidence: (date)
+- [ ] Best practices met — evidence: (date)
+- [ ] Matches locked requirements — evidence: (date)
+- [ ] No scope drift — evidence: (date)
+
 ---
 
 ## TRADEOFFS
@@ -215,22 +254,64 @@ _None logged._
 
 ## SPOTTED, NOT FIXED
 
-_None._
+- (qa-gate 2026-10-25) The Like button's blue styling in web/src/deck/deck.css relies on `:last-child` in the action row; reordering or adding a button would move the styling silently. A Like-specific className would fix it. — accepted by arbiter 2026-10-25: breaks no rule in force or amendment line, buttons are not being reordered in this feature, and the fix would be a further web/ change
 
 ---
 
 ## VERIFICATION
 
-- [ ] All step checkboxes ticked with evidence
-- [ ] Every evidence path in this file exists
-- [ ] Test suite run — result:
-- [ ] Lint run — result:
-- [ ] Typecheck run — result:
-- [ ] Build run — result:
-- [ ] Diff contains no files outside declared scope
-- [ ] Tradeoff ledger reviewed and signed off by human
-- [ ] Human eye test completed
+- [x] All step checkboxes ticked with evidence — all 20 PLAN boxes ticked, dated 2026-10-25, in step order (qa-gate 2026-10-25)
+- [x] Every evidence path in this file exists — no evidence paths; every step says "the diff, plus command output recorded in the review", and that output is not stored anywhere durable (qa-gate 2026-10-25)
+- [x] Test suite run — result: `cd web && npm test`, 8 files, 186 tests passed, exit 0 (qa-gate 2026-10-25)
+- [ ] Lint run — result: not configured in kit-config
+- [x] Typecheck run — result: `cd web && npm run typecheck`, exit 0 (qa-gate 2026-10-25)
+- [x] Build run — result: `cd web && npm run build`, exit 0, CSS 35.14 kB, JS 439.99 kB (qa-gate 2026-10-25)
+- [x] Diff contains no files outside declared scope — all code files declared; `docs/plan.md` (F6 tick) and this progress file are allowed by safe-merge.sh (qa-gate 2026-10-25)
+- [ ] Tradeoff ledger reviewed and signed off by human — no entries; nothing to sign
+- [ ] Human eye test completed — not human-verified (full automation) — smoke check: Vite dev server in mock mode on :5181 served `/` (200) with the Inter Google Fonts link; `/src/index.css` compiled with `--color-income-1: #4f5fd0`, `.min-h-11` and `.bg-pulse-1`; `/src/deck/deck.css` 200. The orchestrator checked by eye in mock mode: user picker, deck card with Like, Love and Dislike, compulsory feedback and chip dialog, prefs, empty favourites, results. Not seen: favourites remove dialog, dashboard error state, deck blocked and error panels.
+
+QA-GATE: FAIL 2026-10-25 — three lines of the "glow cards" amendment unmet (Like not a blue gradient, Dislike not white glass, price not light weight); dashboard Retry button lost all button styling under Tailwind preflight.
 
 ---
 
 ## HANDOVER
+
+**What was built**
+
+The web app has a new look. It now uses Tailwind v4 with a white page, the Inter font, and soft pink and blue "glow card" colours. The property card is a blue gradient card with a faint inner glow, the photo inset, and white text. Every screen (user picker, deck, feedback, chip dialog, prefs, favourites, results) uses the same colours. Behaviour, copy and tests are unchanged. `docs/plan.md` also ticks F6 (recording).
+
+**What to check yourself**
+
+1. In `web/`, run `npm ci`, then `VITE_API_MODE=mock npm run dev`. Open http://localhost:5173.
+2. User picker: a white rounded panel. "Create user" is solid pink with white text. Create a user and select it.
+3. Deck tab: the card is blue with a white inner edge. Look at the three buttons under it. Dislike is plain white. Love is a round pink gradient with a heart. Like is solid blue, not a gradient. Decide if that is what you wanted (see What is not done).
+4. Look at the price on the card. It is semibold (600), not light. Decide if that matches your reference.
+5. Swipe a card. Check the feedback screen and tap a chip. The dialog should sit centred with a blurred backdrop.
+6. Prefs and Results tabs: white panels, pink primary button on prefs, blue bars on the chart.
+7. Dashboard error state. Run without mock mode and with the worker stopped (`npm run dev` only), then open Results. The "Retry" button now looks like plain text, with no border or fill. This is a bug.
+8. Favourites with at least one saved property (needs the real worker). Press Remove. Check that the dialog is centred and readable. Nobody has looked at it yet.
+9. Narrow the window to 375px. Check that the nav pills wrap and the card fits.
+
+**Tools that will help**
+
+- Browser devtools, Elements panel: select the Like button and read its `background`. It is `rgb(79, 95, 208)`, solid.
+- Devtools, Rendering panel, "Emulate CSS prefers-reduced-motion": hover transitions should stop.
+- Devtools, Network tab with "Offline" ticked: Inter fails to load and text falls back to the system font. Do this before recording.
+- Devtools contrast picker on the white text over the card, especially the feature tags and the bottom of the card.
+
+**What is not done**
+
+- Like is solid blue (`#4f5fd0`), not the blue gradient the amendment asks for.
+- Dislike is solid white with a grey hairline, not "white glass" (no translucency or blur).
+- The card price is weight 600. The reference asks for a large, light number.
+- The dashboard "Retry" button (`web/src/dashboard/DashboardScreen.tsx` line 74) has no class. Tailwind's reset strips its border and fill, so it reads as plain text and is under 44px tall.
+- The favourites remove dialog, the dashboard error state and the deck blocked and error panels were not checked by eye.
+- Step evidence is "command output recorded in the review". That output is not saved anywhere you can look at now.
+- The REQUIREMENTS block could not be checked for edits. The progress file first appears in the same commit as the restyle.
+- Tradeoff ledger: no entries.
+
+**What could bite you**
+
+- The Like button's blue look comes from `:last-child` in `deck.css`. If anyone reorders or adds a button in the action row, the wrong button turns blue and Like goes white, with no error.
+- Inter loads from Google Fonts. Record offline or on a flaky network and the font falls back to the system font, so the recording looks different from what you checked.
+- Tailwind's reset (preflight) applies to the whole app. Any future element with no class (a button, list or heading) loses its browser styling. The Retry button is the one case found now. New unstyled markup will look broken in the same way.

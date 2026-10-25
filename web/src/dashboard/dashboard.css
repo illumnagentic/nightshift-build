@@ -155,6 +155,29 @@
   outline-offset: 2px;
 }
 
+.dashboard button:not([class]) {
+  min-height: 48px;
+  margin-top: 12px;
+  padding: 0 20px;
+  border: 1px solid var(--color-hairline);
+  border-radius: 999px;
+  background: var(--color-page);
+  color: var(--color-ink);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.dashboard button:not([class]):hover {
+  background: var(--color-mist);
+}
+
+.dashboard button:not([class]):focus-visible {
+  outline: 3px solid var(--color-income-1);
+  outline-offset: 2px;
+}
+
 .dashboard .chart__table {
   margin-top: 0.75rem;
   border-collapse: collapse;
@@ -205,7 +228,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .dashboard .chart__toggle {
+  .dashboard .chart__toggle,
+  .dashboard button:not([class]) {
     transition: none;
   }
 }
