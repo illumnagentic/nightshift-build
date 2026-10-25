@@ -5,7 +5,7 @@
 - **Started**: 2026-10-25
 - **Branch**: fix/safe-merge-sigpipe
 - **BASE_SHA**: 278a239144ef0448a6fdccda2bc32e3e3b6f6704
-- **Status**: in progress
+- **Status**: complete (2026-10-25)
 - **Mode**: full automation (on since 2026-10-24)
 
 ---
@@ -123,42 +123,42 @@ _None logged._
 
 ## VERIFICATION
 
-- [x] All step checkboxes ticked with evidence — Step 1: five ticks, all dated 2026-10-25 (qa-gate 2026-10-25)
-- [x] Every evidence path in this file exists — `evidence/kit-safe-merge-sigpipe/step-1.md` present. Its "old form exit 0, 141 not reproduced" line is wrong: that run used a shell `grep` wrapper (ugrep), not GNU grep. Under GNU grep 3.11 qa-gate got old form 141 x8, new form 0 x8. File not corrected (qa-gate does not edit evidence). (qa-gate 2026-10-25)
-- [x] Test suite run — result: `cd web && npm test` 121 passed, 5 files, exit 0. Backend suite not run: needs a seeded test-mode server and this diff touches no backend code. (qa-gate 2026-10-25)
+- [x] All step checkboxes ticked with evidence — Step 1: five ticks plus two redo ticks, all dated 2026-10-25. (qa-gate 2026-10-25, re-run)
+- [x] Every evidence path in this file exists — `evidence/kit-safe-merge-sigpipe/step-1.md` present and now correct: old form 141, new form 0 under GNU grep, 63,223 bytes, no "not reproduced" claim. qa-gate re-measured in `bash --norc`, `/usr/bin/grep` 3.11: old form exit 141 x5 (PIPESTATUS `141 0`), new form exit 0 x5, non-matching line exit 1. (qa-gate 2026-10-25, re-run)
+- [x] REQUIREMENTS (LOCKED) unchanged — block identical in c99db7d and 4a88ffc. Line 95 covered by AMENDMENT (arbiter) 2026-10-25. (qa-gate 2026-10-25, re-run)
+- [x] Test suite run — result: `cd web && npm test` 121 passed, 5 files, exit 0. Backend suite not run: this diff touches no backend code. (qa-gate 2026-10-25, re-run)
 - [x] Lint run — result: no lint command configured in kit-config. (qa-gate 2026-10-25)
-- [x] Typecheck run — result: `cd web && npm run typecheck` exit 0. (qa-gate 2026-10-25)
-- [x] Build run — result: `cd web && npm run build` exit 0. (qa-gate 2026-10-25)
-- [x] Diff contains no files outside declared scope — 3 files: safe-merge.sh, step-1.md (Step 1 scope), this progress file. (qa-gate 2026-10-25)
-- [x] Tradeoff ledger reviewed — signed by arbiter (full automation); no tradeoffs logged. (qa-gate 2026-10-25)
-- [ ] Human eye test completed — not human-verified (full automation) — smoke check: `safe-merge.sh 15 --check-only` exit 0 "ok: all checks passed" (old script on the same PR: exit 2, branch check refused, 3 of 3 runs); `safe-merge.sh 12 --check-only` exit 2 "PR #12 is MERGED, not OPEN".
+- [x] Typecheck run — result: `cd web && npm run typecheck` exit 0 (first gate; no web code changed since). (qa-gate 2026-10-25)
+- [x] Build run — result: `cd web && npm run build` exit 0 (first gate; no web code changed since). (qa-gate 2026-10-25)
+- [x] Script checks — `bash -n .claude/scripts/safe-merge.sh` exit 0; `check-process-refs.sh 278a239` exit 0, no hits. Line 95 by hand: `QA-GATE: PASS` passes; `PASS WITH FINDINGS`, `FAIL` and no line all refuse. (qa-gate 2026-10-25, re-run)
+- [x] Diff contains no files outside declared scope — 3 files: safe-merge.sh, step-1.md (Step 1 scope), this progress file. (qa-gate 2026-10-25, re-run)
+- [x] Tradeoff ledger reviewed — signed by arbiter (full automation); no tradeoffs logged. SPOTTED items both marked accepted by arbiter. (qa-gate 2026-10-25, re-run)
+- [ ] Human eye test completed — not human-verified (full automation) — smoke check: `safe-merge.sh 15 --check-only` exit 0 "ok: all checks passed"; `safe-merge.sh 12 --check-only` exit 2 "PR #12 is MERGED, not OPEN". (qa-gate 2026-10-25, re-run)
 
-Finding (blocks PASS): the line 95 change is not covered by REQUIREMENTS (LOCKED). The quoted fix names lines 76 and 91 only, and "Explicitly out of scope" says "Any other change to `safe-merge.sh`". The PLAN Done-when adds line 95, but no AMENDMENT records it. The change is harmless (same logic, verified by hand) but the locked block and the diff disagree. Needs an AMENDMENT (arbiter or human) covering line 95, then a re-gate.
-
-QA-GATE: PASS WITH FINDINGS 2026-10-25
+QA-GATE: PASS 2026-10-25
 
 ---
 
 ## HANDOVER
 
-**What was built.** The merge guard (`.claude/scripts/safe-merge.sh`) no longer refuses a PR just because its progress file is large. Three checks piped a file into `grep -q`; under `set -o pipefail` the early exit of `grep -q` killed the `git show`/`printf` feeding it (exit 141), and the guard read that as "not found". Those three now use `grep … >/dev/null`, which reads all input. PR #15 now passes `--check-only`; with the old script it was refused at the branch check.
+**What was built.** The merge guard (`.claude/scripts/safe-merge.sh`) no longer refuses a PR because its progress file is large. Three checks (lines 76, 91, 95) piped a file into `grep -q`. Under `set -o pipefail`, `grep -q` exits on the first match, the `git show` or `printf` feeding it dies with exit 141, and the guard read that as "not found". Those checks now send grep's output to `/dev/null` instead, so grep reads all the input. PR #15 now passes `--check-only`.
 
 **What to check yourself.**
-1. `git diff 278a239...HEAD -- .claude/scripts/safe-merge.sh`. You should see three lines: 76, 91, 95. Only `-q` removed and `>/dev/null` added.
-2. Run `.claude/scripts/safe-merge.sh 15 --check-only`. Expect `ok: all checks passed`, exit 0. It does not merge.
-3. Run `git show 278a239:.claude/scripts/safe-merge.sh > /tmp/old.sh && bash /tmp/old.sh 15 --check-only`. Expect `no progress file on feat/prefs-filters declares ...`, exit 2. That is the bug.
-4. Run `.claude/scripts/safe-merge.sh 12 --check-only`. Expect `PR #12 is MERGED, not OPEN`, exit 2.
-5. Decide whether line 95 may stay. The locked requirements name only lines 76 and 91. If yes, add an AMENDMENT saying so and re-run qa-gate.
+1. `git diff 278a239...HEAD -- .claude/scripts/safe-merge.sh`. Three lines change: 76, 91, 95. Only `-q` removed and `>/dev/null` added.
+2. `.claude/scripts/safe-merge.sh 15 --check-only`. Expect `ok: all checks passed`, exit 0. It merges nothing.
+3. `.claude/scripts/safe-merge.sh 12 --check-only`. Expect `safe-merge: PR #12 is MERGED, not OPEN`, exit 2.
+4. In `bash --norc` with `set -o pipefail`: `git show d54ac25:.claude/progress/prefs-filters.md | grep -Fxq -- '- **Branch**: feat/prefs-filters'; echo $?` gives 141 (the bug). The same with `grep -Fx … >/dev/null` gives 0.
 
-**Tools that will help.** A plain terminal (`bash --norc`), not an agent shell: agent shells may wrap `grep` in ugrep, which behaves differently and gave misleading results during this work. `echo "${PIPESTATUS[*]}"` after a pipeline shows which stage failed; 141 in the first slot is the SIGPIPE.
+**Tools that will help.** A plain terminal (`bash --norc`), not an agent shell: agent shells may wrap `grep` in ugrep, which gave misleading results earlier. `echo "${PIPESTATUS[*]}"` after a pipeline shows which stage failed; 141 in the first slot is SIGPIPE.
 
 **What is not done.**
-- Line 95 change has no amendment behind it (see VERIFICATION finding).
-- `evidence/kit-safe-merge-sigpipe/step-1.md` says the old form was not reproduced. That is wrong under GNU grep; it was measured with a ugrep wrapper.
-- The kickoff said PR #15's progress file is "over 64 KB". It is 63,223 bytes. The bug reproduces anyway, so the claim does not matter, but it is inaccurate.
-- Pre-existing, unchanged by this diff: line 95 accepts VERIFICATION if any line says `QA-GATE: PASS`, even when a later line says `PASS WITH FINDINGS`. Not fixed here; out of scope.
 - No tradeoffs logged.
+- Accepted by arbiter, not fixed: the fix relies on GNU grep reading all of stdin when output goes to `/dev/null`. BSD/macOS grep is not confirmed to behave the same.
+- Accepted by arbiter, not fixed, pre-existing: line 95 passes if any VERIFICATION line says `QA-GATE: PASS`, even if another says `PASS WITH FINDINGS`. Candidate for a separate kit fix.
+- The kickoff said PR #15's progress file is "over 64 KB". It is 63,223 bytes. The bug reproduces anyway.
+- Not human-verified: full automation, smoke check only.
 
 **What could bite you.**
-- The fix relies on GNU grep draining stdin when its output goes to `/dev/null`. GNU grep 3.11 does. BSD grep (macOS) or a ugrep alias may not. If Yewen runs the merge guard on a Mac, the same refusal could come back. Reading into a variable first (`c="$(git show …)"; [[ $c == *…* ]]`) would not depend on grep at all.
-- The other `| grep -q` uses on lines 58 and 64 were left alone on purpose (short single strings). If someone later pipes a file into them, the same bug returns.
+- Running the merge guard on a Mac or with a non-GNU grep. If it refuses a large progress file again, reading the file into a variable and matching in bash would remove the grep dependency.
+- Lines 58 and 64 still use `| grep -q` on purpose (short strings). Anyone piping a file into them later brings the bug back.
+- A stale `QA-GATE: PASS` line left beside a newer finding would still let a PR through (line 95, above).
