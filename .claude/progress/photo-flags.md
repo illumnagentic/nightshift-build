@@ -197,11 +197,18 @@ and writes contract-shaped flag rows, proven by one test call and a 10-listing p
 version, pilot request IDs, token counts, cost extrapolation, a short sample of flags
 with what the photo shows, test output).
 
-- [ ] Implemented
-- [ ] Tested — evidence: (date)
-- [ ] Best practices met — evidence: (date)
-- [ ] Matches locked requirements — evidence: (date)
-- [ ] No scope drift — evidence: (date)
+- [x] Implemented — dataset/scripts/flag_images.py; 400-with-GIF resend, uncertainty required, prompt asks for minor defects; photo_flags.jsonl 30 listing_status lines match evidence token total 187,613 (2026-10-25)
+- [x] Tested — evidence: unittest discover in dataset/, 151 tests OK, exit 0; 22 in test_flag_images.py incl. GIF mimeType, 400->200, 400 no GIF, 400 twice, uncertainty required (2026-10-25)
+- [x] Best practices met — evidence: stdlib only, key via env/.env (ignored), enum validation, failed listings write nothing, process-refs check exit 0 (2026-10-25)
+- [x] Matches locked requirements — evidence: build_request/parse_response imported from worker/src/mubit.py; per-listing request, schema, thinking minimal, medium resolution; pilot of 10 with request IDs, cost extrapolation and eye checks in evidence/photo-flags/step-2.md (2026-10-25)
+- [x] No scope drift — evidence: diff limited to step 2 files plus progress file (2026-10-25)
+
+**Redo 1 (2026-10-25, arbiter FIX_NOW after review FAIL 1 of 3)**: (A) evidence
+passes the process-reference check, plus a GIF mimeType test; (B1) a 400 with a GIF in
+the request resends once without the GIFs, recording them as `rejected_by_model`;
+live run of the 20 GIF listings; (B3) `uncertainty` required in the schema and the
+system instruction asks for minor defects, real uncertainty and low confidence when
+ambiguous; pilot re-run. Files: Step 2's files in scope.
 
 ### Step 3 — Full run
 
@@ -274,13 +281,36 @@ output, test output).
   script. | The CDN returned real images throughout; magic bytes were checked once over
   the whole set. | Sniff magic bytes in the script and retry with backoff per image. — accepted by arbiter 2026-10-25: the dump is frozen, all 6,841 rows are `ok` and were sniffed once, and a re-run is the retry; adding it now changes no output and blocks nothing.
 
+- 2026-10-25 | 2 | GIF floorplans (20) are sent as `image/gif` although Google's
+  documented types exclude GIF. | One live GIF call returned 200 and read the plan (area
+  right, one bedroom-count error), and leaving GIFs out would drop those listings' floorplan
+  flags. | Convert the 20 GIFs to PNG (needs Pillow or similar, out of scope) or check all 20
+  outputs by eye after the full run. — accepted by arbiter 2026-10-25: Redo 1 added a resend-without-GIF fallback on HTTP 400 (tested with a fake sender); all 20 GIF listings returned 200 live and their floorplan outputs were checked by eye, so no listing loses flags either way.
+
+- 2026-10-25 | 2 | Cost is extrapolated from assumed prices, not the model's published
+  price. | The model is newer than the implementer's knowledge and no price page was read.
+  Estimate GBP 0.7 to 3.3 for 635 listings, under the GBP 5 limit on both bases. | Read the
+  Mubit console cost page before and after the full run. — accepted by arbiter 2026-10-25: tokens are measured (about 3.8 M in, 1.3 M out for 635 listings); the GBP 5 cap holds up to about 2 to 3 times Gemini 2.5 Flash rates, well above any Flash-Lite-class price, and step 3 records actual tokens and console cost.
+
+- 2026-10-25 | 2 | Pilot flags look optimistic: after the prompt change, the 10 pilot listings
+  still have no `defects` rows, light `poor` once and never `none`, `uncertainty` set on 12 of
+  223 rows, confidence never low (10 listings, 93 photos). The 20 GIF listings gave 16 defect
+  rows, 1 low-confidence row and 38 of 463 rows with uncertainty. | The
+  prompt and schema were kept as asked; tuning them was not part of the step and the sample is
+  small. | Re-prompt for defects and uncertainty, or accept that a missing defect flag means
+  none seen, before the full run. — accepted by arbiter 2026-10-25: the redo's prompt change was made and the model does report defects when they exist (16 rows on the GIF set, eye-checked correct, one with overstated confidence); the pilot 10 may simply be clean. Flags are soft curator input, a missing defect flag reads as "none seen", and users can correct flags (B5). A second prompt redo would re-spend on the pilot with no evidence it would help.
+
+- 2026-10-25 | 2 | A request has a 300 s timeout and no retry inside a run. One pilot
+  listing hung once and succeeded on the next run in 10 s. | Failed listings are retried by
+  re-running, as the step specifies. | Add a shorter timeout with one automatic retry. — accepted by arbiter 2026-10-25: step 3's done-when allows a rerun of failures, which is the retry; one hang in 10 listings costs minutes, not flags.
+
 ---
 
 ## SPOTTED, NOT FIXED
 
 - `dataset/photos/*/floorplan-0.gif` (20 files) | Floorplans are GIF; Gemini's
   documented image types are PNG, JPEG, WebP, HEIC, HEIF. Step 2 must skip or handle
-  them (no Pillow) | medium
+  them (no Pillow) | medium — accepted by arbiter 2026-10-25: handled in Step 2 Redo 1 (sent as image/gif, resend without GIFs on 400); 20/20 accepted live.
 
 ---
 

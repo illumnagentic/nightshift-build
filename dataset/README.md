@@ -685,6 +685,25 @@ second run downloads nothing. `images-manifest.csv` is committed: one row per im
 `failed: <reason>` and an empty path; the script lists failures and carries on. The
 manifest is the same after a re-run unless a failed image is fetched on the retry.
 
+## Flagging the images
+
+Each listing's photos and floorplans are sent in one request to `gemini-3.5-flash-lite`
+through the Mubit gateway, and the answer is stored as flag rows. From `dataset/`:
+
+```bash
+python3 -I -B scripts/flag_images.py --limit 10      # first 10 listings, id order
+python3 -I -B scripts/flag_images.py --listing rm-137220284
+python3 -I -B scripts/flag_images.py                 # all listings, 4 requests at a time
+```
+
+`MUBIT_API_KEY` is read from the environment, else from the repo-root `.env`. Output is
+`photo_flags.jsonl`: flag rows in the shape of `photo_flags` in `docs/api-contract.md`,
+plus one `"record_type": "listing_status"` line per listing (request ID, token usage,
+skipped photos, images not sent, rows rejected for a bad enum). A listing with a status
+line is skipped on re-run. A listing whose call fails writes nothing and is retried by
+the next run. Images are sent as the type their first bytes say; a type Gemini does not
+take is left out and listed as `unsupported_format`.
+
 ## Loading into D1
 
 **Not yet run.** No D1 database exists yet, so these commands have not been tried. Create
