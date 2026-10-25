@@ -253,6 +253,12 @@ cd web && npm ci && npm run dev
 `seed.sh` after pulling schema changes, with the server stopped. Details in
 [worker/README.md](worker/README.md).
 
+`./dev.sh` at the repo root wraps these commands:
+
+- `./dev.sh seed` wipes and reseeds the local D1, users included, and refuses while :8787 is in use.
+- `./dev.sh tables` adds new tables and keeps users.
+- `./dev.sh start` runs the backend on :8787 and the frontend on :5173 together; Ctrl+C stops both. It needs `worker/.dev.vars` and `web/node_modules`.
+
 ## Tests
 
 ```bash
