@@ -290,7 +290,8 @@ Response 200 (`empty_reason` is `null` here; an empty deck is
 - `photos` is an ordered list of URLs.
 
 Errors: 409 `prefs_missing` (no prefs saved), 422 `invalid_request` (`n` out of range or
-not an integer).
+not an integer). 502 `curator_failed` (listings match, but the curator scored none of
+them; retry).
 
 ## Listings
 

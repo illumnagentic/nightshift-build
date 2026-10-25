@@ -27,3 +27,35 @@ CREATE TABLE IF NOT EXISTS commute_cache (
   fetched_at TEXT NOT NULL,                  -- ISO 8601 UTC
   PRIMARY KEY (listing_id, postcode)         -- shared by every user with that postcode
 );
+
+CREATE TABLE IF NOT EXISTS decisions (
+  decision_id TEXT PRIMARY KEY,              -- opaque random string; one per card served
+  user_id TEXT NOT NULL REFERENCES users(user_id),
+  listing_id TEXT NOT NULL REFERENCES listings(id),
+  source TEXT NOT NULL CHECK (source IN ('ranked', 'exploration')), -- never shown on the card face
+  score INTEGER,                             -- the curator score at serve time
+  curator_request_id TEXT,                   -- mreq_ id of the call that scored it; NULL = none
+  profile_version INTEGER NOT NULL,          -- taste profile version the score was made under
+  served_at TEXT NOT NULL,                   -- ISO 8601 UTC
+  swiped_at TEXT                             -- ISO 8601 UTC; NULL = not swiped
+);
+
+CREATE INDEX IF NOT EXISTS decisions_user ON decisions (user_id);
+
+CREATE TABLE IF NOT EXISTS offered_chips (
+  decision_id TEXT NOT NULL REFERENCES decisions(decision_id) ON DELETE CASCADE,
+  chip_id TEXT NOT NULL,                     -- a chip sent on the card; chips cut by the limit are not logged
+  position INTEGER NOT NULL,                 -- 0-based place in the card's chips[]
+  PRIMARY KEY (decision_id, chip_id)
+);
+
+CREATE TABLE IF NOT EXISTS curator_scores (
+  user_id TEXT NOT NULL REFERENCES users(user_id),
+  listing_id TEXT NOT NULL REFERENCES listings(id),
+  profile_version INTEGER NOT NULL,          -- scored under this taste profile version
+  score INTEGER NOT NULL CHECK (score BETWEEN 0 AND 100),
+  reason TEXT,                               -- the curator's short reason; NULL = none given
+  request_id TEXT,                           -- mreq_ id of the scoring call; NULL = none
+  scored_at TEXT NOT NULL,                   -- ISO 8601 UTC
+  PRIMARY KEY (user_id, listing_id, profile_version)
+);

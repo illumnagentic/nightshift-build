@@ -11,12 +11,21 @@ can make one listing's journeys answer 429 whatever the postcode. EC2N and SW1A 
 commute pending, and caches nothing, however often the suite is run against one database.
 Both routes are served on one port.
 
+A request whose system prompt is the curator's gets a valid score for every listing in its user JSON
+(a hash of the id, reason "fake"); "[[curator_500]]" in stated.soft makes it answer 500.
+
 The answer is chosen by a marker in the user's text, e.g. "[[bad_values]]". It refuses any
 key other than FAKE_KEY, so a real key sent by mistake shows up as a 401 and a recorded request.
 """
+import hashlib
 import json
+import sys
 import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
+import curator  # noqa: E402
 
 FAKE_KEY = "test-key-not-a-real-key"
 FAKE_REQUEST_ID = "mreq_fake0000000000000000000000000001"
@@ -63,6 +72,16 @@ def answer_for(user_text: str) -> tuple[int, str]:
     if "[[bad_values]]" in user_text:
         return 200, json.dumps(_wrap(json.dumps(BAD_VALUES)))
     return 200, json.dumps(_wrap(json.dumps(GOOD)))
+
+
+def curator_answer(user_text: str) -> tuple[int, str]:
+    """(status, body) for a curator request: a deterministic valid score for each listing."""
+    payload = json.loads(user_text)
+    if "[[curator_500]]" in json.dumps(payload["stated"].get("soft")):
+        return 500, json.dumps({"error": {"code": 500, "message": "upstream broke", "status": "INTERNAL"}})
+    scores = [{"listing_id": item["id"], "score": int(hashlib.sha256(item["id"].encode()).hexdigest(), 16) % 101, "reason": "fake"}
+              for item in payload["listings"]]
+    return 200, json.dumps(_wrap(json.dumps({"scores": scores})))
 
 
 class FakeUpstream(HTTPServer):
@@ -127,7 +146,9 @@ class _Handler(BaseHTTPRequestHandler):
         if key != FAKE_KEY:
             status, text = 401, json.dumps({"error": {"type": "middleware_gateway_error", "code": "invalid_key", "message": "bad key"}})
         else:
-            status, text = answer_for(body["contents"][0]["parts"][0]["text"])
+            user_text = body["contents"][0]["parts"][0]["text"]
+            is_curator = body.get("systemInstruction", {}).get("parts", [{}])[0].get("text") == curator.SYSTEM_PROMPT
+            status, text = curator_answer(user_text) if is_curator else answer_for(user_text)
         payload = text.encode()
         self.send_response(status)
         self.send_header("Content-Type", "application/json")

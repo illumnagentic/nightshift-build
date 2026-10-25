@@ -12,6 +12,7 @@ from starlette.exceptions import HTTPException
 from workers import WorkerEntrypoint
 import asgi
 
+import deck
 import mubit
 import prefs
 import tfl
@@ -181,7 +182,22 @@ async def put_prefs(request: Request, body: dict = Body(...), user_id: str = Dep
         " parse_request_id = excluded.parse_request_id, commute_status = excluded.commute_status, commute_fail_streak = 0,"
         " updated_at = excluded.updated_at"
     ).bind(user_id, text, normalised, max_commute, json.dumps(parsed), result.request_id, status, updated_at).run()
+    await deck.drop_unswiped(env.DB, user_id)
     return {"text": text, "commute_postcode": normalised, "max_commute_min": max_commute, "parsed": parsed, "commute_status": status}
+
+
+@api.get("/deck")
+async def get_deck(request: Request, n: str = "10", user_id: str = Depends(current_user)):
+    if not re.fullmatch(r"[0-9]{1,3}", n) or not 1 <= int(n) <= 10:
+        raise ApiError(422, "invalid_request", "n must be a whole number from 1 to 10.")
+    env = request.scope["env"]
+    row = await prefs_row(env.DB, user_id)
+    if row is None:
+        raise ApiError(409, "prefs_missing", "Save your preferences before asking for a deck.")
+    try:
+        return await deck.get_deck(env, user_id, int(n), row)
+    except deck.CuratorFailed:
+        raise ApiError(502, "curator_failed", "We could not rank homes for you just now. Please try again.")
 
 
 app.include_router(api)

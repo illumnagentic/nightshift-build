@@ -120,12 +120,27 @@ These modules need no server and no network, and run with a plain
 - `tests/test_prefs_unit.py`: parsing and checking of the model's reply.
 - `tests/test_mubit.py`: the Mubit client.
 - `tests/test_tfl_unit.py`: reading TfL answers and building the journey URL.
+- `tests/test_chips_unit.py` and `tests/test_curator_unit.py`: chip selection and the curator's request and reply checks.
 
-`tests/test_users.py`, `tests/test_prefs.py` and `tests/test_commute.py` call the API and
+`tests/test_users.py`, `tests/test_prefs.py`, `tests/test_commute.py` and `tests/test_deck.py` call the API and
 need the seeded test-mode server. Each run adds users to the local D1. The fake answers
 a few postcodes with 500 so the suite can be repeated without re-seeding, but re-seed
 to clear the users. Stop the dev server before running `worker/scripts/seed.sh` and
 start it again afterwards, or the server returns 500.
+
+## Deck
+
+`GET /api/deck?n=10` scores every listing in the buyer's pool (train split, passing the hard
+filters) with the curator the first time it is asked, in concurrent chunks of 20, and caches
+the scores in `curator_scores`. A first deck therefore waits on about 4 to 25 curator calls, and
+a re-save of prefs clears the cache. Under `pywrangler dev` against the real key these calls
+are paid; in test mode they go to the fake. A chunk that fails is skipped and tried again on
+the next request; if nothing at all scores, the answer is 502 `curator_failed`.
+
+Served cards are stored in `decisions` with their chips in `offered_chips`. Until swipe
+endpoints exist, a user's deck never moves past the first `n` cards, so `test_deck.py` gets its
+larger samples from several users, and the `exhausted` reason is covered only by unit tests on
+the card picker.
 
 ## Mubit ping
 
@@ -142,7 +157,8 @@ when checking the gateway.
 - `src/entry.py`: the FastAPI app and the `/api` routes.
 - `src/mubit.py`: the Mubit gateway client.
 - `src/prefs.py`, `src/tfl.py`, `src/filters.py`: prefs parsing, TfL commute times, hard filters.
-- `schema.sql`: app tables (`users`, `prefs`, `commute_cache`).
+- `src/curator.py`, `src/chips.py`, `src/deck.py`: the curator call, per-card chips, and the deck.
+- `schema.sql`: app tables (`users`, `prefs`, `commute_cache`, `decisions`, `offered_chips`, `curator_scores`).
 - `../dataset/d1/`: listings schema and data, loaded by `seed.sh`.
 - `scripts/`: `seed.sh` and `mubit_ping.py`.
 - `tests/`: unit and API tests, and the fake upstream (`fake_upstream.py`).
