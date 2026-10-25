@@ -50,6 +50,17 @@ export function BarChart({ metric, title, format = defaultFormat }: Props) {
     active === null
       ? 0
       : Math.min(W - RIGHT - TIP_W, Math.max(LEFT, cx(active) - TIP_W / 2));
+  // The tooltip sits in the top band unless the active bar's value text
+  // (about 12 tall, baseline at valueY) falls inside it; then it moves just
+  // above the baseline.
+  const valueY =
+    activeBar === null
+      ? 0
+      : activeBar.missing
+        ? BASE - 10
+        : y(activeBar.high) - 8;
+  const tipY =
+    valueY > TOP && valueY - 12 < TOP + TIP_H ? BASE - TIP_H - 4 : TOP;
 
   return (
     <div className="dashboard chart">
@@ -148,7 +159,7 @@ export function BarChart({ metric, title, format = defaultFormat }: Props) {
           );
         })}
         {activeBar && (
-          <g className="chart__tip" transform={`translate(${tipX} ${TOP})`}>
+          <g className="chart__tip" transform={`translate(${tipX} ${tipY})`}>
             <rect width={TIP_W} height={TIP_H} rx={4} />
             <text x={8} y={16} className="chart__tip-label">
               {activeBar.label}

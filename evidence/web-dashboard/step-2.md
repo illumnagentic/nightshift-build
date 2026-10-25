@@ -16,6 +16,10 @@ Date: 2026-10-25
 - The svg has `role="group"` with an `aria-label` summary. Each focusable hit rectangle has `role="img"` and its own `aria-label` (arm, mean ± SD text and persona count, or "Not available"), so no focusable element sits inside a `role="img"`. A "Show table" button toggles an HTML table (caption = title; columns Arm, Mean, Standard deviation, Personas).
 - Styles are in `dashboard.css`, every rule under `.dashboard`.
 
+## Tooltip placement
+
+The tooltip is drawn in the top band (y 30 to 100) unless the active bar's value text (baseline `y(high) - 8`, or `BASE - 10` for a missing arm, about 12 tall) overlaps that band. In that case it is drawn in a bottom band, y = BASE - 70 - 4, just above the baseline. Horizontal placement is unchanged. The bottom band can cover the bar body and error bar, not the value text. Not seen in a browser.
+
 ## Palette validator
 
 The dataviz palette validator, run in light mode against the app's white surface:

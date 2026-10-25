@@ -163,6 +163,22 @@ the process-wording check exits 0. Not wired into the app yet.
 - [x] Matches locked requirements — evidence: done-when as amended 2026-10-25 (AMENDMENTS); order, missing arm, error bars, tooltip hover+focus, table (2026-10-25)
 - [x] No scope drift — evidence: git status shows only BarChart.tsx, dashboard.css, evidence/web-dashboard/step-2.md, progress file (2026-10-25)
 
+#### Redo of Step 2 — tooltip never covers the value
+
+**Goal**: A bar's tooltip never covers that bar's value text.
+
+**Files in scope**: `web/src/dashboard/BarChart.tsx`, `evidence/web-dashboard/step-2.md`.
+
+**Done when**: the tooltip is drawn in the top band (as now) unless the active bar's value text falls inside that band, in which case it is drawn in a bottom band above the baseline; the rule is a small pure calculation in the component; nothing else changes; TRADEOFFS entry 2 (tooltip placement) is updated in place to describe what remains, or removed if nothing does; diff contains only intended hunks; typecheck, tests and build exit 0; the process-wording check exits 0.
+
+**Evidence location**: `evidence/web-dashboard/step-2.md`.
+
+- [x] Implemented — BarChart.tsx valueY/tipY; typecheck/build exit 0 (2026-10-25)
+- [x] Tested — evidence: npm test exit 0 (186); rule checked by hand for top, missing and short bars; browser pass recorded in Step 3 (2026-10-25)
+- [x] Best practices met — evidence: pure calculation, no new state; check-process-refs exit 0 (2026-10-25)
+- [x] Matches locked requirements — evidence: top band unless value text overlaps, then bottom band; tradeoff 2 rewritten in place and accurate (2026-10-25)
+- [x] No scope drift — evidence: diff touches only placement hunks in BarChart.tsx, step-2.md, progress file (2026-10-25)
+
 ### Step 3 — Results tab
 
 **Goal**: A Results tab loads `GET /stats` and shows the two charts, the empty state and
@@ -191,12 +207,28 @@ measure per chart; switching user still resets to Deck; the rate chart passes a 
 - [x] Matches locked requirements — evidence: done-when as amended; texts exact, percent format passed to rate chart, n shown only when shared (2026-10-25)
 - [x] No scope drift — evidence: git status shows only DashboardScreen.tsx, dashboard.css, App.tsx, evidence step-3.md, progress file; RULES table diff is padding only (2026-10-25)
 
+#### Redo of Step 3 — reuse helpers and full browser checks
+
+**Goal**: The Results screen reuses the existing percent formatter and network message, and the amended browser checks are recorded in full.
+
+**Files in scope**: `web/src/dashboard/DashboardScreen.tsx`, `web/src/dashboard/statsModel.ts` (export the existing percent formatter only), `evidence/web-dashboard/step-3.md`.
+
+**Done when**: DashboardScreen passes the percent formatter already in `statsModel.ts` (exported, not rewritten) instead of its own `percent`; its network message reuses `GENERIC_ERROR_MESSAGE` from `web/src/deck/deckState.ts`; no other change; orchestrator browser checks recorded: hover and keyboard focus on each of the six bars, each showing its tooltip without covering that bar's value text; typecheck, tests and build exit 0; the process-wording check exits 0.
+
+**Evidence location**: `evidence/web-dashboard/step-3.md`.
+
+- [ ] Implemented
+- [ ] Tested — evidence: (date)
+- [ ] Best practices met — evidence: (date)
+- [ ] Matches locked requirements — evidence: (date)
+- [ ] No scope drift — evidence: (date)
+
 ---
 
 ## TRADEOFFS
 
 - Step 2, `web/src/dashboard/BarChart.tsx` | no automated test for the chart (no test file in scope, no DOM test library installed) | rendering, hover, focus and table toggle are unchecked until the browser pass | add a DOM test environment (new dependency, needs approval) or rely on the browser checks in Step 3
-- Step 2, `BarChart.tsx` | tooltip is drawn in SVG at a fixed height over the plot and can cover the value text of neighbouring bars | simplest placement without measuring text | HTML tooltip positioned from the pointer
+- Step 2, `BarChart.tsx` | when a bar's value text falls in the top band, the tooltip is drawn in a bottom band just above the baseline, where it can cover that bar's body and error bar (never its value text) | fixed two-band placement is the simplest rule that avoids the value text | HTML tooltip positioned from the pointer
 - Step 2, `BarChart.tsx` | ticks are 0 to 5 in steps of 1 for hits (six gridlines), 0, 50%, 100% for the rate, keyed on `axisMax` | keeps hit ticks integer | pass ticks as a prop
 - Step 3, `web/src/dashboard/DashboardScreen.tsx` | no automated test for the screen (no test file in scope, no DOM test library installed) | loading, error, empty, fallback and banner states are unchecked until the browser pass | add a DOM test environment (new dependency, needs approval)
 - Step 3 | Chart text scales with the SVG and renders about 9–10 px tall at 375 px wide | the recording is made on a laptop where text is full size; a fixed font size needs per-width layout | render text outside the scaled SVG or set a minimum size at narrow widths
@@ -216,16 +248,65 @@ measure per chart; switching user still resets to Deck; the rate chart passes a 
 
 ## VERIFICATION
 
-- [ ] All step checkboxes ticked with evidence
-- [ ] Every evidence path in this file exists
-- [ ] Test suite run — result:
-- [ ] Lint run — result:
-- [ ] Typecheck run — result:
-- [ ] Build run — result:
-- [ ] Diff contains no files outside declared scope
-- [ ] Tradeoff ledger reviewed and signed off by human
+- [x] All step checkboxes ticked with evidence — 15 of 15 ticked, dated 2026-10-25, in step order (qa-gate 2026-10-25)
+- [x] Every evidence path in this file exists — evidence/web-dashboard/step-1.md, step-2.md, step-3.md (qa-gate 2026-10-25)
+- [x] Test suite run — result: `npm test` in a clean `git archive HEAD web` copy after `npm ci` (exit 0): 8 files, 186 tests passed, exit 0. Backend tests not run: no `worker/` files in the diff, and they need a seeded, running server (qa-gate 2026-10-25)
+- [ ] Lint run — result: not configured (kit-config Lint blank, no `lint` script in web/package.json)
+- [x] Typecheck run — result: `npm run typecheck` exit 0 (qa-gate 2026-10-25)
+- [x] Build run — result: `npm run build` exit 0. Bundle check: mock build 1 file with the banner text, plain build 0, http build 0 (qa-gate 2026-10-25)
+- [x] Diff contains no files outside declared scope — every file is in a step's Files in scope, plus this progress file (qa-gate 2026-10-25)
+- [ ] Tradeoff ledger reviewed and signed off by human — 5 entries, all unsigned. Entry 2 describes the wrong cost: see HANDOVER
 - [ ] Human eye test completed
+
+QA-GATE: FAIL 2026-10-25 — 5 unsigned tradeoffs; the amended Step 3 browser check (tooltip does not hide value text) is not recorded, and by the chart geometry the tooltip does hide the hovered bar's own value text on two of the three hits bars.
 
 ---
 
 ## HANDOVER
+
+### What was built
+
+The app has a fourth tab, Results, after Favourites. It loads `GET /stats` each time it opens and shows two bar charts. The first is hits in the top 5 on a 0 to 5 axis, and the second is the false-exclude rate on a 0 to 100% axis. Each chart has three bars in a fixed order (Base curator, Base + memory, Updated + memory) with ±1 SD error bars, a tooltip per bar, and a Show table button. It handles loading, errors with Retry, the empty state ("No evaluation has run yet."), and fallback D, where the updated arm is missing: two bars, a "Not available" slot and a note. In mock builds a banner says the numbers are samples.
+
+### What to check yourself
+
+1. Make sure `web/.env` has `VITE_API_MODE=mock` (copy `web/.env.example` if it does not exist). Run `cd web && npm run dev` and open http://localhost:5173.
+2. Pick or create a user, then press Results, the fourth tab. You should see the banner "Sample numbers from the mock, not real results", then "Hits in the top 5" with 2.2 ± 0.8, 3.1 ± 0.7 and 3.8 ± 0.6, then "False-exclude rate" with 31% ± 9%, 22% ± 7% and 15% ± 6%. Under each chart you should see "Across 5 held-out personas" and the error-bar caption.
+3. Hover over each bar in turn. Then press Tab to move through the bars. A tooltip should appear each time. Look at Base + memory and Updated + memory on the hits chart. The tooltip sits over the top of the chart and covers that bar's own value text. Decide whether that is acceptable for the recording.
+4. Press Show table under each chart. The table should match the bars. The rate table should show percentages, not 0.31.
+5. Check the empty state. Open devtools, go to Console, and run:
+   `const m = await import('/src/api/mock.ts'); m.mockClient.getStats = async () => ({ arms: { base: null, base_memory: null, updated_memory: null } });`
+   Press Deck, then Results. You should see only "No evaluation has run yet."
+6. Check fallback D. In the same console, run:
+   `const real = (await import('/src/api/mock.ts')).mockClient; const s = { arms: { base: { hits_top5: { mean: 2.2, sd: 0.8, n_personas: 5 }, false_exclude_rate: { mean: 0.31, sd: 0.09, n_personas: 5 } }, base_memory: { hits_top5: { mean: 3.1, sd: 0.7, n_personas: 5 }, false_exclude_rate: { mean: 0.22, sd: 0.07, n_personas: 5 } }, updated_memory: null } }; real.getStats = async () => s;`
+   Press Deck, then Results. You should see the note "The updated curator is not available, so only the base arms are shown." Each chart should draw two bars, with "Not available" in the third slot. The decisions text says "graph shows bars 1 and 2". Decide whether the empty third slot is what you want on the recording.
+7. Narrow the window to about 375 px (devtools device toolbar). The four tabs should fit without sideways scrolling. Chart text will be small, around 9 to 10 px. That is a logged tradeoff.
+8. Press Switch user while on Results. You should land on Deck after picking a user.
+9. Read the five TRADEOFFS entries and sign each one, or reject it. Entry 2 says the tooltip can cover the value text of neighbouring bars. It does not. It stays inside its own bar's slot and covers that bar's own value text when the bar is tall.
+
+### Tools that will help
+
+- Browser devtools, Network tab: in http mode, open Results and confirm one `GET /api/stats` per opening, with no `X-User-Id` header. In mock mode there is no network call, because the mock answers in the page.
+- Browser devtools, Console: the overrides in steps 5 and 6 are the only way to see the empty and fallback-D states without a backend.
+- Devtools Accessibility pane, or VoiceOver (Cmd+F5): each bar should read as, for example, "Base curator: 2.2 ± 0.8, 5 personas". The chart itself is a group with a summary label.
+- curl, once B7 lands: `curl -s http://localhost:8787/api/stats` should return the contract shape. Then run the web app with `VITE_API_MODE=http` and compare the numbers.
+
+### What is not done
+
+- Tradeoffs, all unsigned:
+  1. No automated test for the chart. Rendering, hover, focus and the table toggle rest on browser checks only.
+  2. The tooltip is drawn inside the SVG at a fixed height. As logged, it says it covers neighbouring bars. In fact it covers the hovered bar's own value text on Base + memory and Updated + memory in the hits chart, using the mock numbers.
+  3. Ticks are hard-coded from `axisMax`: 0 to 5 in steps of 1, or 0%, 50% and 100%.
+  4. No automated test for the screen. Loading, error, empty, fallback and banner states rest on browser checks only.
+  5. Chart text scales with the SVG and renders about 9 to 10 px tall at 375 px wide.
+- The amendment of 2026-10-25 asked for browser checks of keyboard focus on each bar and of the tooltip not hiding value text at about 375 px. The evidence records focus on the first bar only, records no hover check, and does not record the tooltip check.
+- There is no lint command in this repo, so none was run.
+- Spotted, not fixed: `.claude/worktrees/` is untracked and not gitignored. There is a `swipeBusy` race in useDeck (F2). Strength labels are written out twice (F3). There are orphaned `.deck-feedback` rules (F3). The generic network message is written out again in Prefs and Favourites (F4), and now in `DashboardScreen.tsx` too as `NETWORK_MESSAGE`, instead of reusing `GENERIC_ERROR_MESSAGE` from `web/src/deck/deckState.ts`. The "Preferences" tab text overflows its button at 375 px.
+- The percentage formatter is written twice: `pct` in `statsModel.ts` and `percent` in `DashboardScreen.tsx`.
+- Out of scope by design: the stats endpoint itself (B7), Mubit version history and cost panels for fallback D, live updating, and dark mode.
+
+### What could bite you
+
+- The dashboard has never seen a real `/stats` response, because B7 is not built. If the backend sends a shape that differs from the contract (for example, an arm with no `false_exclude_rate`), `buildStatsModel` throws inside the fetch handler. The screen then shows "Could not reach the server. Try again.", which points you at the network when the real fault is the response shape.
+- In http mode with no backend running, the Vite proxy returns a 502. The screen will then show "Request failed with status 502.", not "Could not reach the server". That is accurate but looks rough if it shows up in a recording.
+- If the real arms report different `n_personas` (for example, one arm evaluated on fewer personas), the "Across N held-out personas" line disappears. The count is then only in the tooltips and tables. Check this before recording.
