@@ -5,7 +5,7 @@
 - **Started**: 2026-10-25
 - **Branch**: feat/curator-deck
 - **BASE_SHA**: 882efc0838383ac87a4025eb19df00d940cbc754
-- **Status**: in progress
+- **Status**: complete (2026-10-25)
 - **Mode**: full automation (on since 2026-10-24)
 
 ---
@@ -359,19 +359,96 @@ Exploration slots: a new card is `exploration` when (user's decision count befor
 
 ## VERIFICATION
 
-- [ ] All step checkboxes ticked with evidence
-- [ ] Every evidence path in this file exists
-- [ ] Test suite run — result:
-- [ ] Lint run — result:
-- [ ] Typecheck run — result:
-- [ ] Build run — result:
-- [ ] Diff contains no files outside declared scope
-- [ ] Tradeoff ledger reviewed and signed off by human
-- [ ] Human eye test completed
+- [x] All step checkboxes ticked with evidence — Steps 1–6 and the Step 2 redo, five boxes each (redo two), all dated 2026-10-25; Step 3 redo withdrawn by arbiter, no boxes (qa-gate 2026-10-25)
+- [x] Every evidence path in this file exists — `evidence/curator-deck/step-1.md` to `step-6.md`, `evidence/chip-catalogue/coverage.md` (qa-gate 2026-10-25)
+- [x] Test suite run — result: throwaway worktree on the merge tree with origin/main (b53c54e), fresh seed, test-mode server :8811, fake :8813: full backend suite 279 passed exit 0, then 279 passed exit 0 again on the same D1; server-less modules (filters, prefs_unit, mubit, tfl_unit, chips, curator_unit) 168 passed exit 0; web `npm ci` exit 0, `npm test` 186 passed exit 0 (qa-gate 2026-10-25)
+- [x] Lint run — result: no lint command configured in kit-config (qa-gate 2026-10-25)
+- [x] Typecheck run — result: web `npm run typecheck` exit 0 on the merge tree (qa-gate 2026-10-25)
+- [x] Build run — result: web `npm run build` exit 0 on the merge tree (qa-gate 2026-10-25)
+- [x] Diff contains no files outside declared scope — all 18 files map to a step's Files in scope or the progress file; `git merge-tree --write-tree origin/main HEAD` clean; check-process-refs exit 0 (qa-gate 2026-10-25)
+- [x] Tradeoff ledger reviewed — signed by arbiter (full automation): 6 TRADEOFFS rows accepted by arbiter, 3 SPOTTED rows resolved by Steps 2 redo, 5 and 6 (qa-gate 2026-10-25)
+- Human eye test completed: not human-verified (full automation) — smoke check: pass. Fake upstream, test-mode server: create user 201; PUT prefs no postcode 200; `GET /api/deck?n=10` 200, 10 cards, one curator call, exploration at positions 5 and 10, 8 chips on every card, commute null on all, no `split` key anywhere, `feedback_required` true on all; refetch same 10 `decision_id`s, no curator call; re-save prefs then deck 200, 10 cards, no old id, one new call; `[[curator_http_500]]` user with nothing outstanding 502 `{"error":{"code":"curator_failed","message":...}}`; `n=0` 422 `invalid_request`; no prefs 409 `prefs_missing`; fake saw only the fake key.
+- Frozen curator: `SYSTEM_PROMPT` SHA-256 9b5a064bb97282a54c8a2c85de7aae3d004592ed8c7f1d993536328864c3c777 and `GENERATION_CONFIG` (sorted-key JSON) SHA-256 10a031b51b80ab09b2ae3d2d5bfb3f17645df9d8659d9de0c6e0b7fc9d928248 recomputed at HEAD 10e524f, match Step 2; `worker/src/curator.py` unchanged since dc9076a.
+- REQUIREMENTS (LOCKED) block byte-identical in every committed version (c6fc049 to 10e524f); edits before the first commit cannot be checked.
+
+QA-GATE: PASS 2026-10-25
 
 ---
 
 ## HANDOVER
+
+### What was built
+
+A user who has saved preferences can now ask for a deck of property cards. The backend
+picks 30 train-split listings that pass their hard filters, asks `gemini-3.8-flash`
+through Mubit to rank them, and serves up to 10 cards: mostly the top of the ranking,
+with every fifth card drawn from the 50th–80th percentile as an exploration card. Each
+card carries a `decision_id`, its `source`, an onboarding hint and up to 8 feedback
+chips chosen for that listing. Every curator call (candidates, full ranking, `mreq_` id,
+tokens) and every served card is stored in D1; re-saving preferences drops unswiped cards.
+
+### What to check yourself
+
+1. Seed and start the backend: `worker/scripts/seed.sh`, then in `worker/`
+   `uvx --from workers-py pywrangler dev`. It serves http://localhost:8787/api.
+   This is the real server: each deck load that needs new cards is a paid Gemini call.
+2. Create a user: `curl -s -X POST localhost:8787/api/users -H 'Content-Type: application/json' -d '{"username":"zsolt_check"}'`.
+   Note the `user_id` (`u_…`).
+3. Save prefs without a postcode (one paid parse call):
+   `curl -s -X PUT localhost:8787/api/prefs -H 'Content-Type: application/json' -H 'X-User-Id: u_…' -d '{"text":"Two bed flat under 550k near a tube station, bright rooms"}'`.
+4. `curl -s 'localhost:8787/api/deck?n=10' -H 'X-User-Id: u_…'`. Expect 10 cards; cards 5
+   and 10 have `"source":"exploration"`; `commute` is `null`; no card has more than 8 chips.
+   Read the top three listings and judge whether the order is sensible for the text you wrote.
+5. Run the same request again. Same `decision_id`s, and no new row in `curator_calls`:
+   `cd worker && npx wrangler d1 execute haka --local --command "SELECT call_id, status, mreq_id, prompt_tokens FROM curator_calls WHERE user_id='u_…'"`.
+6. Open Mubit's Tasks page and look up that `mreq_id`. Confirm there is ONE curator task
+   (ruling Q8). Do this before the persona batch.
+7. Do not use the web app for this check without a postcode: see "What could bite you".
+
+### Tools that will help
+
+- curl (above): the response body is the contract; check `source`, `chips`, `commute`.
+- `npx wrangler d1 execute haka --local --command "…"` in `worker/`: `curator_calls`
+  shows each call's status, `mreq_id` and tokens; `decisions` shows `source`, `rank`,
+  `offered_chips` and `curator_call_id` per card.
+- The `pywrangler dev` terminal: a failed curator call logs
+  `Curator call failed, call_id=… request_id=…` with the reason.
+- Mubit console: the `mreq_` id ties a stored call to Mubit's record.
+- Provider bill: the real per-call price after the first 50 calls.
+
+### What is not done
+
+- No swipe, feedback, taste profile, favourites or `GET /listings/{id}` (B5). The Sat
+  13:00 checkpoint needs B5 as well.
+- Not checked live that curator calls group into one Mubit task (Q8; step 6 above).
+- Real `gemini-3.8-flash` price unknown; the cost figures below are assumptions.
+- One live call only. Nothing says the ranking is good.
+- Exploration band is a percentile of a 30-listing sample, not of the whole pool
+  (accepted by arbiter, TRADEOFFS step 3).
+- Two overlapping deck requests for one user can both make a paid curator call; a deck
+  that fails mid-insert leaves partial rows (accepted by arbiter, TRADEOFFS step 3).
+- `exhausted` and `feedback_required` after 15 swipes have no API test until the swipe
+  endpoint exists (accepted by arbiter; B5 must add them).
+- Chip rules read garden, defects and sqm flags without a confidence filter; the curator
+  digest keeps one light value per room (accepted by arbiter, TRADEOFFS steps 1 and 2).
+- `test_deck.py` only works when the server was started from the same `worker/`
+  directory (accepted by arbiter, TRADEOFFS step 6).
+- The 422 for `n=0` says "Request body is missing, malformed or has the wrong field
+  types." The code is right; the message is wrong for a query parameter. It comes from
+  the shared validation handler in `worker/src/entry.py`, not from B4.
+
+### What could bite you
+
+- The frontend on `main` types `card.commute` as never null and `PropertyCard.tsx` reads
+  `commute.minutes` directly. This backend sends `commute: null` when no postcode is
+  saved. The web prefs form still forces a postcode, so the UI path is safe today, but
+  any user whose prefs were saved through the API without a postcode (personas, curl,
+  step 3 above) will crash the deck screen. Already escalated to Yewen under B3.
+- Dev deck loads under React StrictMode fire two concurrent `GET /deck`, so two paid
+  curator calls and two near-identical kept examples in Mubit. Watch for it when recording.
+- Every call depends on Gemini answering inside 60 seconds with at least half the
+  candidate ids. A slow or sloppy reply with no outstanding cards gives the user a 502
+  and nothing else; there is no retry and no fallback by design.
 
 ### Notes for later features
 
