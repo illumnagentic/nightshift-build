@@ -2,6 +2,9 @@
 
 The schema's CHECK and foreign-key constraints are the validation: the first row
 that breaks one aborts the build with the listing id and the SQLite error.
+photo_flags.jsonl (written by flag_images.py) supplies the photo_flags table and the
+list of photos the model skipped (logos, duplicates), which are dropped from
+listing_media. A missing photo_flags.jsonl aborts the build.
 Reads only files already on disk. Makes no network requests.
 
 Usage (from the dataset/ directory):
@@ -17,7 +20,7 @@ import sqlite3
 import sys
 from collections import Counter
 
-TABLES = ["listings", "listing_media", "listing_stations"]
+TABLES = ["listings", "listing_media", "listing_stations", "photo_flags"]
 LISTING_COLS = [
     "id", "source", "source_id", "url", "price_gbp", "price_qualifier", "bedrooms", "bathrooms",
     "property_type", "address", "postcode", "lat", "lon", "tenure", "lease_years_remaining",
@@ -28,6 +31,9 @@ LISTING_COLS = [
 JSON_COLS = {"key_features", "parsed_fields"}
 MEDIA_COLS = ["listing_id", "kind", "position", "url"]
 STATION_COLS = ["listing_id", "position", "name", "distance_km", "types"]
+FLAG_COLS = ["flag_id", "listing_id", "scope", "field", "value", "observation", "source_photo",
+             "confidence", "uncertainty", "room", "corrected_text"]
+D1_STATEMENT_LIMIT = 100000  # bytes per statement, about
 
 
 BANDS = "ABCDEFG"
@@ -108,6 +114,56 @@ def check_duplicates(records):
             sys.exit(1)
 
 
+def read_flags(path):
+    """Return (flag rows as dicts, {listing_id: set of skipped image URLs}) from photo_flags.jsonl.
+
+    Lines with record_type listing_status describe a listing's run; every other line is a flag.
+    """
+    if not os.path.exists(path):
+        print("build failed: %s not found (run scripts/flag_images.py first)" % path, file=sys.stderr)
+        sys.exit(1)
+    flags, skipped = [], {}
+    with open(path, encoding="utf-8") as f:
+        for line in f:
+            if not line.strip():
+                continue
+            rec = json.loads(line)
+            if rec.get("record_type") == "listing_status":
+                skipped.setdefault(rec["listing_id"], set()).update(s["url"] for s in rec["skipped"])
+            else:
+                flags.append(rec)
+    return flags, skipped
+
+
+def drop_skipped(r, urls, flagged):
+    """Return a copy of r without media whose URL is in urls, positions renumbered 0-based per kind.
+
+    A listing can list one URL twice. The model then skips the repeat but flags the image once,
+    so a skipped URL that has flags keeps its first copy and loses the others.
+    """
+    out = dict(r)
+    kept, next_pos, seen = [], Counter(), set()
+    for m in sorted(r["media"], key=lambda m: (m["kind"], m["position"])):
+        first = m["url"] not in seen
+        seen.add(m["url"])
+        if m["url"] in urls and not (first and m["url"] in flagged):
+            continue
+        kept.append(dict(m, position=next_pos[m["kind"]]))
+        next_pos[m["kind"]] += 1
+    out["media"] = kept
+    return out
+
+
+def check_flag_sources(flags, records):
+    """Abort if a flag's source_photo is not a remaining image of its listing (e.g. a removed one)."""
+    urls = {r["id"]: {m["url"] for m in r["media"]} for r in records}
+    for fl in flags:
+        if fl["source_photo"] not in urls.get(fl["listing_id"], set()):
+            print("build failed: flag %s points to %s, which is not an image of listing %s"
+                  % (fl["flag_id"], fl["source_photo"], fl["listing_id"]), file=sys.stderr)
+            sys.exit(1)
+
+
 def rows_of(r):
     """Split one record into its listings, listing_media and listing_stations rows."""
     listing = [json.dumps(r[c], ensure_ascii=False) if c in JSON_COLS else r[c] for c in LISTING_COLS]
@@ -166,6 +222,13 @@ def main():
     rng = random.Random(EPC_SEED)
     records = [demo_epc(r, rng, letters, weights) for r in sorted(records, key=lambda r: r["id"])]
     check_duplicates(records)
+    flags, skipped = read_flags(os.path.join(ds, "photo_flags.jsonl"))
+    before = Counter(m["kind"] for r in records for m in r["media"])
+    flagged = {(fl["listing_id"], fl["source_photo"]) for fl in flags}
+    records = [drop_skipped(r, skipped.get(r["id"], set()), {u for i, u in flagged if i == r["id"]})
+               for r in records]
+    removed = before - Counter(m["kind"] for r in records for m in r["media"])
+    check_flag_sources(flags, records)
     split = assign_split(records)
     for r in records:
         r["split"] = split[r["id"]]
@@ -179,6 +242,7 @@ def main():
     listings.sort(key=lambda x: x[0])
     media.sort(key=lambda x: (x[0], x[1], x[2]))
     stations.sort(key=lambda x: (x[0], x[1]))
+    flag_rows = sorted([fl[c] for c in FLAG_COLS] for fl in flags)
 
     if os.path.exists(db_path):
         os.remove(db_path)
@@ -186,7 +250,8 @@ def main():
     con.execute("PRAGMA foreign_keys=ON")
     con.executescript(schema)
     plan = [("listings", LISTING_COLS, listings), ("listing_media", MEDIA_COLS, media),
-            ("listing_stations", STATION_COLS, stations)]
+            ("listing_stations", STATION_COLS, stations),
+            ("photo_flags", FLAG_COLS, flag_rows)]
     statements = []
     for table, cols, rows in plan:
         sql = "INSERT INTO %s (%s) VALUES (%s)" % (table, ", ".join(cols), ", ".join("?" * len(cols)))
@@ -209,6 +274,7 @@ def main():
     epc_pot = dict(con.execute("SELECT epc_potential, COUNT(*) FROM listings GROUP BY 1 ORDER BY 1"))
     split_rows = con.execute("SELECT postcode, split FROM listings").fetchall()
     media_kinds = dict(con.execute("SELECT kind, COUNT(*) FROM listing_media GROUP BY 1 ORDER BY 1"))
+    flag_fields = dict(con.execute("SELECT scope || '.' || field, COUNT(*) FROM photo_flags GROUP BY 1 ORDER BY 1"))
     fk = con.execute("PRAGMA foreign_key_check").fetchall()
     integrity = con.execute("PRAGMA integrity_check").fetchall()
     con.close()
@@ -221,12 +287,15 @@ def main():
     check.close()
 
     sizes = [len(s.encode("utf-8")) for s in statements]
-    ok = seed_counts == db_counts and not fk and integrity == [("ok",)]
+    ok = seed_counts == db_counts and not fk and integrity == [("ok",)] and max(sizes) < D1_STATEMENT_LIMIT
     lines = ["== row counts (listings.sqlite) =="]
     lines += ["  %s: %d" % (t, db_counts[t]) for t in TABLES]
     lines += ["== pragma results ==",
               "  foreign_key_check: %s" % ("clean" if not fk else "%d violations" % len(fk)),
               "  integrity_check: %s" % integrity[0][0],
+              "== photo flags ==",
+              "  flags by field: " + ", ".join("%s %d" % kv for kv in flag_fields.items()),
+              "  skipped images removed from listing_media: " + ", ".join("%s %d" % kv for kv in sorted(removed.items())),
               "== epc (demo values, see README) ==",
               "  epc_current: " + ", ".join("%s %d" % kv for kv in epc_cur.items()),
               "  epc_potential: " + ", ".join("%s %d" % kv for kv in epc_pot.items()),
@@ -236,7 +305,7 @@ def main():
     lines += ["== seed.sql ==",
               "  statements: %d" % len(statements),
               "  size: %d bytes" % len(seed.encode("utf-8")),
-              "  largest statement: %d bytes (D1 limit about 100000)" % max(sizes),
+              "  largest statement: %d bytes (D1 limit about %d)" % (max(sizes), D1_STATEMENT_LIMIT),
               "== self-check: schema.sql then seed.sql into empty in-memory db, foreign_keys=ON =="]
     lines += ["  %s: %d (listings.sqlite %d)" % (t, seed_counts[t], db_counts[t]) for t in TABLES]
     lines.append("  result: %s" % ("PASS" if ok else "FAIL"))

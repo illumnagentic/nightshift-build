@@ -259,11 +259,11 @@ sentence saying no flag table exists yet), `evidence/photo-flags/step-4.md` (new
 **Evidence location**: `evidence/photo-flags/step-4.md` (build report extract, seed.sh
 output, test output).
 
-- [ ] Implemented
-- [ ] Tested — evidence: (date)
-- [ ] Best practices met — evidence: (date)
-- [ ] Matches locked requirements — evidence: (date)
-- [ ] No scope drift — evidence: (date)
+- [x] Implemented — schema.sql photo_flags additive, build_d1.py read_flags/drop_skipped; listings.sqlite 14,684 flags, media 6,715, positions gapless, seed.sh exit 0 and local D1 count 14684 (2026-10-25)
+- [x] Tested — evidence: unittest discover in dataset/, 158 tests OK, exit 0; 7 new FlagTests, no existing test altered (2026-10-25)
+- [x] Best practices met — evidence: CHECKs enforce enums, FK, build aborts on missing file or orphan flag, sqm typeof integer 76/real 550, others text, process-refs exit 0 (2026-10-25)
+- [x] Matches locked requirements — evidence: contract columns/enums/room nullability match schema; seed self-check PASS; arbiter sqm_estimate FIX_NOW met (typeof test) (2026-10-25)
+- [x] No scope drift — evidence: diff limited to declared step-4 files; api-contract.md changes one sentence only (2026-10-25)
 
 ---
 
@@ -311,15 +311,24 @@ output, test output).
   access from this session. | Delete that listing's lines from the output and rerun; read the
   console cost page. — accepted by arbiter 2026-10-25: 2 of 6,841 images (one listing's floorplan and one photo) is a 0.03% gap; that listing keeps 17 photo flags and simply lacks `sqm_estimate`/`floorplan_notes`, as 8 other listings already do, and flags are soft curator input. A rerun means hand-editing the output and a fresh Step 3 review for one listing. Cost: tokens are measured (3.97 M in, 1.38 M out), the estimate sits under the GBP 5 cap on stated assumptions, and console access is not available here; the human can read the console page when back, and decisions.md already requires a real cost check before the persona batch.
 
+- 2026-10-25 | 4 | In 8 listings the model both skipped and flagged the same URL, which the
+  listing lists twice. The build keeps the first copy of such a URL and drops the repeat, instead
+  of dropping the image and its flags. | The contract says skipped images have no flags, but
+  dropping would lose 19 flags for images that are real; the skip was about the repeat. The flag
+  file is not editable in this step. | Re-run those 8 listings, or have the flag script not
+  list a flagged URL as skipped. — accepted by arbiter 2026-10-25: the result matches the contract's intent: the duplicate is gone from `listing_media` and the real image appears once with its flags, so no skipped image carries flags. Dropping it would lose 19 good flags, and re-running 8 listings would cost money and a Step 3 re-review for no gain. Covered by a build test.
+
 ---
 
 ## SPOTTED, NOT FIXED
+
+- `dataset/photo_flags.jsonl` | 8 listings repeat a URL; the model skipped one copy and flagged the other (see Step 4 tradeoff). | low — accepted by arbiter 2026-10-25: same as the Step 4 tradeoff; the build keeps one copy with its flags, tested.
 
 - `dataset/photos/*/floorplan-0.gif` (20 files) | Floorplans are GIF; Gemini's
   documented image types are PNG, JPEG, WebP, HEIC, HEIF. Step 2 must skip or handle
   them (no Pillow) | medium — accepted by arbiter 2026-10-25: handled in Step 2 Redo 1 (sent as image/gif, resend without GIFs on 400); 20/20 accepted live.
 
-- `dataset/photo_flags.jsonl` | `sqm_estimate` values are numbers (626 rows); every other `value` is text. The contract already allows this ("a string, or a number for `sqm_estimate`"). Step 4's schema must keep the type: a `value TEXT` column would coerce 58 to '58', and `NUMERIC` would turn numeric-looking text into numbers. | low — arbiter 2026-10-25: FIX_NOW inside Step 4 (in its files, no amendment): declare `value` with no type affinity (or keep numbers in a typed way the contract allows), emit `sqm_estimate` unquoted in `seed.sql`, and test that it round-trips as a number while text values stay text.
+- `dataset/photo_flags.jsonl` | `sqm_estimate` values are numbers (626 rows); every other `value` is text. The contract already allows this ("a string, or a number for `sqm_estimate`"). Step 4's schema must keep the type: a `value TEXT` column would coerce 58 to '58', and `NUMERIC` would turn numeric-looking text into numbers. | low — arbiter 2026-10-25: FIX_NOW inside Step 4 (in its files, no amendment): declare `value` with no type affinity (or keep numbers in a typed way the contract allows), emit `sqm_estimate` unquoted in `seed.sql`, and test that it round-trips as a number while text values stay text. — resolved, confirmed by arbiter 2026-10-25: Step 4 passed review with sqm_estimate stored as typeof integer (76) / real (550) and other values as text, covered by a typeof test.
 
 ---
 

@@ -288,7 +288,17 @@ a comment on each column giving its unit and what NULL means. In brief:
 - `listing_stations` - one row per nearby station: `(listing_id, position, name,
   distance_km, types)`, nearest first. `types` is a JSON array.
 
-Both child tables have a foreign key to `listings.id` with `ON DELETE CASCADE`. The old
+- `photo_flags` - one row per flag from `photo_flags.jsonl`, in the shape of `photo_flags`
+  in `docs/api-contract.md`. CHECK constraints cover `scope`, `field` per scope, `light`
+  values, `confidence` and `room` (set on photo scope, NULL on listing scope). `value`
+  has no declared type on purpose, so `sqm_estimate` stays a number and every other value
+  stays text. `build_d1.py` writes `sqm_estimate` unquoted in `seed.sql`.
+  Images the model skipped (logos, duplicates) are removed from `listing_media` and the
+  remaining positions renumbered 0-based per kind. A URL a listing lists twice, which the
+  model both skipped and flagged, keeps its first copy. The build aborts if
+  `photo_flags.jsonl` is missing or a flag points to an image that is not left.
+
+All three child tables have a foreign key to `listings.id` with `ON DELETE CASCADE`. The old
 columns `photo_urls`, `floorplan_urls`, `epc_image_urls` and `nearest_stations` no longer
 exist as columns; the child tables replace them.
 
@@ -721,6 +731,6 @@ Known limits:
 - `seed.sql` needs empty tables. It is plain `INSERT`s with no `BEGIN`/`COMMIT` (D1 rejects
   them), so a second import fails on the primary keys. Drop and recreate the tables before
   re-seeding.
-- `seed.sql` is 3.7 MB (3,655,077 bytes) in 9,365 statements, the largest 13,327 bytes against D1's limit of
+- `seed.sql` is 10.1 MB (10,053,183 bytes) in 23,923 statements, the largest 13,327 bytes against D1's limit of
   about 100 KB per statement. An import of that size has not been tried. If D1 rejects it,
   split the file.
