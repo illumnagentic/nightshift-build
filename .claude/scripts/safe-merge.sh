@@ -73,7 +73,7 @@ git cat-file -e "${oid}^{commit}" 2>/dev/null || refuse "head commit ${oid} not 
 matches=()
 while IFS= read -r p; do
   [ -n "$p" ] || continue
-  if git show "${oid}:${p}" | grep -Fxq -- "- **Branch**: ${head}"; then matches+=("$p"); fi
+  if git show "${oid}:${p}" | grep -Fx -- "- **Branch**: ${head}" >/dev/null; then matches+=("$p"); fi
 done < <(git ls-tree -r --name-only "$oid" -- .claude/progress/ | grep '\.md$' || true)
 
 [ "${#matches[@]}" -ge 1 ] || refuse "no progress file on ${head} declares '- **Branch**: ${head}'"
@@ -88,11 +88,11 @@ open_boxes="$(printf '%s\n' "$content" | awk '
   inplan && /^- \[ \]/ { print step " :: " $0 }')"
 [ -z "$open_boxes" ] || refuse "unticked PLAN boxes:
 ${open_boxes}"
-printf '%s\n' "$content" | grep -q '^- \[x\]' || refuse "no ticked boxes found in ${progress}"
+printf '%s\n' "$content" | grep '^- \[x\]' >/dev/null || refuse "no ticked boxes found in ${progress}"
 
 # --- QA-GATE: PASS in VERIFICATION ----------------------------------------------
 verification="$(printf '%s\n' "$content" | awk '/^## /{v = ($0 ~ /^## VERIFICATION/); next} v')"
-printf '%s\n' "$verification" | grep 'QA-GATE: PASS' | grep -qv 'PASS WITH FINDINGS' \
+printf '%s\n' "$verification" | grep 'QA-GATE: PASS' | grep -v 'PASS WITH FINDINGS' >/dev/null \
   || refuse "no 'QA-GATE: PASS' line in VERIFICATION of ${progress}"
 
 # --- No code change after the QA-GATE PASS --------------------------------------
