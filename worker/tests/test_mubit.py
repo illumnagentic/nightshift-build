@@ -19,6 +19,12 @@ def test_build_request_url_headers_body():
     assert json.loads(body) == {"contents": []}
 
 
+def test_build_request_base_can_be_overridden():
+    url, headers, _ = mubit.build_request(KEY, "m", {}, "http://127.0.0.1:8799")
+    assert url == "http://127.0.0.1:8799/v1beta/models/m:generateContent"
+    assert headers["x-goog-api-key"] == KEY
+
+
 @pytest.mark.parametrize("name", ["x-middleware-request-id", "X-Middleware-Request-Id", "X-MIDDLEWARE-REQUEST-ID"])
 def test_success_parse_and_request_id_any_case(name):
     result = mubit.parse_response(200, {name: RID, "content-type": "application/json"}, '{"modelVersion": "m"}')

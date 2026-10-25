@@ -118,13 +118,17 @@ After prefs are saved:
 - `commute_status`: `pending` while TfL times are being calculated, `ready` when done,
   `failed` if the calculation as a whole failed. On `failed` the frontend shows an
   error and lets the user re-save prefs. A TfL failure for a single listing is not
-  `failed`: that card has `commute.minutes: null` and the status stays `ready`.
+  `failed`: the status stays `ready`. With no `max_commute_min` set, that card is served
+  with `commute.minutes: null`. With a limit set, that listing is not served.
+  Commute is optional: when no `commute_postcode` was saved, `commute_postcode` and
+  `commute_status` are `null` and `hard.max_commute_min` is `null`.
 
 ### `PUT /prefs`
 
-Replaces the stored prefs. Returns at once; the backend then calculates the TfL commute
-for every listing that passes the other hard filters. Poll `GET /prefs` until
-`commute_status` is `ready`.
+Replaces the stored prefs. Returns at once; when a `commute_postcode` is given, the
+backend then calculates the TfL commute for every listing that passes the other hard
+filters. Poll `GET /prefs` until `commute_status` is `ready`. Without a postcode no
+commute is calculated.
 
 Request:
 
@@ -136,24 +140,28 @@ Request:
 }
 ```
 
-`commute_postcode` is required and is a postcode only. `max_commute_min` is optional.
-A missing `commute_postcode` returns 422 `invalid_request`. A malformed one, including a
-free-text place name, returns 422 `invalid_postcode`.
+`commute_postcode` is optional and is a postcode only. A missing or `null` value is
+accepted: the response then has `commute_postcode: null` and `commute_status: null`.
+A malformed one, including a free-text place name, returns 422 `invalid_postcode`.
+`max_commute_min` is optional and needs a postcode: a non-null `max_commute_min` with no
+`commute_postcode` returns 422 `invalid_request`.
 
 `text` is required and must be non-empty. A missing, `null`, empty or whitespace-only
 `text` returns 422 `invalid_request`.
 
-Response 200: same shape as `GET /prefs`, with `commute_status: "pending"`. `parsed` is
-filled in the response; only the TfL commute step runs after. Poll `GET /prefs` until
-the status is `ready` or `failed`.
+Response 200: same shape as `GET /prefs`, with `commute_status: "pending"` when a
+postcode was given and `null` when not. `parsed` is filled in the response; only the TfL
+commute step runs after. With a postcode, poll `GET /prefs` until the status is `ready`
+or `failed`.
 
 Re-saving prefs mid-session discards every served card that has not been swiped. Their
 `decision_id`s are dropped, and swiping or sending feedback on one returns 404
 `decision_not_found`. Already swiped decisions are kept. The frontend should discard its
-local deck and fetch a new one once `commute_status` is `ready`. The dropped cards
-return to the pool and can be served again.
+local deck and fetch a new one at once, without waiting for `commute_status`. The
+dropped cards return to the pool and can be served again.
 
-Errors: 422 `invalid_postcode`.
+Errors: 422 `invalid_postcode`. 502 `parse_failed` if the preferences could not be read
+(the stored prefs are unchanged; the frontend shows the message and lets the user retry).
 
 ## Deck
 
@@ -265,7 +273,13 @@ Response 200 (`empty_reason` is `null` here; an empty deck is
 }
 ```
 
-- `commute.minutes` is `null` if TfL had no answer.
+- `commute` is `null` when the user saved no `commute_postcode`. With a postcode,
+  `commute.minutes` is `null` until that listing's time is cached, and stays `null` if
+  TfL had no answer. The deck never waits for commute.
+  When `max_commute_min` is set, a listing with no cached time (still pending, or TfL
+  had no answer) does not pass the hard filters. The deck is therefore short while
+  `commute_status` is `pending`, and an empty deck on `failed` has
+  `empty_reason: "no_matches"`.
 - `chips[]` is chosen by the backend per listing, from the photo flags and listing
   fields, by the rules in [Chip catalogue](#chip-catalogue). The frontend renders
   `chips[]` as sent, in the order sent, and never filters, adds or reorders chips. A
@@ -275,9 +289,8 @@ Response 200 (`empty_reason` is `null` here; an empty deck is
   record.
 - `photos` is an ordered list of URLs.
 
-Errors: 409 `prefs_missing` (no prefs saved), 409 `commute_pending`
-(`commute_status` is `pending`), 409 `commute_failed` (`commute_status` is `failed`;
-the user must re-save prefs), 422 `invalid_request` (`n` out of range or not an integer).
+Errors: 409 `prefs_missing` (no prefs saved), 422 `invalid_request` (`n` out of range or
+not an integer).
 
 ## Listings
 

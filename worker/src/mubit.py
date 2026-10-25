@@ -24,8 +24,8 @@ class MubitError(Exception):
         self.status, self.request_id, self.gateway, self.code, self.message = status, request_id, gateway, code, message
 
 
-def build_request(api_key: str, model: str, body: dict) -> tuple[str, dict, str]:
-    url = f"{GEMINI_BASE}/v1beta/models/{model}:generateContent"
+def build_request(api_key: str, model: str, body: dict, base: str = GEMINI_BASE) -> tuple[str, dict, str]:
+    url = f"{base}/v1beta/models/{model}:generateContent"
     headers = {"x-goog-api-key": api_key, "Content-Type": "application/json"}
     return url, headers, json.dumps(body)
 
@@ -51,10 +51,10 @@ def parse_response(status: int, headers, text: str) -> MubitResult:
     raise MubitError(status, request_id, err_type in GATEWAY_ERROR_TYPES, code, message)
 
 
-async def generate_content(api_key: str, model: str, body: dict) -> MubitResult:
+async def generate_content(api_key: str, model: str, body: dict, base: str = GEMINI_BASE) -> MubitResult:
     from workers import fetch  # only exists inside the Workers runtime
 
-    url, headers, payload = build_request(api_key, model, body)
+    url, headers, payload = build_request(api_key, model, body, base)
     response = await fetch(url, method="POST", headers=headers, body=payload)
     # Only this header is read, via .get(), which works on the runtime's Headers object.
     request_id = response.headers.get(REQUEST_ID_HEADER)
