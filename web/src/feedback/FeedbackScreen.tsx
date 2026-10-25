@@ -55,7 +55,9 @@ export default function FeedbackScreen({ userId, pending, onDone }: Props) {
       onDone();
     } catch (err) {
       setError(
-        err instanceof ApiError ? err.message : "Could not reach the server. Try again.",
+        err instanceof ApiError
+          ? err.message
+          : "Could not reach the server. Try again.",
       );
       setSending(false);
     }
@@ -66,12 +68,24 @@ export default function FeedbackScreen({ userId, pending, onDone }: Props) {
   const openAnswer = openChip ? (form.answers[openChip.chip_id] ?? null) : null;
 
   return (
-    <section className="feedback-screen" aria-labelledby="feedback-screen-title">
-      <h2 id="feedback-screen-title" className="feedback-screen__title" tabIndex={-1} ref={heading}>
+    <section
+      className="feedback-screen"
+      aria-labelledby="feedback-screen-title"
+    >
+      <h2
+        id="feedback-screen-title"
+        className="feedback-screen__title"
+        tabIndex={-1}
+        ref={heading}
+      >
         Tell us why
       </h2>
       <p className="feedback-screen__summary">
-        {ACTION_LINES[response.action]}: {formatPriceWithQualifier(card.listing.price_gbp, card.listing.price_qualifier)}
+        {ACTION_LINES[response.action]}:{" "}
+        {formatPriceWithQualifier(
+          card.listing.price_gbp,
+          card.listing.price_qualifier,
+        )}
         {address && `, ${address}`}
       </p>
       {response.favourited && (
@@ -133,7 +147,13 @@ export default function FeedbackScreen({ userId, pending, onDone }: Props) {
           className="feedback-screen__button feedback-screen__button--primary"
           disabled={!ready || sending}
           aria-describedby={compulsory && !ready ? noteId : undefined}
-          onClick={() => send(!compulsory && !canSubmit(form, true) ? skipRequest() : toRequest(form, card.chips))}
+          onClick={() =>
+            send(
+              !compulsory && !canSubmit(form, true)
+                ? skipRequest()
+                : toRequest(form, card.chips),
+            )
+          }
         >
           Done
         </button>
@@ -153,7 +173,8 @@ export default function FeedbackScreen({ userId, pending, onDone }: Props) {
         chip={openChip}
         initial={openAnswer}
         onSave={(strength, text) => {
-          if (openChip) setForm(setAnswer(form, openChip.chip_id, strength, text));
+          if (openChip)
+            setForm(setAnswer(form, openChip.chip_id, strength, text));
           setOpenChip(null);
         }}
         onRemove={() => {

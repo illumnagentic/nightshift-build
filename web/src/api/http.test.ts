@@ -47,24 +47,39 @@ it("sends a JSON body with a content type on POST /users", async () => {
   expect(user).toEqual({ user_id: "u_01", username: "alex" });
   expect(url).toBe("/api/users");
   expect(init.method).toBe("POST");
-  expect((init.headers as Record<string, string>)["Content-Type"]).toBe("application/json");
+  expect((init.headers as Record<string, string>)["Content-Type"]).toBe(
+    "application/json",
+  );
   expect(init.body).toBe(JSON.stringify({ username: "alex" }));
 });
 
 it("turns an error body into an ApiError", async () => {
   fetchMock.mockResolvedValue(
-    json({ error: { code: "username_taken", message: "That username is taken." } }, 409),
+    json(
+      { error: { code: "username_taken", message: "That username is taken." } },
+      409,
+    ),
   );
-  const err = await httpClient.createUser({ username: "alex" }).catch((e: unknown) => e);
+  const err = await httpClient
+    .createUser({ username: "alex" })
+    .catch((e: unknown) => e);
   expect(err).toBeInstanceOf(ApiError);
-  expect(err).toMatchObject({ status: 409, code: "username_taken", message: "That username is taken." });
+  expect(err).toMatchObject({
+    status: 409,
+    code: "username_taken",
+    message: "That username is taken.",
+  });
 });
 
 it("falls back to http_error when the error body is not JSON", async () => {
   fetchMock.mockResolvedValue(new Response("Bad Gateway", { status: 502 }));
   const err = await httpClient.listUsers().catch((e: unknown) => e);
   expect(err).toBeInstanceOf(ApiError);
-  expect(err).toMatchObject({ status: 502, code: "http_error", message: "Request failed with status 502." });
+  expect(err).toMatchObject({
+    status: 502,
+    code: "http_error",
+    message: "Request failed with status 502.",
+  });
 });
 
 it("falls back to http_error when the JSON is not the error shape", async () => {
@@ -105,7 +120,13 @@ it("URL-encodes path ids", async () => {
 
 it("sends skipped in the PUT feedback body", async () => {
   fetchMock.mockResolvedValue(
-    json({ decision_id: "d_000001", chips: [], free_text: null, skipped: true, profile_version: 2 }),
+    json({
+      decision_id: "d_000001",
+      chips: [],
+      free_text: null,
+      skipped: true,
+      profile_version: 2,
+    }),
   );
   const res = await httpClient.putFeedback("u_01", "d_000001", {
     chips: [],
@@ -115,6 +136,8 @@ it("sends skipped in the PUT feedback body", async () => {
   const [url, init] = lastCall();
   expect(url).toBe("/api/decisions/d_000001/feedback");
   expect(init.method).toBe("PUT");
-  expect(init.body).toBe(JSON.stringify({ chips: [], free_text: null, skipped: true }));
+  expect(init.body).toBe(
+    JSON.stringify({ chips: [], free_text: null, skipped: true }),
+  );
   expect(res.skipped).toBe(true);
 });

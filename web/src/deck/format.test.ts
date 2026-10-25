@@ -107,7 +107,10 @@ describe("floorLevelLabel", () => {
 describe("addressLine", () => {
   it("replaces a trailing outward code with the full postcode", () => {
     expect(
-      addressLine("Yew House, Plantation Close, Bushey, Hertfordshire, WD23", "WD23 2PL"),
+      addressLine(
+        "Yew House, Plantation Close, Bushey, Hertfordshire, WD23",
+        "WD23 2PL",
+      ),
     ).toBe("Yew House, Plantation Close, Bushey, Hertfordshire, WD23 2PL");
   });
 
@@ -127,11 +130,15 @@ describe("addressLine", () => {
   });
 
   it("appends the postcode otherwise", () => {
-    expect(addressLine("High Street, Bushey", "WD23 2PL")).toBe("High Street, Bushey, WD23 2PL");
+    expect(addressLine("High Street, Bushey", "WD23 2PL")).toBe(
+      "High Street, Bushey, WD23 2PL",
+    );
   });
 
   it("does not treat a longer code as the outward code", () => {
-    expect(addressLine("High Street, XWD23", "WD23 2PL")).toBe("High Street, XWD23, WD23 2PL");
+    expect(addressLine("High Street, XWD23", "WD23 2PL")).toBe(
+      "High Street, XWD23, WD23 2PL",
+    );
   });
 
   it("returns whichever part exists, or null", () => {
@@ -144,14 +151,14 @@ describe("addressLine", () => {
 
 describe("commuteLine", () => {
   it("shows minutes and postcode", () => {
-    expect(commuteLine({ minutes: 32, postcode: "EC2N 2DB", assumptions: "x" })).toBe(
-      "32 min to EC2N 2DB",
-    );
+    expect(
+      commuteLine({ minutes: 32, postcode: "EC2N 2DB", assumptions: "x" }),
+    ).toBe("32 min to EC2N 2DB");
   });
 
   it("says unknown when minutes is null", () => {
-    expect(commuteLine({ minutes: null, postcode: "EC2N 2DB", assumptions: "x" })).toBe(
-      "Commute unknown",
-    );
+    expect(
+      commuteLine({ minutes: null, postcode: "EC2N 2DB", assumptions: "x" }),
+    ).toBe("Commute unknown");
   });
 });

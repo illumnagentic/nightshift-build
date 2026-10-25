@@ -4,23 +4,22 @@
 // with and once without the commute chip. The mock sends them as computed.
 import type { Chip, ChipId, Listing, ListingDetail } from "./types";
 
-const listings: ListingDetail[] = 
-[
+const listings: ListingDetail[] = [
   {
-    "id": "rm-163949006",
-    "price_gbp": 300000,
-    "price_qualifier": "offers_over",
-    "bedrooms": 2,
-    "bathrooms": 2,
-    "property_type": "flat",
-    "address": "Yew House, Plantation Close, Bushey, Hertfordshire, WD23",
-    "postcode": "WD23 2PL",
-    "lat": 51.648188,
-    "lon": -0.382761,
-    "tenure": "leasehold",
-    "epc_current": "B",
-    "floor_level": "first",
-    "key_features": [
+    id: "rm-163949006",
+    price_gbp: 300000,
+    price_qualifier: "offers_over",
+    bedrooms: 2,
+    bathrooms: 2,
+    property_type: "flat",
+    address: "Yew House, Plantation Close, Bushey, Hertfordshire, WD23",
+    postcode: "WD23 2PL",
+    lat: 51.648188,
+    lon: -0.382761,
+    tenure: "leasehold",
+    epc_current: "B",
+    floor_level: "first",
+    key_features: [
       "First Floor Apartment",
       "Two Spacious Bedrooms",
       "Open Plan Reception & Modern Fitted Kitchen",
@@ -30,59 +29,55 @@ const listings: ListingDetail[] =
       "Long Lease – 114 Years Remaining",
       "EPC Rating B –",
       "Council Tax Band D",
-      "Approx. 771 Sq. Ft (71.6 Sq. M)"
+      "Approx. 771 Sq. Ft (71.6 Sq. M)",
     ],
-    "photos": [
+    photos: [
       "https://media.rightmove.co.uk/property-photo/077224532/163949006/077224532e53bc41aa98e7e7e5479f28.jpeg",
       "https://media.rightmove.co.uk/property-photo/ab999e97f/163949006/ab999e97f169d1992da512bbf1187cad.jpeg",
       "https://media.rightmove.co.uk/property-photo/42eb2bbc7/163949006/42eb2bbc76faf34e83611a6d35d8c74f.jpeg",
-      "https://media.rightmove.co.uk/property-photo/3bdf1c24a/163949006/3bdf1c24a26eda8676f8d735782f2668.jpeg"
+      "https://media.rightmove.co.uk/property-photo/3bdf1c24a/163949006/3bdf1c24a26eda8676f8d735782f2668.jpeg",
     ],
-    "lease_years_remaining": 112,
-    "service_charge_gbp_pa": null,
-    "ground_rent_gbp_pa": null,
-    "council_tax_band": null,
-    "epc_potential": null,
-    "description": "Set within an attractive and well-maintained development, this beautifully presented first-floor apartment offers the perfect combination of contemporary comfort and convenience. With over 770 sq. ft. of light-filled living space, this",
-    "agent_name": "Rolstons, covering Hertfordshire",
-    "listed_date": "2025-06-30T10:44:11Z",
-    "floorplans": [
-      "https://media.rightmove.co.uk/property-floorplan/729c1d514/163949006/729c1d5141854f66d185e63eca12ff74.jpeg"
+    lease_years_remaining: 112,
+    service_charge_gbp_pa: null,
+    ground_rent_gbp_pa: null,
+    council_tax_band: null,
+    epc_potential: null,
+    description:
+      "Set within an attractive and well-maintained development, this beautifully presented first-floor apartment offers the perfect combination of contemporary comfort and convenience. With over 770 sq. ft. of light-filled living space, this",
+    agent_name: "Rolstons, covering Hertfordshire",
+    listed_date: "2025-06-30T10:44:11Z",
+    floorplans: [
+      "https://media.rightmove.co.uk/property-floorplan/729c1d514/163949006/729c1d5141854f66d185e63eca12ff74.jpeg",
     ],
-    "stations": [
+    stations: [
       {
-        "name": "Bushey Station",
-        "distance_km": 0.338,
-        "types": [
-          "NATIONAL_TRAIN",
-          "LONDON_OVERGROUND"
-        ]
+        name: "Bushey Station",
+        distance_km: 0.338,
+        types: ["NATIONAL_TRAIN", "LONDON_OVERGROUND"],
       },
       {
-        "name": "Watford High Street Station",
-        "distance_km": 0.789,
-        "types": [
-          "LONDON_OVERGROUND"
-        ]
-      }
+        name: "Watford High Street Station",
+        distance_km: 0.789,
+        types: ["LONDON_OVERGROUND"],
+      },
     ],
-    "photo_flags": []
+    photo_flags: [],
   },
   {
-    "id": "rm-170560346",
-    "price_gbp": 800000,
-    "price_qualifier": "guide_price",
-    "bedrooms": 3,
-    "bathrooms": 1,
-    "property_type": "flat",
-    "address": "Cormont Road, Camberwell, London, SE5",
-    "postcode": "SE5 9RQ",
-    "lat": 51.474392,
-    "lon": -0.10255,
-    "tenure": "leasehold",
-    "epc_current": "D",
-    "floor_level": "top",
-    "key_features": [
+    id: "rm-170560346",
+    price_gbp: 800000,
+    price_qualifier: "guide_price",
+    bedrooms: 3,
+    bathrooms: 1,
+    property_type: "flat",
+    address: "Cormont Road, Camberwell, London, SE5",
+    postcode: "SE5 9RQ",
+    lat: 51.474392,
+    lon: -0.10255,
+    tenure: "leasehold",
+    epc_current: "D",
+    floor_level: "top",
+    key_features: [
       "Period mansion block",
       "Top floor",
       "Three bedrooms",
@@ -91,83 +86,83 @@ const listings: ListingDetail[] =
       "Chain free",
       "Conservation area",
       "1301 sqft / 120.9 sqm",
-      "EPC rating D"
+      "EPC rating D",
     ],
-    "photos": [
+    photos: [
       "https://media.rightmove.co.uk/property-photo/d81a2a337/170560346/d81a2a3376352561385224b3a4f7778a.jpeg",
       "https://media.rightmove.co.uk/property-photo/89bca4f9f/170560346/89bca4f9f087b15e066a45ca626825a0.jpeg",
       "https://media.rightmove.co.uk/property-photo/2c1333b1f/170560346/2c1333b1fa69315e42fa1f9442ee388c.jpeg",
-      "https://media.rightmove.co.uk/property-photo/54910bc10/170560346/54910bc10c79a708ca3a26ed76c2e7aa.jpeg"
+      "https://media.rightmove.co.uk/property-photo/54910bc10/170560346/54910bc10c79a708ca3a26ed76c2e7aa.jpeg",
     ],
-    "lease_years_remaining": null,
-    "service_charge_gbp_pa": null,
-    "ground_rent_gbp_pa": null,
-    "council_tax_band": null,
-    "epc_potential": null,
-    "description": "Positioned on the top floor of an impressive Grade II listed late Victorian mansion block, this exceptionally spacious 1301 sqft three-bedroom apartment combines period grandeur with contemporary comfort. Recently refurbished throughout,",
-    "agent_name": "Kinleigh Folkard & Hayward - Sales, Kennington",
-    "listed_date": "2025-12-23T16:17:46Z",
-    "floorplans": [
-      "https://media.rightmove.co.uk/property-floorplan/d6520e935/170560346/d6520e9352befd8ad46bbdecd5b41c87.jpeg"
+    lease_years_remaining: null,
+    service_charge_gbp_pa: null,
+    ground_rent_gbp_pa: null,
+    council_tax_band: null,
+    epc_potential: null,
+    description:
+      "Positioned on the top floor of an impressive Grade II listed late Victorian mansion block, this exceptionally spacious 1301 sqft three-bedroom apartment combines period grandeur with contemporary comfort. Recently refurbished throughout,",
+    agent_name: "Kinleigh Folkard & Hayward - Sales, Kennington",
+    listed_date: "2025-12-23T16:17:46Z",
+    floorplans: [
+      "https://media.rightmove.co.uk/property-floorplan/d6520e935/170560346/d6520e9352befd8ad46bbdecd5b41c87.jpeg",
     ],
-    "stations": [
+    stations: [
       {
-        "name": "Oval Station",
-        "distance_km": 1.11,
-        "types": [
-          "LONDON_UNDERGROUND"
-        ]
+        name: "Oval Station",
+        distance_km: 1.11,
+        types: ["LONDON_UNDERGROUND"],
       },
       {
-        "name": "Loughborough Junction Station",
-        "distance_km": 0.933,
-        "types": [
-          "NATIONAL_TRAIN"
-        ]
-      }
+        name: "Loughborough Junction Station",
+        distance_km: 0.933,
+        types: ["NATIONAL_TRAIN"],
+      },
     ],
-    "photo_flags": [
+    photo_flags: [
       {
-        "flag_id": "f_00001",
-        "scope": "photo",
-        "field": "light",
-        "value": "bright",
-        "observation": "Tall sash windows, daylight reaches the back of the room.",
-        "source_photo": "https://media.rightmove.co.uk/property-photo/d81a2a337/170560346/d81a2a3376352561385224b3a4f7778a.jpeg",
-        "confidence": "high",
-        "uncertainty": null,
-        "room": "living_room",
-        "corrected_text": null
+        flag_id: "f_00001",
+        scope: "photo",
+        field: "light",
+        value: "bright",
+        observation:
+          "Tall sash windows, daylight reaches the back of the room.",
+        source_photo:
+          "https://media.rightmove.co.uk/property-photo/d81a2a337/170560346/d81a2a3376352561385224b3a4f7778a.jpeg",
+        confidence: "high",
+        uncertainty: null,
+        room: "living_room",
+        corrected_text: null,
       },
       {
-        "flag_id": "f_00002",
-        "scope": "photo",
-        "field": "defects",
-        "value": "damp patch on ceiling",
-        "observation": "Pale stain near the ceiling corner.",
-        "source_photo": "https://media.rightmove.co.uk/property-photo/2c1333b1f/170560346/2c1333b1fa69315e42fa1f9442ee388c.jpeg",
-        "confidence": "medium",
-        "uncertainty": "Could be a shadow.",
-        "room": "bedroom",
-        "corrected_text": null
-      }
-    ]
+        flag_id: "f_00002",
+        scope: "photo",
+        field: "defects",
+        value: "damp patch on ceiling",
+        observation: "Pale stain near the ceiling corner.",
+        source_photo:
+          "https://media.rightmove.co.uk/property-photo/2c1333b1f/170560346/2c1333b1fa69315e42fa1f9442ee388c.jpeg",
+        confidence: "medium",
+        uncertainty: "Could be a shadow.",
+        room: "bedroom",
+        corrected_text: null,
+      },
+    ],
   },
   {
-    "id": "rm-170906828",
-    "price_gbp": 375000,
-    "price_qualifier": "offers_over",
-    "bedrooms": 3,
-    "bathrooms": 1,
-    "property_type": "end_of_terrace",
-    "address": "Tristram Road, Bromley",
-    "postcode": "BR1 5LX",
-    "lat": 51.428824,
-    "lon": 0.010776,
-    "tenure": "freehold",
-    "epc_current": "D",
-    "floor_level": null,
-    "key_features": [
+    id: "rm-170906828",
+    price_gbp: 375000,
+    price_qualifier: "offers_over",
+    bedrooms: 3,
+    bathrooms: 1,
+    property_type: "end_of_terrace",
+    address: "Tristram Road, Bromley",
+    postcode: "BR1 5LX",
+    lat: 51.428824,
+    lon: 0.010776,
+    tenure: "freehold",
+    epc_current: "D",
+    floor_level: null,
+    key_features: [
       "Refurbished",
       "Three Bedrooms",
       "Ideal for First Time Buyers",
@@ -175,115 +170,109 @@ const listings: ListingDetail[] =
       "Close to Local Amenities",
       "Excellent Transport Links",
       "Near Local Schools",
-      "EPC - D"
+      "EPC - D",
     ],
-    "photos": [
+    photos: [
       "https://media.rightmove.co.uk/property-photo/b89e6bea4/170906828/b89e6bea41fcf3f0e7b40da9c6e39f6c.jpeg",
       "https://media.rightmove.co.uk/property-photo/93595d711/170906828/93595d711c6ccd7a07013502191e04a8.jpeg",
       "https://media.rightmove.co.uk/property-photo/d1e99dd95/170906828/d1e99dd9507f8f0908088420dbcdef10.jpeg",
-      "https://media.rightmove.co.uk/property-photo/fcf7351b1/170906828/fcf7351b1feef00e889f04738a217089.jpeg"
+      "https://media.rightmove.co.uk/property-photo/fcf7351b1/170906828/fcf7351b1feef00e889f04738a217089.jpeg",
     ],
-    "lease_years_remaining": null,
-    "service_charge_gbp_pa": null,
-    "ground_rent_gbp_pa": null,
-    "council_tax_band": "C",
-    "epc_potential": null,
-    "description": "** GUIDE PRICE £400,000 - £425,000 **\n\nAcorn are pleased to welcome to the market, this refurbished three-bedroom end of terrace house is located on the popular Tristian Road in SE12. The property offers bright and modern accommodation",
-    "agent_name": "Acorn, Grove Park",
-    "listed_date": "2026-01-07T08:57:17Z",
-    "floorplans": [
-      "https://media.rightmove.co.uk/property-floorplan/89aaeb47c/170906828/89aaeb47c98c6fc28a646959cada0dc0.jpeg"
+    lease_years_remaining: null,
+    service_charge_gbp_pa: null,
+    ground_rent_gbp_pa: null,
+    council_tax_band: "C",
+    epc_potential: null,
+    description:
+      "** GUIDE PRICE £400,000 - £425,000 **\n\nAcorn are pleased to welcome to the market, this refurbished three-bedroom end of terrace house is located on the popular Tristian Road in SE12. The property offers bright and modern accommodation",
+    agent_name: "Acorn, Grove Park",
+    listed_date: "2026-01-07T08:57:17Z",
+    floorplans: [
+      "https://media.rightmove.co.uk/property-floorplan/89aaeb47c/170906828/89aaeb47c98c6fc28a646959cada0dc0.jpeg",
     ],
-    "stations": [
+    stations: [
       {
-        "name": "Grove Park Station",
-        "distance_km": 0.789,
-        "types": [
-          "NATIONAL_TRAIN"
-        ]
+        name: "Grove Park Station",
+        distance_km: 0.789,
+        types: ["NATIONAL_TRAIN"],
       },
       {
-        "name": "Sundridge Park Station",
-        "distance_km": 1.867,
-        "types": [
-          "NATIONAL_TRAIN"
-        ]
-      }
+        name: "Sundridge Park Station",
+        distance_km: 1.867,
+        types: ["NATIONAL_TRAIN"],
+      },
     ],
-    "photo_flags": []
+    photo_flags: [],
   },
   {
-    "id": "rm-171802127",
-    "price_gbp": 800000,
-    "price_qualifier": "guide_price",
-    "bedrooms": 2,
-    "bathrooms": 2,
-    "property_type": "maisonette",
-    "address": "The Old School, 146 York Way, Barnsbury, London, N1",
-    "postcode": "N1 0AE",
-    "lat": 51.537351,
-    "lon": -0.121059,
-    "tenure": "share_of_freehold",
-    "epc_current": "D",
-    "floor_level": null,
-    "key_features": [
+    id: "rm-171802127",
+    price_gbp: 800000,
+    price_qualifier: "guide_price",
+    bedrooms: 2,
+    bathrooms: 2,
+    property_type: "maisonette",
+    address: "The Old School, 146 York Way, Barnsbury, London, N1",
+    postcode: "N1 0AE",
+    lat: 51.537351,
+    lon: -0.121059,
+    tenure: "share_of_freehold",
+    epc_current: "D",
+    floor_level: null,
+    key_features: [
       "Elegant two bedroom duplex apartment within a landmark period school conversion",
       "Impressive reception room with double height ceiling and abundant natural light",
       "Private garden and secure off street parking",
       "Unique mezzanine principal bedroom with fob entry access",
       "Prime Islington location close to Kings Cross and excellent transport links",
-      "EPC Rating = D"
+      "EPC Rating = D",
     ],
-    "photos": [
+    photos: [
       "https://media.rightmove.co.uk/property-photo/927488e70/171802127/927488e7068fc3300f71b752bff19576.jpeg",
       "https://media.rightmove.co.uk/property-photo/c4921ee2f/171802127/c4921ee2feaea9c3a5cfff49402a5845.jpeg",
       "https://media.rightmove.co.uk/property-photo/6b78c19b7/171802127/6b78c19b73ad0857ecbd5328e5049bdc.jpeg",
-      "https://media.rightmove.co.uk/property-photo/bfcf306d3/171802127/bfcf306d3645bc08bf9b5ea31b718fab.jpeg"
+      "https://media.rightmove.co.uk/property-photo/bfcf306d3/171802127/bfcf306d3645bc08bf9b5ea31b718fab.jpeg",
     ],
-    "lease_years_remaining": 972,
-    "service_charge_gbp_pa": 3216,
-    "ground_rent_gbp_pa": 250,
-    "council_tax_band": "E",
-    "epc_potential": null,
-    "description": "A Characterful Two Bedroom Duplex Apartment within a Landmark School Conversion\n\nDescription\n\nSet within an impressive former school building, Flat 3 The Old School is an elegant two bedroom duplex apartment that blends historic",
-    "agent_name": "Savills, Islington",
-    "listed_date": "2026-02-03T13:48:25Z",
-    "floorplans": [
-      "https://media.rightmove.co.uk/property-floorplan/cd095f459/171802127/cd095f459c3a818d4e57610284fd29a5.jpeg"
+    lease_years_remaining: 972,
+    service_charge_gbp_pa: 3216,
+    ground_rent_gbp_pa: 250,
+    council_tax_band: "E",
+    epc_potential: null,
+    description:
+      "A Characterful Two Bedroom Duplex Apartment within a Landmark School Conversion\n\nDescription\n\nSet within an impressive former school building, Flat 3 The Old School is an elegant two bedroom duplex apartment that blends historic",
+    agent_name: "Savills, Islington",
+    listed_date: "2026-02-03T13:48:25Z",
+    floorplans: [
+      "https://media.rightmove.co.uk/property-floorplan/cd095f459/171802127/cd095f459c3a818d4e57610284fd29a5.jpeg",
     ],
-    "stations": [
+    stations: [
       {
-        "name": "Kings Cross Thameslink Station",
-        "distance_km": 0.74,
-        "types": [
-          "NATIONAL_TRAIN"
-        ]
+        name: "Kings Cross Thameslink Station",
+        distance_km: 0.74,
+        types: ["NATIONAL_TRAIN"],
       },
       {
-        "name": "King's Cross Station",
-        "distance_km": 0.805,
-        "types": [
-          "NATIONAL_TRAIN"
-        ]
-      }
+        name: "King's Cross Station",
+        distance_km: 0.805,
+        types: ["NATIONAL_TRAIN"],
+      },
     ],
-    "photo_flags": []
+    photo_flags: [],
   },
   {
-    "id": "rm-172366775",
-    "price_gbp": 270000,
-    "price_qualifier": "offers_over",
-    "bedrooms": 2,
-    "bathrooms": 2,
-    "property_type": "flat",
-    "address": "The Gateway, Omega Court The Gateway, WD18",
-    "postcode": "WD18 7HG",
-    "lat": 51.650695,
-    "lon": -0.421941,
-    "tenure": "leasehold",
-    "epc_current": "C",
-    "floor_level": "second",
-    "key_features": [
+    id: "rm-172366775",
+    price_gbp: 270000,
+    price_qualifier: "offers_over",
+    bedrooms: 2,
+    bathrooms: 2,
+    property_type: "flat",
+    address: "The Gateway, Omega Court The Gateway, WD18",
+    postcode: "WD18 7HG",
+    lat: 51.650695,
+    lon: -0.421941,
+    tenure: "leasehold",
+    epc_current: "C",
+    floor_level: "second",
+    key_features: [
       "TWO DOUBLE BEDROOM APARTMENT",
       "ENSUITE SHOWER ROOM",
       "RESIDENTS GYM",
@@ -291,83 +280,82 @@ const listings: ListingDetail[] =
       "CHAIN FREE",
       "LARGE OPEN PLAN LOUNGE/KITCHEN",
       "BALCONY",
-      "2ND FLOOR WITH LIFT"
+      "2ND FLOOR WITH LIFT",
     ],
-    "photos": [
+    photos: [
       "https://media.rightmove.co.uk/property-photo/0b033dfc6/172366775/0b033dfc67fb9c6efda405338ae0c6fd.jpeg",
       "https://media.rightmove.co.uk/property-photo/1a9ab032d/172366775/1a9ab032dd02e9a6d06d53cd52ae54f9.jpeg",
       "https://media.rightmove.co.uk/property-photo/d47e0e714/172366775/d47e0e7147c93245a5858cfd9d6eee4e.jpeg",
-      "https://media.rightmove.co.uk/property-photo/cf62cbb36/172366775/cf62cbb36f5fcbb10c5b90c6fd8289e9.jpeg"
+      "https://media.rightmove.co.uk/property-photo/cf62cbb36/172366775/cf62cbb36f5fcbb10c5b90c6fd8289e9.jpeg",
     ],
-    "lease_years_remaining": 977,
-    "service_charge_gbp_pa": 3295,
-    "ground_rent_gbp_pa": 360,
-    "council_tax_band": "D",
-    "epc_potential": null,
-    "description": "Welcome to this stylish two double bedroom apartment, perfectly positioned on the second floor of a modern development with lift access for ultimate convenience. Step inside to discover a spacious open plan lounge and kitchen, ideal for",
-    "agent_name": "Kingsley Estates, Watford",
-    "listed_date": "2026-02-18T17:19:25Z",
-    "floorplans": [
-      "https://media.rightmove.co.uk/property-floorplan/4ed3b0521/172366775/4ed3b05216c8d15bae20f687f5271984.jpeg"
+    lease_years_remaining: 977,
+    service_charge_gbp_pa: 3295,
+    ground_rent_gbp_pa: 360,
+    council_tax_band: "D",
+    epc_potential: null,
+    description:
+      "Welcome to this stylish two double bedroom apartment, perfectly positioned on the second floor of a modern development with lift access for ultimate convenience. Step inside to discover a spacious open plan lounge and kitchen, ideal for",
+    agent_name: "Kingsley Estates, Watford",
+    listed_date: "2026-02-18T17:19:25Z",
+    floorplans: [
+      "https://media.rightmove.co.uk/property-floorplan/4ed3b0521/172366775/4ed3b05216c8d15bae20f687f5271984.jpeg",
     ],
-    "stations": [
+    stations: [
       {
-        "name": "Watford Station",
-        "distance_km": 0.805,
-        "types": [
-          "LONDON_UNDERGROUND"
-        ]
+        name: "Watford Station",
+        distance_km: 0.805,
+        types: ["LONDON_UNDERGROUND"],
       },
       {
-        "name": "Croxley Station",
-        "distance_km": 1.4,
-        "types": [
-          "LONDON_UNDERGROUND"
-        ]
-      }
+        name: "Croxley Station",
+        distance_km: 1.4,
+        types: ["LONDON_UNDERGROUND"],
+      },
     ],
-    "photo_flags": [
+    photo_flags: [
       {
-        "flag_id": "f_00003",
-        "scope": "photo",
-        "field": "defects",
-        "value": "mould on ceiling",
-        "observation": "Dark patches in the corner above the shower.",
-        "source_photo": "https://media.rightmove.co.uk/property-photo/1a9ab032d/172366775/1a9ab032dd02e9a6d06d53cd52ae54f9.jpeg",
-        "confidence": "medium",
-        "uncertainty": "Could be shadow or staining.",
-        "room": "bathroom",
-        "corrected_text": "Not damp, it is a shadow from the light fitting."
+        flag_id: "f_00003",
+        scope: "photo",
+        field: "defects",
+        value: "mould on ceiling",
+        observation: "Dark patches in the corner above the shower.",
+        source_photo:
+          "https://media.rightmove.co.uk/property-photo/1a9ab032d/172366775/1a9ab032dd02e9a6d06d53cd52ae54f9.jpeg",
+        confidence: "medium",
+        uncertainty: "Could be shadow or staining.",
+        room: "bathroom",
+        corrected_text: "Not damp, it is a shadow from the light fitting.",
       },
       {
-        "flag_id": "f_00004",
-        "scope": "listing",
-        "field": "sqm_estimate",
-        "value": 68,
-        "observation": "Scaled from the stated room dimensions on the floorplan.",
-        "source_photo": "https://media.rightmove.co.uk/property-floorplan/4ed3b0521/172366775/4ed3b05216c8d15bae20f687f5271984.jpeg",
-        "confidence": "medium",
-        "uncertainty": "Wall thickness not shown.",
-        "room": null,
-        "corrected_text": null
-      }
-    ]
+        flag_id: "f_00004",
+        scope: "listing",
+        field: "sqm_estimate",
+        value: 68,
+        observation: "Scaled from the stated room dimensions on the floorplan.",
+        source_photo:
+          "https://media.rightmove.co.uk/property-floorplan/4ed3b0521/172366775/4ed3b05216c8d15bae20f687f5271984.jpeg",
+        confidence: "medium",
+        uncertainty: "Wall thickness not shown.",
+        room: null,
+        corrected_text: null,
+      },
+    ],
   },
   {
-    "id": "rm-174032522",
-    "price_gbp": 1000000,
-    "price_qualifier": "offers_over",
-    "bedrooms": 4,
-    "bathrooms": 2,
-    "property_type": "detached",
-    "address": "Gordon Road, North Chingford",
-    "postcode": "E4 6BU",
-    "lat": 51.631767,
-    "lon": 0.013124,
-    "tenure": "freehold",
-    "epc_current": "C",
-    "floor_level": null,
-    "key_features": [
+    id: "rm-174032522",
+    price_gbp: 1000000,
+    price_qualifier: "offers_over",
+    bedrooms: 4,
+    bathrooms: 2,
+    property_type: "detached",
+    address: "Gordon Road, North Chingford",
+    postcode: "E4 6BU",
+    lat: 51.631767,
+    lon: 0.013124,
+    tenure: "freehold",
+    epc_current: "C",
+    floor_level: null,
+    key_features: [
       "Beautiful And Spacious Four Double Bedroom, Two Bathroom Detached House",
       "Large Attached Garage Via Own Driveway",
       "Large Approx 100ft Rear Garden",
@@ -377,117 +365,110 @@ const listings: ListingDetail[] =
       "Ground Floor WC",
       "Utility Room",
       "Two Large Reception Rooms",
-      "Ideal Family Home"
+      "Ideal Family Home",
     ],
-    "photos": [
+    photos: [
       "https://media.rightmove.co.uk/property-photo/3eba7e8e7/174032522/3eba7e8e793abb7c4300cb1ac2332878.jpeg",
       "https://media.rightmove.co.uk/property-photo/505a3380c/174032522/505a3380c4934978470ee4c53e80c195.jpeg",
       "https://media.rightmove.co.uk/property-photo/781c56298/174032522/781c56298325b24f6a7136a7fa74d751.jpeg",
-      "https://media.rightmove.co.uk/property-photo/198d4a97d/174032522/198d4a97d0e7f7ae6accc407b183b03e.jpeg"
+      "https://media.rightmove.co.uk/property-photo/198d4a97d/174032522/198d4a97d0e7f7ae6accc407b183b03e.jpeg",
     ],
-    "lease_years_remaining": null,
-    "service_charge_gbp_pa": null,
-    "ground_rent_gbp_pa": null,
-    "council_tax_band": "G",
-    "epc_potential": null,
-    "description": "Beautiful and spacious four double bedroom, two bathroom detached house which is situated in one of North Chingford's most prestigious location close to the main line station and the beautiful open spaces of Epping forest - Large Attached",
-    "agent_name": "Churchill Estates, North Chingford & Sewardstone",
-    "listed_date": "2026-04-02T14:01:11Z",
-    "floorplans": [
-      "https://media.rightmove.co.uk/property-floorplan/cff4cdcbd/174032522/cff4cdcbdf73944630176927e275a2f3.jpeg"
+    lease_years_remaining: null,
+    service_charge_gbp_pa: null,
+    ground_rent_gbp_pa: null,
+    council_tax_band: "G",
+    epc_potential: null,
+    description:
+      "Beautiful and spacious four double bedroom, two bathroom detached house which is situated in one of North Chingford's most prestigious location close to the main line station and the beautiful open spaces of Epping forest - Large Attached",
+    agent_name: "Churchill Estates, North Chingford & Sewardstone",
+    listed_date: "2026-04-02T14:01:11Z",
+    floorplans: [
+      "https://media.rightmove.co.uk/property-floorplan/cff4cdcbd/174032522/cff4cdcbdf73944630176927e275a2f3.jpeg",
     ],
-    "stations": [
+    stations: [
       {
-        "name": "Chingford Station",
-        "distance_km": 0.306,
-        "types": [
-          "NATIONAL_TRAIN"
-        ]
+        name: "Chingford Station",
+        distance_km: 0.306,
+        types: ["NATIONAL_TRAIN"],
       },
       {
-        "name": "Buckhurst Hill Station",
-        "distance_km": 2.414,
-        "types": [
-          "LONDON_UNDERGROUND"
-        ]
-      }
+        name: "Buckhurst Hill Station",
+        distance_km: 2.414,
+        types: ["LONDON_UNDERGROUND"],
+      },
     ],
-    "photo_flags": []
+    photo_flags: [],
   },
   {
-    "id": "rm-174367916",
-    "price_gbp": 500000,
-    "price_qualifier": "offers_over",
-    "bedrooms": 3,
-    "bathrooms": 1,
-    "property_type": "semi_detached",
-    "address": "Oxhey Avenue, Oxhey, WD19",
-    "postcode": "WD19 4HB",
-    "lat": 51.641686,
-    "lon": -0.383101,
-    "tenure": "freehold",
-    "epc_current": "C",
-    "floor_level": null,
-    "key_features": [
+    id: "rm-174367916",
+    price_gbp: 500000,
+    price_qualifier: "offers_over",
+    bedrooms: 3,
+    bathrooms: 1,
+    property_type: "semi_detached",
+    address: "Oxhey Avenue, Oxhey, WD19",
+    postcode: "WD19 4HB",
+    lat: 51.641686,
+    lon: -0.383101,
+    tenure: "freehold",
+    epc_current: "C",
+    floor_level: null,
+    key_features: [
       "3 Bedroom Semi Detached House",
       "Two Separate Reception Rooms",
       "Fitted Kitchen",
       "Downstairs WC",
       "Well Maintained Rear Garden",
       "Residents Permit Parking",
-      "Close To Bushey Station"
+      "Close To Bushey Station",
     ],
-    "photos": [
+    photos: [
       "https://media.rightmove.co.uk/property-photo/e1a6c375a/174367916/e1a6c375a26d8810b4ef50c3444f94a9.jpeg",
       "https://media.rightmove.co.uk/property-photo/599ed8b06/174367916/599ed8b06a19e0cc7e98ee65e3fa5360.jpeg",
       "https://media.rightmove.co.uk/property-photo/4ca563b79/174367916/4ca563b798ad1fe39b71c5740fc2c24c.jpeg",
-      "https://media.rightmove.co.uk/property-photo/f4482607c/174367916/f4482607c34c186eb7d4aa529b7bb70d.jpeg"
+      "https://media.rightmove.co.uk/property-photo/f4482607c/174367916/f4482607c34c186eb7d4aa529b7bb70d.jpeg",
     ],
-    "lease_years_remaining": null,
-    "service_charge_gbp_pa": null,
-    "ground_rent_gbp_pa": null,
-    "council_tax_band": "D",
-    "epc_potential": null,
-    "description": "A charming 1930s steel frame semi detached family home, offering well proportioned accommodation throughout, including 3 bedrooms and 2 reception rooms.\nThe property is entered via an enclosed porch, leading into a welcoming entrance hall",
-    "agent_name": "Churchills Estate Agents, Bushey",
-    "listed_date": "2026-04-13T11:48:06Z",
-    "floorplans": [
-      "https://media.rightmove.co.uk/property-floorplan/e624e1018/174367916/e624e10188feb544a67579cda58cd93c.jpeg"
+    lease_years_remaining: null,
+    service_charge_gbp_pa: null,
+    ground_rent_gbp_pa: null,
+    council_tax_band: "D",
+    epc_potential: null,
+    description:
+      "A charming 1930s steel frame semi detached family home, offering well proportioned accommodation throughout, including 3 bedrooms and 2 reception rooms.\nThe property is entered via an enclosed porch, leading into a welcoming entrance hall",
+    agent_name: "Churchills Estate Agents, Bushey",
+    listed_date: "2026-04-13T11:48:06Z",
+    floorplans: [
+      "https://media.rightmove.co.uk/property-floorplan/e624e1018/174367916/e624e10188feb544a67579cda58cd93c.jpeg",
     ],
-    "stations": [
+    stations: [
       {
-        "name": "Bushey Station",
-        "distance_km": 0.467,
-        "types": [
-          "NATIONAL_TRAIN",
-          "LONDON_OVERGROUND"
-        ]
+        name: "Bushey Station",
+        distance_km: 0.467,
+        types: ["NATIONAL_TRAIN", "LONDON_OVERGROUND"],
       },
       {
-        "name": "Carpenders Park Station",
-        "distance_km": 1.545,
-        "types": [
-          "LONDON_OVERGROUND"
-        ]
-      }
+        name: "Carpenders Park Station",
+        distance_km: 1.545,
+        types: ["LONDON_OVERGROUND"],
+      },
     ],
-    "photo_flags": []
+    photo_flags: [],
   },
   {
-    "id": "rm-89042490",
-    "price_gbp": 390000,
-    "price_qualifier": "guide_price",
-    "bedrooms": 2,
-    "bathrooms": 2,
-    "property_type": "flat",
-    "address": "Hatfield Road, St Albans, AL4",
-    "postcode": "AL4 0UH",
-    "lat": 51.75222,
-    "lon": -0.2966,
-    "tenure": "leasehold",
-    "epc_current": "C",
-    "floor_level": "first",
-    "key_features": [
+    id: "rm-89042490",
+    price_gbp: 390000,
+    price_qualifier: "guide_price",
+    bedrooms: 2,
+    bathrooms: 2,
+    property_type: "flat",
+    address: "Hatfield Road, St Albans, AL4",
+    postcode: "AL4 0UH",
+    lat: 51.75222,
+    lon: -0.2966,
+    tenure: "leasehold",
+    epc_current: "C",
+    floor_level: "first",
+    key_features: [
       "Approximately 0.2 Miles From Beaumont School, Judged Outstanding In All Five Areas By Ofsted In 20",
       "Private Maisonette-Style Entrance",
       "No Upper Chain, Freshly Presented & Ready For Immediate Occupation",
@@ -497,112 +478,110 @@ const listings: ListingDetail[] =
       "Two Double Bedrooms & Two Bathrooms",
       "Small Development Of Only Eight Apartments",
       "Bright Dual-Aspect Sitting/Dining room",
-      "Approximately 1.5 Miles From St Albans City Station, With Direct Services To London St Pancras"
+      "Approximately 1.5 Miles From St Albans City Station, With Direct Services To London St Pancras",
     ],
-    "photos": [
+    photos: [
       "https://media.rightmove.co.uk/property-photo/9157bf00e/89042490/9157bf00e2d6589716169d17f5b121c7.jpeg",
       "https://media.rightmove.co.uk/property-photo/71fff8e76/89042490/71fff8e764c186a17b9a65ec0500788b.jpeg",
       "https://media.rightmove.co.uk/property-photo/b52ff26ae/89042490/b52ff26ae18539eec6787e40f95b8721.jpeg",
-      "https://media.rightmove.co.uk/property-photo/96cac7470/89042490/96cac74708e236d6371c5702e893c36c.jpeg"
+      "https://media.rightmove.co.uk/property-photo/96cac7470/89042490/96cac74708e236d6371c5702e893c36c.jpeg",
     ],
-    "lease_years_remaining": null,
-    "service_charge_gbp_pa": 2147,
-    "ground_rent_gbp_pa": 30,
-    "council_tax_band": "C",
-    "epc_potential": null,
-    "description": "Offered with no upper chain is this bright and spacious two double bedroom, two-bathroom first floor apartment, with its own private entrance with stairs from the front door leading to a good-sized entrance hall. The well-appointed kitchen",
-    "agent_name": "Northwood, St Albans",
-    "listed_date": "2026-05-28T17:29:25Z",
-    "floorplans": [
-      "https://media.rightmove.co.uk/property-floorplan/b18bbdbed/89042490/b18bbdbedf4802b0762322534d2a996e.jpeg"
+    lease_years_remaining: null,
+    service_charge_gbp_pa: 2147,
+    ground_rent_gbp_pa: 30,
+    council_tax_band: "C",
+    epc_potential: null,
+    description:
+      "Offered with no upper chain is this bright and spacious two double bedroom, two-bathroom first floor apartment, with its own private entrance with stairs from the front door leading to a good-sized entrance hall. The well-appointed kitchen",
+    agent_name: "Northwood, St Albans",
+    listed_date: "2026-05-28T17:29:25Z",
+    floorplans: [
+      "https://media.rightmove.co.uk/property-floorplan/b18bbdbed/89042490/b18bbdbedf4802b0762322534d2a996e.jpeg",
     ],
-    "stations": [
+    stations: [
       {
-        "name": "St. Albans Station",
-        "distance_km": 2.35,
-        "types": [
-          "NATIONAL_TRAIN"
-        ]
+        name: "St. Albans Station",
+        distance_km: 2.35,
+        types: ["NATIONAL_TRAIN"],
       },
       {
-        "name": "St. Albans Abbey Station",
-        "distance_km": 3.283,
-        "types": [
-          "NATIONAL_TRAIN"
-        ]
-      }
+        name: "St. Albans Abbey Station",
+        distance_km: 3.283,
+        types: ["NATIONAL_TRAIN"],
+      },
     ],
-    "photo_flags": []
+    photo_flags: [],
   },
   {
-    "id": "rm-89124552",
-    "price_gbp": 1195000,
-    "price_qualifier": "guide_price",
-    "bedrooms": 3,
-    "bathrooms": 1,
-    "property_type": "bungalow",
-    "address": "Warren Road, Guildford, Surrey, GU1",
-    "postcode": "GU1 2HB",
-    "lat": 51.236374,
-    "lon": -0.553508,
-    "tenure": "freehold",
-    "epc_current": "D",
-    "floor_level": null,
-    "key_features": [
+    id: "rm-89124552",
+    price_gbp: 1195000,
+    price_qualifier: "guide_price",
+    bedrooms: 3,
+    bathrooms: 1,
+    property_type: "bungalow",
+    address: "Warren Road, Guildford, Surrey, GU1",
+    postcode: "GU1 2HB",
+    lat: 51.236374,
+    lon: -0.553508,
+    tenure: "freehold",
+    epc_current: "D",
+    floor_level: null,
+    key_features: [
       "Sought after residential road",
       "Conveniently located for Pewley Down",
       "0.6 mile from Guildford High Street",
       "Well presented throughout",
       "Private rear garden",
       "Garden home office with separate utility room, WC and store room",
-      "EPC Rating = D"
+      "EPC Rating = D",
     ],
-    "photos": [
+    photos: [
       "https://media.rightmove.co.uk/property-photo/2d4211a69/89124552/2d4211a6938ba4c953a653ada77c427b.jpeg",
       "https://media.rightmove.co.uk/property-photo/21a7aa672/89124552/21a7aa6725a6259f34bb1c9af6446258.jpeg",
       "https://media.rightmove.co.uk/property-photo/c0dd819cb/89124552/c0dd819cb15341eb7bff84ddc3bdac54.jpeg",
-      "https://media.rightmove.co.uk/property-photo/e3b3d9ef4/89124552/e3b3d9ef44668f09869a776310f4cb6f.jpeg"
+      "https://media.rightmove.co.uk/property-photo/e3b3d9ef4/89124552/e3b3d9ef44668f09869a776310f4cb6f.jpeg",
     ],
-    "lease_years_remaining": null,
-    "service_charge_gbp_pa": null,
-    "ground_rent_gbp_pa": null,
-    "council_tax_band": "G",
-    "epc_potential": null,
-    "description": "A charming and immaculately maintained three-bedroom home with elegant parquet-floored interiors, beautifully established gardens, a converted home office, and ample gated driveway parking.\n\nDescription\n\nUpon entering is a welcoming hall",
-    "agent_name": "Savills, Guildford",
-    "listed_date": "2026-06-01T09:36:08Z",
-    "floorplans": [
-      "https://media.rightmove.co.uk/property-floorplan/a36929732/89124552/a369297324539b3fa19583dfcbf0b188.jpeg"
+    lease_years_remaining: null,
+    service_charge_gbp_pa: null,
+    ground_rent_gbp_pa: null,
+    council_tax_band: "G",
+    epc_potential: null,
+    description:
+      "A charming and immaculately maintained three-bedroom home with elegant parquet-floored interiors, beautifully established gardens, a converted home office, and ample gated driveway parking.\n\nDescription\n\nUpon entering is a welcoming hall",
+    agent_name: "Savills, Guildford",
+    listed_date: "2026-06-01T09:36:08Z",
+    floorplans: [
+      "https://media.rightmove.co.uk/property-floorplan/a36929732/89124552/a369297324539b3fa19583dfcbf0b188.jpeg",
     ],
-    "stations": [
+    stations: [
       {
-        "name": "London Road Station",
-        "distance_km": 0.966,
-        "types": []
+        name: "London Road Station",
+        distance_km: 0.966,
+        types: [],
       },
       {
-        "name": "Guildford Station",
-        "distance_km": 1.931,
-        "types": []
-      }
+        name: "Guildford Station",
+        distance_km: 1.931,
+        types: [],
+      },
     ],
-    "photo_flags": []
+    photo_flags: [],
   },
   {
-    "id": "rm-89554128",
-    "price_gbp": 650000,
-    "price_qualifier": "offers_over",
-    "bedrooms": 5,
-    "bathrooms": 2,
-    "property_type": "terraced",
-    "address": "Chingford Lane, Woodford Green",
-    "postcode": "IG8 9QS",
-    "lat": 51.610309,
-    "lon": 0.018985,
-    "tenure": "freehold",
-    "epc_current": "C",
-    "floor_level": null,
-    "key_features": [
+    id: "rm-89554128",
+    price_gbp: 650000,
+    price_qualifier: "offers_over",
+    bedrooms: 5,
+    bathrooms: 2,
+    property_type: "terraced",
+    address: "Chingford Lane, Woodford Green",
+    postcode: "IG8 9QS",
+    lat: 51.610309,
+    lon: 0.018985,
+    tenure: "freehold",
+    epc_current: "C",
+    floor_level: null,
+    key_features: [
       "5 bedroom",
       "Extended Victorian house",
       "Good condition",
@@ -612,58 +591,55 @@ const listings: ListingDetail[] =
       "Double bayed house",
       "Fitted kitchen diner",
       "Outbuilding",
-      "Period features"
+      "Period features",
     ],
-    "photos": [
+    photos: [
       "https://media.rightmove.co.uk/property-photo/b1a026cb9/89554128/b1a026cb99825f8643f2960573a15111.jpeg",
       "https://media.rightmove.co.uk/property-photo/8fd925b86/89554128/8fd925b8625c5da0d7302eaa1c2072ea.jpeg",
       "https://media.rightmove.co.uk/property-photo/edf65f95a/89554128/edf65f95ac5b0c8d40e2b49e7eba3f4f.jpeg",
-      "https://media.rightmove.co.uk/property-photo/0ab58ebb6/89554128/0ab58ebb673aaaf2c8f9f26a1efb94df.jpeg"
+      "https://media.rightmove.co.uk/property-photo/0ab58ebb6/89554128/0ab58ebb673aaaf2c8f9f26a1efb94df.jpeg",
     ],
-    "lease_years_remaining": null,
-    "service_charge_gbp_pa": null,
-    "ground_rent_gbp_pa": null,
-    "council_tax_band": "D",
-    "epc_potential": null,
-    "description": "Located on the highly sought-after Chingford Lane in Woodford Green is this beautifully presented five-bedroom double bayed Victorian terraced family home. The property has been maintained to an good standard by the current owners and",
-    "agent_name": "William Rose, Woodford",
-    "listed_date": "2026-06-10T17:03:06Z",
-    "floorplans": [
-      "https://media.rightmove.co.uk/property-floorplan/92b72a2ae/89554128/92b72a2aebf73d9eed5bed7ce78c00d0.jpeg"
+    lease_years_remaining: null,
+    service_charge_gbp_pa: null,
+    ground_rent_gbp_pa: null,
+    council_tax_band: "D",
+    epc_potential: null,
+    description:
+      "Located on the highly sought-after Chingford Lane in Woodford Green is this beautifully presented five-bedroom double bayed Victorian terraced family home. The property has been maintained to an good standard by the current owners and",
+    agent_name: "William Rose, Woodford",
+    listed_date: "2026-06-10T17:03:06Z",
+    floorplans: [
+      "https://media.rightmove.co.uk/property-floorplan/92b72a2ae/89554128/92b72a2aebf73d9eed5bed7ce78c00d0.jpeg",
     ],
-    "stations": [
+    stations: [
       {
-        "name": "Woodford Station",
-        "distance_km": 1.207,
-        "types": [
-          "LONDON_UNDERGROUND"
-        ]
+        name: "Woodford Station",
+        distance_km: 1.207,
+        types: ["LONDON_UNDERGROUND"],
       },
       {
-        "name": "Highams Park Station",
-        "distance_km": 1.336,
-        "types": [
-          "NATIONAL_TRAIN"
-        ]
-      }
+        name: "Highams Park Station",
+        distance_km: 1.336,
+        types: ["NATIONAL_TRAIN"],
+      },
     ],
-    "photo_flags": []
+    photo_flags: [],
   },
   {
-    "id": "rm-94639683",
-    "price_gbp": 789000,
-    "price_qualifier": null,
-    "bedrooms": 2,
-    "bathrooms": 2,
-    "property_type": "other",
-    "address": "Sterling Way, N7",
-    "postcode": "N7 9HL",
-    "lat": 51.54621,
-    "lon": -0.118817,
-    "tenure": "leasehold",
-    "epc_current": "B",
-    "floor_level": "higher than 2nd floor (with lift)",
-    "key_features": [
+    id: "rm-94639683",
+    price_gbp: 789000,
+    price_qualifier: null,
+    bedrooms: 2,
+    bathrooms: 2,
+    property_type: "other",
+    address: "Sterling Way, N7",
+    postcode: "N7 9HL",
+    lat: 51.54621,
+    lon: -0.118817,
+    tenure: "leasehold",
+    epc_current: "B",
+    floor_level: "higher than 2nd floor (with lift)",
+    key_features: [
       "Underfloor heating and elegant hardwood flooring",
       "Stylish kitchen with premium integrated appliances",
       "Private balcony and communal roof terrace",
@@ -671,83 +647,82 @@ const listings: ListingDetail[] =
       "24-hour concierge, residents’ gym and business lounge",
       "0.3 miles from Caledonian Road Underground Station",
       "EPC Rating = B",
-      "Quote property code 4648 if calling"
+      "Quote property code 4648 if calling",
     ],
-    "photos": [
+    photos: [
       "https://media.rightmove.co.uk/property-photo/f8b66a45c/94639683/f8b66a45ce85a516c89eac58e1633810.jpeg",
       "https://media.rightmove.co.uk/property-photo/2d7c3ca3a/94639683/2d7c3ca3a6b2a24c24d278741239d56f.jpeg",
       "https://media.rightmove.co.uk/property-photo/bb9740b40/94639683/bb9740b404fc31c1ba163e2793ddabd1.jpeg",
-      "https://media.rightmove.co.uk/property-photo/6db7084f8/94639683/6db7084f8593411f4ec3b2adb6542d88.jpeg"
+      "https://media.rightmove.co.uk/property-photo/6db7084f8/94639683/6db7084f8593411f4ec3b2adb6542d88.jpeg",
     ],
-    "lease_years_remaining": 989,
-    "service_charge_gbp_pa": 4708,
-    "ground_rent_gbp_pa": 450,
-    "council_tax_band": "E",
-    "epc_potential": null,
-    "description": "This beautifully presented two-bedroom apartment is situated on the third floor of Jewel House, part of the highly sought-after London Square development.\n\nThe apartment features a spacious open-plan living area with direct access to a",
-    "agent_name": "Douglas and Gordon, London",
-    "listed_date": "2026-10-23T08:57:43Z",
-    "floorplans": [
-      "https://media.rightmove.co.uk/property-floorplan/dd9216ebf/94639683/dd9216ebf14b4c3f53a2e238001358e7.jpeg"
+    lease_years_remaining: 989,
+    service_charge_gbp_pa: 4708,
+    ground_rent_gbp_pa: 450,
+    council_tax_band: "E",
+    epc_potential: null,
+    description:
+      "This beautifully presented two-bedroom apartment is situated on the third floor of Jewel House, part of the highly sought-after London Square development.\n\nThe apartment features a spacious open-plan living area with direct access to a",
+    agent_name: "Douglas and Gordon, London",
+    listed_date: "2026-10-23T08:57:43Z",
+    floorplans: [
+      "https://media.rightmove.co.uk/property-floorplan/dd9216ebf/94639683/dd9216ebf14b4c3f53a2e238001358e7.jpeg",
     ],
-    "stations": [
+    stations: [
       {
-        "name": "Caledonian Road Station",
-        "distance_km": 0.241,
-        "types": [
-          "LONDON_UNDERGROUND"
-        ]
+        name: "Caledonian Road Station",
+        distance_km: 0.241,
+        types: ["LONDON_UNDERGROUND"],
       },
       {
-        "name": "Caledonian Road & Barnsbury Station",
-        "distance_km": 0.451,
-        "types": [
-          "LONDON_OVERGROUND"
-        ]
-      }
+        name: "Caledonian Road & Barnsbury Station",
+        distance_km: 0.451,
+        types: ["LONDON_OVERGROUND"],
+      },
     ],
-    "photo_flags": [
+    photo_flags: [
       {
-        "flag_id": "f_00005",
-        "scope": "photo",
-        "field": "light",
-        "value": "poor",
-        "observation": "Small window, back of the room is in shadow.",
-        "source_photo": "https://media.rightmove.co.uk/property-photo/f8b66a45c/94639683/f8b66a45ce85a516c89eac58e1633810.jpeg",
-        "confidence": "medium",
-        "uncertainty": "Photo may be taken on a dull day.",
-        "room": "living_room",
-        "corrected_text": null
+        flag_id: "f_00005",
+        scope: "photo",
+        field: "light",
+        value: "poor",
+        observation: "Small window, back of the room is in shadow.",
+        source_photo:
+          "https://media.rightmove.co.uk/property-photo/f8b66a45c/94639683/f8b66a45ce85a516c89eac58e1633810.jpeg",
+        confidence: "medium",
+        uncertainty: "Photo may be taken on a dull day.",
+        room: "living_room",
+        corrected_text: null,
       },
       {
-        "flag_id": "f_00006",
-        "scope": "photo",
-        "field": "room",
-        "value": "kitchen",
-        "observation": "Open kitchen with integrated appliances.",
-        "source_photo": "https://media.rightmove.co.uk/property-photo/2d7c3ca3a/94639683/2d7c3ca3a6b2a24c24d278741239d56f.jpeg",
-        "confidence": "high",
-        "uncertainty": null,
-        "room": "kitchen",
-        "corrected_text": null
-      }
-    ]
+        flag_id: "f_00006",
+        scope: "photo",
+        field: "room",
+        value: "kitchen",
+        observation: "Open kitchen with integrated appliances.",
+        source_photo:
+          "https://media.rightmove.co.uk/property-photo/2d7c3ca3a/94639683/2d7c3ca3a6b2a24c24d278741239d56f.jpeg",
+        confidence: "high",
+        uncertainty: null,
+        room: "kitchen",
+        corrected_text: null,
+      },
+    ],
   },
   {
-    "id": "rm-87459600",
-    "price_gbp": 1200000,
-    "price_qualifier": null,
-    "bedrooms": 3,
-    "bathrooms": 3,
-    "property_type": null,
-    "address": "Maple Road, Surbiton, KT6",
-    "postcode": "KT6 4AW",
-    "lat": 51.39534,
-    "lon": -0.307519,
-    "tenure": "freehold",
-    "epc_current": "C",
-    "floor_level": null,
-    "key_features": [
+    id: "rm-87459600",
+    price_gbp: 1200000,
+    price_qualifier: null,
+    bedrooms: 3,
+    bathrooms: 3,
+    property_type: null,
+    address: "Maple Road, Surbiton, KT6",
+    postcode: "KT6 4AW",
+    lat: 51.39534,
+    lon: -0.307519,
+    tenure: "freehold",
+    epc_current: "C",
+    floor_level: null,
+    key_features: [
       "Retail Unit",
       "Three/Four-bedroom",
       "Amazing Location",
@@ -757,106 +732,108 @@ const listings: ListingDetail[] =
       "Modern Shower room",
       "WC",
       "Gas central heating",
-      "Double glazing"
+      "Double glazing",
     ],
-    "photos": [
+    photos: [
       "https://media.rightmove.co.uk/property-photo/70ce9dcf7/87459600/70ce9dcf7e0adc7ab3f41af36679a232.jpeg",
       "https://media.rightmove.co.uk/property-photo/3a5449450/87459600/3a5449450bc3ccbcdaecfd7e623f9b3e.jpeg",
       "https://media.rightmove.co.uk/property-photo/0dcff15bb/87459600/0dcff15bb2e2a29228a4151596eed41e.jpeg",
-      "https://media.rightmove.co.uk/property-photo/93e4133b4/87459600/93e4133b4a8b343cda6c263282bea3d4.jpeg"
+      "https://media.rightmove.co.uk/property-photo/93e4133b4/87459600/93e4133b4a8b343cda6c263282bea3d4.jpeg",
     ],
-    "lease_years_remaining": null,
-    "service_charge_gbp_pa": null,
-    "ground_rent_gbp_pa": null,
-    "council_tax_band": null,
-    "epc_potential": null,
-    "description": "Winkworth Surbiton is delighted to present this exceptional freehold investment opportunity, comprising a prominently positioned retail premises with a substantial three-bedroom apartment above, located on one of Surbiton’s most",
-    "agent_name": "Winkworth, Surbiton",
-    "listed_date": "2026-01-09T10:10:14Z",
-    "floorplans": [
-      "https://media.rightmove.co.uk/property-floorplan/7dacd37bb/87459600/7dacd37bb920e45680c8f0e8ad98011a.jpeg"
+    lease_years_remaining: null,
+    service_charge_gbp_pa: null,
+    ground_rent_gbp_pa: null,
+    council_tax_band: null,
+    epc_potential: null,
+    description:
+      "Winkworth Surbiton is delighted to present this exceptional freehold investment opportunity, comprising a prominently positioned retail premises with a substantial three-bedroom apartment above, located on one of Surbiton’s most",
+    agent_name: "Winkworth, Surbiton",
+    listed_date: "2026-01-09T10:10:14Z",
+    floorplans: [
+      "https://media.rightmove.co.uk/property-floorplan/7dacd37bb/87459600/7dacd37bb920e45680c8f0e8ad98011a.jpeg",
     ],
-    "stations": [
+    stations: [
       {
-        "name": "Surbiton Station",
-        "distance_km": 0.322,
-        "types": []
+        name: "Surbiton Station",
+        distance_km: 0.322,
+        types: [],
       },
       {
-        "name": "Berrylands Station",
-        "distance_km": 1.931,
-        "types": []
-      }
+        name: "Berrylands Station",
+        distance_km: 1.931,
+        types: [],
+      },
     ],
-    "photo_flags": []
+    photo_flags: [],
   },
   {
-    "id": "rm-90476601",
-    "price_gbp": 315000,
-    "price_qualifier": null,
-    "bedrooms": 3,
-    "bathrooms": 1,
-    "property_type": "house",
-    "address": "Holton Hill, Brighton",
-    "postcode": "BN2 6RQ",
-    "lat": 50.83053,
-    "lon": -0.067546,
-    "tenure": "freehold",
-    "epc_current": "D",
-    "floor_level": null,
-    "key_features": [
+    id: "rm-90476601",
+    price_gbp: 315000,
+    price_qualifier: null,
+    bedrooms: 3,
+    bathrooms: 1,
+    property_type: "house",
+    address: "Holton Hill, Brighton",
+    postcode: "BN2 6RQ",
+    lat: 50.83053,
+    lon: -0.067546,
+    tenure: "freehold",
+    epc_current: "D",
+    floor_level: null,
+    key_features: [
       "THREE BEDROOM END OF TERRACE HOUSE",
       "NO ONWARD CHAIN",
       "STUNNING VIEWS",
       "SOUTH WOODINGDEAN",
-      "IDEAL FIRST TIME BUY OR FAMILY HOME"
+      "IDEAL FIRST TIME BUY OR FAMILY HOME",
     ],
-    "photos": [
+    photos: [
       "https://media.rightmove.co.uk/property-photo/69d0d7b22/90476601/69d0d7b22990ea363b6a28f93929c250.jpeg",
       "https://media.rightmove.co.uk/property-photo/8e2a598c2/90476601/8e2a598c24d35b35c919663dfa4ac985.jpeg",
       "https://media.rightmove.co.uk/property-photo/dba1e4ef0/90476601/dba1e4ef0b49709ee32e46d817d1ee0b.jpeg",
-      "https://media.rightmove.co.uk/property-photo/5ba19fd54/90476601/5ba19fd547947035cd2dfe33e6022195.jpeg"
+      "https://media.rightmove.co.uk/property-photo/5ba19fd54/90476601/5ba19fd547947035cd2dfe33e6022195.jpeg",
     ],
-    "lease_years_remaining": null,
-    "service_charge_gbp_pa": null,
-    "ground_rent_gbp_pa": null,
-    "council_tax_band": "C",
-    "epc_potential": null,
-    "description": "Robert Luff & Co are delighted to bring to market this spacious three bedroom, end of terrace house in the heart of Woodingdean. Holton Hill is located in South Woodingdean near the ever popular Happy Valley, with stunning views over The",
-    "agent_name": "Robert Luff & Co, Hove",
-    "listed_date": "2026-07-03T16:28:07Z",
-    "floorplans": [
-      "https://media.rightmove.co.uk/property-floorplan/54bcf8436/90476601/54bcf843698bdcb3fc9e333427b5f78a.jpeg"
+    lease_years_remaining: null,
+    service_charge_gbp_pa: null,
+    ground_rent_gbp_pa: null,
+    council_tax_band: "C",
+    epc_potential: null,
+    description:
+      "Robert Luff & Co are delighted to bring to market this spacious three bedroom, end of terrace house in the heart of Woodingdean. Holton Hill is located in South Woodingdean near the ever popular Happy Valley, with stunning views over The",
+    agent_name: "Robert Luff & Co, Hove",
+    listed_date: "2026-07-03T16:28:07Z",
+    floorplans: [
+      "https://media.rightmove.co.uk/property-floorplan/54bcf8436/90476601/54bcf843698bdcb3fc9e333427b5f78a.jpeg",
     ],
-    "stations": [
+    stations: [
       {
-        "name": "Falmer Station",
-        "distance_km": 3.701,
-        "types": []
+        name: "Falmer Station",
+        distance_km: 3.701,
+        types: [],
       },
       {
-        "name": "Moulsecoomb Station",
-        "distance_km": 4.023,
-        "types": []
-      }
+        name: "Moulsecoomb Station",
+        distance_km: 4.023,
+        types: [],
+      },
     ],
-    "photo_flags": []
+    photo_flags: [],
   },
   {
-    "id": "rm-167642897",
-    "price_gbp": 365000,
-    "price_qualifier": null,
-    "bedrooms": 2,
-    "bathrooms": 2,
-    "property_type": "flat",
-    "address": "Benedictine Place, London Road, St. Albans",
-    "postcode": "AL1 3WA",
-    "lat": 51.750137,
-    "lon": -0.336169,
-    "tenure": "leasehold",
-    "epc_current": "C",
-    "floor_level": null,
-    "key_features": [
+    id: "rm-167642897",
+    price_gbp: 365000,
+    price_qualifier: null,
+    bedrooms: 2,
+    bathrooms: 2,
+    property_type: "flat",
+    address: "Benedictine Place, London Road, St. Albans",
+    postcode: "AL1 3WA",
+    lat: 51.750137,
+    lon: -0.336169,
+    tenure: "leasehold",
+    epc_current: "C",
+    floor_level: null,
+    key_features: [
       "Chain Free",
       "Two Double Bedrooms",
       "Modern Kitchen",
@@ -866,58 +843,55 @@ const listings: ListingDetail[] =
       "Gym",
       "Extended Long Lease & No Ground Rent",
       "Council Tax Band E",
-      "EPC - C"
+      "EPC - C",
     ],
-    "photos": [
+    photos: [
       "https://media.rightmove.co.uk/property-photo/dd840858d/167642897/dd840858d949bfad35a08668a1c17f53.jpeg",
       "https://media.rightmove.co.uk/property-photo/f5b0e2426/167642897/f5b0e2426b87f1fcdbb524b1ddca3b71.jpeg",
       "https://media.rightmove.co.uk/property-photo/097f5a8ff/167642897/097f5a8ff68967e8f2dd2f282c00f1ed.jpeg",
-      "https://media.rightmove.co.uk/property-photo/78c365c64/167642897/78c365c6430ca88c5ce749dcff256ccf.jpeg"
+      "https://media.rightmove.co.uk/property-photo/78c365c64/167642897/78c365c6430ca88c5ce749dcff256ccf.jpeg",
     ],
-    "lease_years_remaining": null,
-    "service_charge_gbp_pa": null,
-    "ground_rent_gbp_pa": null,
-    "council_tax_band": "E",
-    "epc_potential": null,
-    "description": "Deakin-White Estate Agents in St Albans, Hatfield & Welwyn Garden City are pleased to present to the market for sale this CHAIN FREE, two double bedroom, two bathroom apartment located in the Heart of St Albans within a few minutes walk to",
-    "agent_name": "Deakin-White, St Albans",
-    "listed_date": "2025-10-01T08:17:42Z",
-    "floorplans": [
-      "https://media.rightmove.co.uk/property-floorplan/9fa6b81d3/167642897/9fa6b81d3a5290c63012424fa943f061.jpeg"
+    lease_years_remaining: null,
+    service_charge_gbp_pa: null,
+    ground_rent_gbp_pa: null,
+    council_tax_band: "E",
+    epc_potential: null,
+    description:
+      "Deakin-White Estate Agents in St Albans, Hatfield & Welwyn Garden City are pleased to present to the market for sale this CHAIN FREE, two double bedroom, two bathroom apartment located in the Heart of St Albans within a few minutes walk to",
+    agent_name: "Deakin-White, St Albans",
+    listed_date: "2025-10-01T08:17:42Z",
+    floorplans: [
+      "https://media.rightmove.co.uk/property-floorplan/9fa6b81d3/167642897/9fa6b81d3a5290c63012424fa943f061.jpeg",
     ],
-    "stations": [
+    stations: [
       {
-        "name": "St. Albans Station",
-        "distance_km": 0.402,
-        "types": [
-          "NATIONAL_TRAIN"
-        ]
+        name: "St. Albans Station",
+        distance_km: 0.402,
+        types: ["NATIONAL_TRAIN"],
       },
       {
-        "name": "St. Albans Abbey Station",
-        "distance_km": 0.74,
-        "types": [
-          "NATIONAL_TRAIN"
-        ]
-      }
+        name: "St. Albans Abbey Station",
+        distance_km: 0.74,
+        types: ["NATIONAL_TRAIN"],
+      },
     ],
-    "photo_flags": []
+    photo_flags: [],
   },
   {
-    "id": "rm-90819174",
-    "price_gbp": 415000,
-    "price_qualifier": "offers_over",
-    "bedrooms": 2,
-    "bathrooms": 1,
-    "property_type": "terraced",
-    "address": "Gables Close, Lee",
-    "postcode": "SE12 0UD",
-    "lat": 51.438963,
-    "lon": 0.013784,
-    "tenure": "freehold",
-    "epc_current": "C",
-    "floor_level": null,
-    "key_features": [
+    id: "rm-90819174",
+    price_gbp: 415000,
+    price_qualifier: "offers_over",
+    bedrooms: 2,
+    bathrooms: 1,
+    property_type: "terraced",
+    address: "Gables Close, Lee",
+    postcode: "SE12 0UD",
+    lat: 51.438963,
+    lon: 0.013784,
+    tenure: "freehold",
+    epc_current: "C",
+    floor_level: null,
+    key_features: [
       "Quiet Development",
       "Two Double Bedrooms",
       "Lounge",
@@ -925,58 +899,55 @@ const listings: ListingDetail[] =
       "Modern Bathroom",
       "Private Front and Rear Gardens",
       "Residents Car Park",
-      "Chain Free"
+      "Chain Free",
     ],
-    "photos": [
+    photos: [
       "https://media.rightmove.co.uk/property-photo/d5b5ea7cd/90819174/d5b5ea7cd43d5a3e9a6df0d67a5fee4f.jpeg",
       "https://media.rightmove.co.uk/property-photo/0a2d2c060/90819174/0a2d2c0606e426587315e6bab18f8089.jpeg",
       "https://media.rightmove.co.uk/property-photo/dce20d982/90819174/dce20d982af37ab20e74f7f6baf7194f.jpeg",
-      "https://media.rightmove.co.uk/property-photo/bdd52c64a/90819174/bdd52c64a8e063ee9efd605554d274c4.jpeg"
+      "https://media.rightmove.co.uk/property-photo/bdd52c64a/90819174/bdd52c64a8e063ee9efd605554d274c4.jpeg",
     ],
-    "lease_years_remaining": null,
-    "service_charge_gbp_pa": null,
-    "ground_rent_gbp_pa": null,
-    "council_tax_band": "D",
-    "epc_potential": null,
-    "description": "A well-presented two-bedroom terraced house situated within a quiet and highly sought-after development, conveniently located between Lee and Grove Park railway stations.\n\nThe accommodation is in good decorative order throughout and",
-    "agent_name": "John Payne, Lee",
-    "listed_date": "2026-07-13T15:17:56Z",
-    "floorplans": [
-      "https://media.rightmove.co.uk/property-floorplan/df744ad2f/90819174/df744ad2f0067e48c057f1cdfabfb28a.jpeg"
+    lease_years_remaining: null,
+    service_charge_gbp_pa: null,
+    ground_rent_gbp_pa: null,
+    council_tax_band: "D",
+    epc_potential: null,
+    description:
+      "A well-presented two-bedroom terraced house situated within a quiet and highly sought-after development, conveniently located between Lee and Grove Park railway stations.\n\nThe accommodation is in good decorative order throughout and",
+    agent_name: "John Payne, Lee",
+    listed_date: "2026-07-13T15:17:56Z",
+    floorplans: [
+      "https://media.rightmove.co.uk/property-floorplan/df744ad2f/90819174/df744ad2f0067e48c057f1cdfabfb28a.jpeg",
     ],
-    "stations": [
+    stations: [
       {
-        "name": "Grove Park Station",
-        "distance_km": 1.094,
-        "types": [
-          "NATIONAL_TRAIN"
-        ]
+        name: "Grove Park Station",
+        distance_km: 1.094,
+        types: ["NATIONAL_TRAIN"],
       },
       {
-        "name": "Lee Station",
-        "distance_km": 1.207,
-        "types": [
-          "NATIONAL_TRAIN"
-        ]
-      }
+        name: "Lee Station",
+        distance_km: 1.207,
+        types: ["NATIONAL_TRAIN"],
+      },
     ],
-    "photo_flags": []
+    photo_flags: [],
   },
   {
-    "id": "rm-92824431",
-    "price_gbp": 550000,
-    "price_qualifier": "offers_over",
-    "bedrooms": 3,
-    "bathrooms": 2,
-    "property_type": "terraced",
-    "address": "Birkhall Road, London, SE6",
-    "postcode": "SE6 1TF",
-    "lat": 51.437809,
-    "lon": -0.00374,
-    "tenure": "freehold",
-    "epc_current": "C",
-    "floor_level": null,
-    "key_features": [
+    id: "rm-92824431",
+    price_gbp: 550000,
+    price_qualifier: "offers_over",
+    bedrooms: 3,
+    bathrooms: 2,
+    property_type: "terraced",
+    address: "Birkhall Road, London, SE6",
+    postcode: "SE6 1TF",
+    lat: 51.437809,
+    lon: -0.00374,
+    tenure: "freehold",
+    epc_current: "C",
+    floor_level: null,
+    key_features: [
       "Three Bedrooms Plus A Downstairs Guest Room With ensuite Bathroom",
       "Period Property",
       "Full of Charm And Character",
@@ -984,58 +955,55 @@ const listings: ListingDetail[] =
       "Fully Fitted Kitchen With Breakfast Bar",
       "First Floor Comprise Three Well Proportioned Bedrooms",
       "Family Bathroom",
-      "Freehold EPC Rating C"
+      "Freehold EPC Rating C",
     ],
-    "photos": [
+    photos: [
       "https://media.rightmove.co.uk/property-photo/6a87f3400/92824431/6a87f34000bc1005901d4d2635ee3753.jpeg",
       "https://media.rightmove.co.uk/property-photo/9c3e4e6e4/92824431/9c3e4e6e417ac27af1d1cc9286f9eaac.jpeg",
       "https://media.rightmove.co.uk/property-photo/dcc091bfb/92824431/dcc091bfb12061c6b618187d930d3bcc.jpeg",
-      "https://media.rightmove.co.uk/property-photo/d777f648b/92824431/d777f648b0a22e5e7487e45fcffc0556.jpeg"
+      "https://media.rightmove.co.uk/property-photo/d777f648b/92824431/d777f648b0a22e5e7487e45fcffc0556.jpeg",
     ],
-    "lease_years_remaining": null,
-    "service_charge_gbp_pa": null,
-    "ground_rent_gbp_pa": null,
-    "council_tax_band": "D",
-    "epc_potential": null,
-    "description": "PRICE RANGE BETWEEN £580,000 - £600,000 Darren Monks from Properly Catford is pleased to present this well presented four-bedroom terraced house offers an exceptional blend of period charm and modern living, providing a spacious and",
-    "agent_name": "Properly, London",
-    "listed_date": "2026-09-07T11:51:28Z",
-    "floorplans": [
-      "https://media.rightmove.co.uk/property-floorplan/8daf1ff63/92824431/8daf1ff63b80f853931b2f2d070d3fa4.jpeg"
+    lease_years_remaining: null,
+    service_charge_gbp_pa: null,
+    ground_rent_gbp_pa: null,
+    council_tax_band: "D",
+    epc_potential: null,
+    description:
+      "PRICE RANGE BETWEEN £580,000 - £600,000 Darren Monks from Properly Catford is pleased to present this well presented four-bedroom terraced house offers an exceptional blend of period charm and modern living, providing a spacious and",
+    agent_name: "Properly, London",
+    listed_date: "2026-09-07T11:51:28Z",
+    floorplans: [
+      "https://media.rightmove.co.uk/property-floorplan/8daf1ff63/92824431/8daf1ff63b80f853931b2f2d070d3fa4.jpeg",
     ],
-    "stations": [
+    stations: [
       {
-        "name": "Bellingham Station",
-        "distance_km": 1.207,
-        "types": [
-          "NATIONAL_TRAIN"
-        ]
+        name: "Bellingham Station",
+        distance_km: 1.207,
+        types: ["NATIONAL_TRAIN"],
       },
       {
-        "name": "Hither Green Station",
-        "distance_km": 1.577,
-        "types": [
-          "NATIONAL_TRAIN"
-        ]
-      }
+        name: "Hither Green Station",
+        distance_km: 1.577,
+        types: ["NATIONAL_TRAIN"],
+      },
     ],
-    "photo_flags": []
+    photo_flags: [],
   },
   {
-    "id": "rm-94648950",
-    "price_gbp": 700000,
-    "price_qualifier": null,
-    "bedrooms": 2,
-    "bathrooms": 2,
-    "property_type": "flat",
-    "address": "Ravensbury Terrace, Earlsfield, London, SW18",
-    "postcode": "SW18 4SB",
-    "lat": 51.440749,
-    "lon": -0.190495,
-    "tenure": "leasehold",
-    "epc_current": "B",
-    "floor_level": null,
-    "key_features": [
+    id: "rm-94648950",
+    price_gbp: 700000,
+    price_qualifier: null,
+    bedrooms: 2,
+    bathrooms: 2,
+    property_type: "flat",
+    address: "Ravensbury Terrace, Earlsfield, London, SW18",
+    postcode: "SW18 4SB",
+    lat: 51.440749,
+    lon: -0.190495,
+    tenure: "leasehold",
+    epc_current: "B",
+    floor_level: null,
+    key_features: [
       "964 sq ft",
       "Fifth floor",
       "Far reaching views",
@@ -1044,58 +1012,55 @@ const listings: ListingDetail[] =
       "19'8 open plan living",
       "Two terraces",
       "Photos and floorplan from Jan 2026",
-      "EPC rating B"
+      "EPC rating B",
     ],
-    "photos": [
+    photos: [
       "https://media.rightmove.co.uk/property-photo/10e97ef4a/94648950/10e97ef4a5f78d3b9479159f5653179c.jpeg",
       "https://media.rightmove.co.uk/property-photo/a1945c779/94648950/a1945c77936b2e855dd8b2265c5a001d.jpeg",
       "https://media.rightmove.co.uk/property-photo/9a9075f49/94648950/9a9075f49a17f8b5dd41c3d109eb9b19.jpeg",
-      "https://media.rightmove.co.uk/property-photo/19bb6bc8d/94648950/19bb6bc8d8d394326e78199d053608f6.jpeg"
+      "https://media.rightmove.co.uk/property-photo/19bb6bc8d/94648950/19bb6bc8d8d394326e78199d053608f6.jpeg",
     ],
-    "lease_years_remaining": 994,
-    "service_charge_gbp_pa": 2478,
-    "ground_rent_gbp_pa": null,
-    "council_tax_band": "E",
-    "epc_potential": null,
-    "description": "The property opens into a generous hallway with excellent built-in storage, leading through to an impressive open-plan living space with herringbone flooring and floor-to-ceiling windows, creating a wonderful sense of light and space. The",
-    "agent_name": "Kinleigh Folkard & Hayward - Sales, Earlsfield",
-    "listed_date": "2026-10-23T11:28:17Z",
-    "floorplans": [
-      "https://media.rightmove.co.uk/property-floorplan/9548e1092/94648950/9548e1092769f080f76c0cabd3dd11fc.jpeg"
+    lease_years_remaining: 994,
+    service_charge_gbp_pa: 2478,
+    ground_rent_gbp_pa: null,
+    council_tax_band: "E",
+    epc_potential: null,
+    description:
+      "The property opens into a generous hallway with excellent built-in storage, leading through to an impressive open-plan living space with herringbone flooring and floor-to-ceiling windows, creating a wonderful sense of light and space. The",
+    agent_name: "Kinleigh Folkard & Hayward - Sales, Earlsfield",
+    listed_date: "2026-10-23T11:28:17Z",
+    floorplans: [
+      "https://media.rightmove.co.uk/property-floorplan/9548e1092/94648950/9548e1092769f080f76c0cabd3dd11fc.jpeg",
     ],
-    "stations": [
+    stations: [
       {
-        "name": "Earlsfield Station",
-        "distance_km": 0.257,
-        "types": [
-          "NATIONAL_TRAIN"
-        ]
+        name: "Earlsfield Station",
+        distance_km: 0.257,
+        types: ["NATIONAL_TRAIN"],
       },
       {
-        "name": "Wimbledon Park Station",
-        "distance_km": 1.014,
-        "types": [
-          "LONDON_UNDERGROUND"
-        ]
-      }
+        name: "Wimbledon Park Station",
+        distance_km: 1.014,
+        types: ["LONDON_UNDERGROUND"],
+      },
     ],
-    "photo_flags": []
+    photo_flags: [],
   },
   {
-    "id": "rm-94672293",
-    "price_gbp": 650000,
-    "price_qualifier": null,
-    "bedrooms": 2,
-    "bathrooms": 2,
-    "property_type": "flat",
-    "address": "Weston Street, London",
-    "postcode": "SE1 4XE",
-    "lat": 51.498718,
-    "lon": -0.085794,
-    "tenure": "share_of_freehold",
-    "epc_current": "B",
-    "floor_level": "2nd",
-    "key_features": [
+    id: "rm-94672293",
+    price_gbp: 650000,
+    price_qualifier: null,
+    bedrooms: 2,
+    bathrooms: 2,
+    property_type: "flat",
+    address: "Weston Street, London",
+    postcode: "SE1 4XE",
+    lat: 51.498718,
+    lon: -0.085794,
+    tenure: "share_of_freehold",
+    epc_current: "B",
+    floor_level: "2nd",
+    key_features: [
       "Contemporary Development",
       "816Sqft of Accommodation",
       "EWS1 Compliant",
@@ -1103,112 +1068,109 @@ const listings: ListingDetail[] =
       "Immaculate Interior",
       "Central SE1 Location",
       "Share of Freehold",
-      "Chain Free"
+      "Chain Free",
     ],
-    "photos": [
+    photos: [
       "https://media.rightmove.co.uk/property-photo/419238525/94672293/4192385252cd009909017b46983be844.jpeg",
       "https://media.rightmove.co.uk/property-photo/fa2a17735/94672293/fa2a17735b3c92e85c9583382327f632.jpeg",
       "https://media.rightmove.co.uk/property-photo/e43dc61d7/94672293/e43dc61d7e9d935f4eef8f457fd947a1.jpeg",
-      "https://media.rightmove.co.uk/property-photo/2b142b580/94672293/2b142b58054ebfce79f06f9d67507107.jpeg"
+      "https://media.rightmove.co.uk/property-photo/2b142b580/94672293/2b142b58054ebfce79f06f9d67507107.jpeg",
     ],
-    "lease_years_remaining": 977,
-    "service_charge_gbp_pa": 4400,
-    "ground_rent_gbp_pa": null,
-    "council_tax_band": "E",
-    "epc_potential": null,
-    "description": "An immaculate apartment set centrally in SE1 on Weston Street, moments from the bars, boutiques, restaurants and galleries of nearby Bermondsey Street, Borough, and London Bridge. Boasting a stunning central location, this premier SE1",
-    "agent_name": "Acorn, London Bridge",
-    "listed_date": "2026-10-23T16:33:49Z",
-    "floorplans": [
-      "https://media.rightmove.co.uk/property-floorplan/5aa0472b9/94672293/5aa0472b9984677573cf1085c7dc1a5a.jpeg"
+    lease_years_remaining: 977,
+    service_charge_gbp_pa: 4400,
+    ground_rent_gbp_pa: null,
+    council_tax_band: "E",
+    epc_potential: null,
+    description:
+      "An immaculate apartment set centrally in SE1 on Weston Street, moments from the bars, boutiques, restaurants and galleries of nearby Bermondsey Street, Borough, and London Bridge. Boasting a stunning central location, this premier SE1",
+    agent_name: "Acorn, London Bridge",
+    listed_date: "2026-10-23T16:33:49Z",
+    floorplans: [
+      "https://media.rightmove.co.uk/property-floorplan/5aa0472b9/94672293/5aa0472b9984677573cf1085c7dc1a5a.jpeg",
     ],
-    "stations": [
+    stations: [
       {
-        "name": "Borough Station",
-        "distance_km": 0.612,
-        "types": [
-          "LONDON_UNDERGROUND"
-        ]
+        name: "Borough Station",
+        distance_km: 0.612,
+        types: ["LONDON_UNDERGROUND"],
       },
       {
-        "name": "London Bridge Station",
-        "distance_km": 0.708,
-        "types": [
-          "NATIONAL_TRAIN",
-          "LONDON_UNDERGROUND"
-        ]
-      }
+        name: "London Bridge Station",
+        distance_km: 0.708,
+        types: ["NATIONAL_TRAIN", "LONDON_UNDERGROUND"],
+      },
     ],
-    "photo_flags": []
+    photo_flags: [],
   },
   {
-    "id": "rm-91380246",
-    "price_gbp": 1200000,
-    "price_qualifier": "guide_price",
-    "bedrooms": 2,
-    "bathrooms": 2,
-    "property_type": "flat",
-    "address": "Hand & Flower House, 617 Kings Road, Fulham, London, SW6",
-    "postcode": "SW6 2ES",
-    "lat": 51.477657,
-    "lon": -0.189909,
-    "tenure": "share_of_freehold",
-    "epc_current": "C",
-    "floor_level": "first",
-    "key_features": [
+    id: "rm-91380246",
+    price_gbp: 1200000,
+    price_qualifier: "guide_price",
+    bedrooms: 2,
+    bathrooms: 2,
+    property_type: "flat",
+    address: "Hand & Flower House, 617 Kings Road, Fulham, London, SW6",
+    postcode: "SW6 2ES",
+    lat: 51.477657,
+    lon: -0.189909,
+    tenure: "share_of_freehold",
+    epc_current: "C",
+    floor_level: "first",
+    key_features: [
       "Located on the Fulham Chelsea border",
       "Approximately 0.3 miles from Fulham Broadway",
       "Finished to a high standard",
       "Bespoke joinery",
       "Air-conditioning",
-      "EPC Rating = C"
+      "EPC Rating = C",
     ],
-    "photos": [
+    photos: [
       "https://media.rightmove.co.uk/property-photo/883bfcebc/91380246/883bfcebcdcc944b21d5ed16cae9909d.jpeg",
       "https://media.rightmove.co.uk/property-photo/f06a2012d/91380246/f06a2012d84f46493bda11210ef56556.jpeg",
       "https://media.rightmove.co.uk/property-photo/2dc23f958/91380246/2dc23f958c9234fedd14ca70fe8c4c70.jpeg",
-      "https://media.rightmove.co.uk/property-photo/df64acedb/91380246/df64acedb9f9cea9c7402f37be50a43e.jpeg"
+      "https://media.rightmove.co.uk/property-photo/df64acedb/91380246/df64acedb9f9cea9c7402f37be50a43e.jpeg",
     ],
-    "lease_years_remaining": 240,
-    "service_charge_gbp_pa": 3317.9,
-    "ground_rent_gbp_pa": 200.0,
-    "council_tax_band": "F",
-    "epc_potential": null,
-    "description": "A beautifully designed two bedroom apartment located on the Fulham/Chelsea border.\n\nDescription\n\nThis superb first floor apartment was completely redeveloped and finished to a high standard by the current owner. Large windows throughout",
-    "agent_name": "Savills, Fulham",
-    "listed_date": "2026-07-28T00:45:29Z",
-    "floorplans": [
-      "https://media.rightmove.co.uk/property-floorplan/a59943ec8/91380246/a59943ec8b7bbe403e089e3cc4aa18fd.jpeg"
+    lease_years_remaining: 240,
+    service_charge_gbp_pa: 3317.9,
+    ground_rent_gbp_pa: 200.0,
+    council_tax_band: "F",
+    epc_potential: null,
+    description:
+      "A beautifully designed two bedroom apartment located on the Fulham/Chelsea border.\n\nDescription\n\nThis superb first floor apartment was completely redeveloped and finished to a high standard by the current owner. Large windows throughout",
+    agent_name: "Savills, Fulham",
+    listed_date: "2026-07-28T00:45:29Z",
+    floorplans: [
+      "https://media.rightmove.co.uk/property-floorplan/a59943ec8/91380246/a59943ec8b7bbe403e089e3cc4aa18fd.jpeg",
     ],
-    "stations": [
+    stations: [
       {
-        "name": "Fulham Broadway Station",
-        "distance_km": 0.483,
-        "types": []
+        name: "Fulham Broadway Station",
+        distance_km: 0.483,
+        types: [],
       },
       {
-        "name": "Imperial Wharf Station",
-        "distance_km": 0.644,
-        "types": []
-      }
+        name: "Imperial Wharf Station",
+        distance_km: 0.644,
+        types: [],
+      },
     ],
-    "photo_flags": []
+    photo_flags: [],
   },
   {
-    "id": "rm-93699291",
-    "price_gbp": 419950,
-    "price_qualifier": "offers_over",
-    "bedrooms": 1,
-    "bathrooms": 1,
-    "property_type": "terraced",
-    "address": "Connor Close, London, E11",
-    "postcode": "E11 1BP",
-    "lat": 51.569145,
-    "lon": 0.005992,
-    "tenure": "freehold",
-    "epc_current": "C",
-    "floor_level": "ground",
-    "key_features": [
+    id: "rm-93699291",
+    price_gbp: 419950,
+    price_qualifier: "offers_over",
+    bedrooms: 1,
+    bathrooms: 1,
+    property_type: "terraced",
+    address: "Connor Close, London, E11",
+    postcode: "E11 1BP",
+    lat: 51.569145,
+    lon: 0.005992,
+    tenure: "freehold",
+    epc_current: "C",
+    floor_level: "ground",
+    key_features: [
       "40 sq.m, end-of-terrace",
       "Private courtyard with an additional separate entrance. South facing.",
       "Private Parking. Gated Close Street.",
@@ -1218,111 +1180,338 @@ const listings: ListingDetail[] =
       "Freehold house",
       "EPC C",
       "Council Tax: Band C",
-      "Chain free"
+      "Chain free",
     ],
-    "photos": [
+    photos: [
       "https://media.rightmove.co.uk/property-photo/6ba8e77aa/93699291/6ba8e77aa998dc6c019abc378955ddd0.jpeg",
       "https://media.rightmove.co.uk/property-photo/a579f52c9/93699291/a579f52c9944844f88c284f9877bb8de.jpeg",
       "https://media.rightmove.co.uk/property-photo/f79619238/93699291/f796192380563cbe40d76f0d2839b134.jpeg",
-      "https://media.rightmove.co.uk/property-photo/92dc3632d/93699291/92dc3632d8c967834aa7495b1a4ea6d1.jpeg"
+      "https://media.rightmove.co.uk/property-photo/92dc3632d/93699291/92dc3632d8c967834aa7495b1a4ea6d1.jpeg",
     ],
-    "lease_years_remaining": null,
-    "service_charge_gbp_pa": null,
-    "ground_rent_gbp_pa": null,
-    "council_tax_band": "C",
-    "epc_potential": null,
-    "description": "Property Ref: S7341\n\nProperty Description\nA beautifully refurbished approx. 40 sq.m (430 sq.ft) one bedroom, two storey mews-style end-of-terrace house with a private south / south east facing back garden and a dedicated parking space,",
-    "agent_name": "Emoov, Chelmsford",
-    "listed_date": "2026-09-29T13:21:42Z",
-    "floorplans": [
-      "https://media.rightmove.co.uk/property-floorplan/621da6970/93699291/621da697035fb8b556590aece1e2a5f1.jpeg"
+    lease_years_remaining: null,
+    service_charge_gbp_pa: null,
+    ground_rent_gbp_pa: null,
+    council_tax_band: "C",
+    epc_potential: null,
+    description:
+      "Property Ref: S7341\n\nProperty Description\nA beautifully refurbished approx. 40 sq.m (430 sq.ft) one bedroom, two storey mews-style end-of-terrace house with a private south / south east facing back garden and a dedicated parking space,",
+    agent_name: "Emoov, Chelmsford",
+    listed_date: "2026-09-29T13:21:42Z",
+    floorplans: [
+      "https://media.rightmove.co.uk/property-floorplan/621da6970/93699291/621da697035fb8b556590aece1e2a5f1.jpeg",
     ],
-    "stations": [
+    stations: [
       {
-        "name": "Leytonstone Station",
-        "distance_km": 0.193,
-        "types": [
-          "LONDON_UNDERGROUND"
-        ]
+        name: "Leytonstone Station",
+        distance_km: 0.193,
+        types: ["LONDON_UNDERGROUND"],
       },
       {
-        "name": "Leytonstone High Road Station",
-        "distance_km": 0.628,
-        "types": [
-          "LONDON_OVERGROUND"
-        ]
-      }
+        name: "Leytonstone High Road Station",
+        distance_km: 0.628,
+        types: ["LONDON_OVERGROUND"],
+      },
     ],
-    "photo_flags": []
-  }
+    photo_flags: [],
+  },
 ];
 
 const PHRASES: Record<ChipId, [label: string, phrases: string[]]> = {
-  garden: ["Garden", ["Lovely garden", "Too small", "Too much upkeep", "Overlooked"]],
-  parking: ["Parking", ["Parking is a big plus", "Hard to use", "Not enough space", "Don't need it"]],
-  natural_light: ["Natural light inside", ["Bright and airy", "A bit dark", "Good light in the main room", "Needs more daylight"]],
-  balcony_terrace: ["Balcony or terrace", ["Great outdoor spot", "Too small to use", "Overlooked", "Not needed"]],
-  price_value: ["Price and value", ["Good value", "Fair for what it is", "Overpriced", "Over my budget"]],
-  commute: ["Commute", ["Easy commute", "Fine a few days a week", "Too long for me", "Too many changes"]],
-  station_access: ["Station access", ["Close to the station", "Good transport links", "Too far to walk", "Station noise worries me"]],
-  area_busyness: ["Area and street feel", ["Quiet, I love it", "Lively, I like that", "Too busy for me", "Too quiet for me"]],
-  space: ["Space and room sizes", ["Plenty of room", "Good size for the price", "Rooms feel small", "More than I need"]],
-  kitchen: ["Kitchen", ["Great kitchen", "Fine as it is", "Needs replacing", "Too small to cook in"]],
-  layout: ["Layout", ["Layout works well", "Love the open plan", "Awkward layout", "Want separate rooms"]],
-  condition: ["Condition and decor", ["Great condition", "Happy to renovate", "Too dated", "Needs too much work"]],
-  bathrooms: ["Bathrooms", ["Good bathroom", "Love the en-suite", "Dated bathroom", "Need more bathrooms"]],
-  floor_level: ["Floor level", ["Love being up high", "Good floor for me", "Too low", "Too many stairs"]],
-  building_amenities: ["Building facilities", ["Great facilities", "Concierge is a plus", "Would not use them", "Paying for what I don't want"]],
-  lease: ["Lease length", ["Long lease, fine", "Lease is too short", "Worried about extending", "Share of freehold helps"]],
-  service_charge: ["Service charge", ["Charge is reasonable", "Too high", "Worried it will rise", "Fine for what's included"]],
-  energy_efficiency: ["Energy efficiency", ["Good energy rating", "Costly to heat", "Happy to improve it", "Rating doesn't matter"]],
-  home_office: ["Space to work from home", ["Room to work from home", "Spare room is useful", "No space for a desk", "Don't need an office"]],
-  building_style: ["Period or modern style", ["Love the period character", "Prefer a modern build", "Too dated", "Character matters to me"]],
+  garden: [
+    "Garden",
+    ["Lovely garden", "Too small", "Too much upkeep", "Overlooked"],
+  ],
+  parking: [
+    "Parking",
+    [
+      "Parking is a big plus",
+      "Hard to use",
+      "Not enough space",
+      "Don't need it",
+    ],
+  ],
+  natural_light: [
+    "Natural light inside",
+    [
+      "Bright and airy",
+      "A bit dark",
+      "Good light in the main room",
+      "Needs more daylight",
+    ],
+  ],
+  balcony_terrace: [
+    "Balcony or terrace",
+    ["Great outdoor spot", "Too small to use", "Overlooked", "Not needed"],
+  ],
+  price_value: [
+    "Price and value",
+    ["Good value", "Fair for what it is", "Overpriced", "Over my budget"],
+  ],
+  commute: [
+    "Commute",
+    [
+      "Easy commute",
+      "Fine a few days a week",
+      "Too long for me",
+      "Too many changes",
+    ],
+  ],
+  station_access: [
+    "Station access",
+    [
+      "Close to the station",
+      "Good transport links",
+      "Too far to walk",
+      "Station noise worries me",
+    ],
+  ],
+  area_busyness: [
+    "Area and street feel",
+    [
+      "Quiet, I love it",
+      "Lively, I like that",
+      "Too busy for me",
+      "Too quiet for me",
+    ],
+  ],
+  space: [
+    "Space and room sizes",
+    [
+      "Plenty of room",
+      "Good size for the price",
+      "Rooms feel small",
+      "More than I need",
+    ],
+  ],
+  kitchen: [
+    "Kitchen",
+    [
+      "Great kitchen",
+      "Fine as it is",
+      "Needs replacing",
+      "Too small to cook in",
+    ],
+  ],
+  layout: [
+    "Layout",
+    [
+      "Layout works well",
+      "Love the open plan",
+      "Awkward layout",
+      "Want separate rooms",
+    ],
+  ],
+  condition: [
+    "Condition and decor",
+    [
+      "Great condition",
+      "Happy to renovate",
+      "Too dated",
+      "Needs too much work",
+    ],
+  ],
+  bathrooms: [
+    "Bathrooms",
+    [
+      "Good bathroom",
+      "Love the en-suite",
+      "Dated bathroom",
+      "Need more bathrooms",
+    ],
+  ],
+  floor_level: [
+    "Floor level",
+    ["Love being up high", "Good floor for me", "Too low", "Too many stairs"],
+  ],
+  building_amenities: [
+    "Building facilities",
+    [
+      "Great facilities",
+      "Concierge is a plus",
+      "Would not use them",
+      "Paying for what I don't want",
+    ],
+  ],
+  lease: [
+    "Lease length",
+    [
+      "Long lease, fine",
+      "Lease is too short",
+      "Worried about extending",
+      "Share of freehold helps",
+    ],
+  ],
+  service_charge: [
+    "Service charge",
+    [
+      "Charge is reasonable",
+      "Too high",
+      "Worried it will rise",
+      "Fine for what's included",
+    ],
+  ],
+  energy_efficiency: [
+    "Energy efficiency",
+    [
+      "Good energy rating",
+      "Costly to heat",
+      "Happy to improve it",
+      "Rating doesn't matter",
+    ],
+  ],
+  home_office: [
+    "Space to work from home",
+    [
+      "Room to work from home",
+      "Spare room is useful",
+      "No space for a desk",
+      "Don't need an office",
+    ],
+  ],
+  building_style: [
+    "Period or modern style",
+    [
+      "Love the period character",
+      "Prefer a modern build",
+      "Too dated",
+      "Character matters to me",
+    ],
+  ],
 };
 
-const HOUSE_TYPES = ["house", "terraced", "semi_detached", "end_of_terrace", "detached", "bungalow"];
+const HOUSE_TYPES = [
+  "house",
+  "terraced",
+  "semi_detached",
+  "end_of_terrace",
+  "detached",
+  "bungalow",
+];
 
 // Catalogue rules in priority order. `featured` is omitted where the chip is featured whenever offered.
 function buildChips(l: ListingDetail, hasCommute: boolean): Chip[] {
   const text = l.key_features.join("\n");
   const mentions = (re: RegExp) => re.test(text);
   const type = l.property_type;
-  const flatLike = type === null || type === "flat" || type === "maisonette" || type === "other";
-  const leaseholdLike = l.tenure === "leasehold" || l.tenure === "share_of_freehold";
-  const distances = l.stations.map((s) => s.distance_km).filter((d): d is number => d !== null);
+  const flatLike =
+    type === null ||
+    type === "flat" ||
+    type === "maisonette" ||
+    type === "other";
+  const leaseholdLike =
+    l.tenure === "leasehold" || l.tenure === "share_of_freehold";
+  const distances = l.stations
+    .map((s) => s.distance_km)
+    .filter((d): d is number => d !== null);
   const nearest = distances.length ? Math.min(...distances) : null;
-  const flag = (field: string) => l.photo_flags.filter((f) => f.field === field);
+  const flag = (field: string) =>
+    l.photo_flags.filter((f) => f.field === field);
   const gardenFlag = l.photo_flags.some((f) => f.room === "garden");
   const lightFlag = flag("light").some(
-    (f) => (f.value === "bright" || f.value === "poor") && (f.confidence === "high" || f.confidence === "medium"),
+    (f) =>
+      (f.value === "bright" || f.value === "poor") &&
+      (f.confidence === "high" || f.confidence === "medium"),
   );
   const officeMention = /study|office|home working|work(ing)? from home/i;
 
   const rules: [ChipId, boolean, boolean][] = [
-    ["garden", (type !== null && HOUSE_TYPES.includes(type)) || mentions(/garden/i) || gardenFlag, mentions(/garden/i) || gardenFlag],
-    ["parking", mentions(/parking|garage|driveway|off[- ]street|car ?port|car ?park/i), true],
-    ["natural_light", true, mentions(/\b(bright|light|sunny|airy|south[- ]facing)\b/i) || lightFlag],
-    ["balcony_terrace", mentions(/balcon|roof terrace/i) || (mentions(/\bterrace\b/i) && flatLike), true],
+    [
+      "garden",
+      (type !== null && HOUSE_TYPES.includes(type)) ||
+        mentions(/garden/i) ||
+        gardenFlag,
+      mentions(/garden/i) || gardenFlag,
+    ],
+    [
+      "parking",
+      mentions(/parking|garage|driveway|off[- ]street|car ?port|car ?park/i),
+      true,
+    ],
+    [
+      "natural_light",
+      true,
+      mentions(/\b(bright|light|sunny|airy|south[- ]facing)\b/i) || lightFlag,
+    ],
+    [
+      "balcony_terrace",
+      mentions(/balcon|roof terrace/i) ||
+        (mentions(/\bterrace\b/i) && flatLike),
+      true,
+    ],
     ["price_value", true, true],
     ["commute", hasCommute, true],
-    ["station_access", nearest !== null, (nearest !== null && nearest <= 0.8) || mentions(/station|tube|underground|\bdlr\b|overground/i)],
-    ["area_busyness", true, mentions(/quiet|peaceful|tranquil|cul[- ]de[- ]sac|vibrant|bustling|lively|high street|village/i)],
-    ["space", true, mentions(/spacious|generous|large|ample|\bhuge\b|sq\.? ?ft|sq\.? ?m\b|sqm/i) || flag("sqm_estimate").length > 0],
+    [
+      "station_access",
+      nearest !== null,
+      (nearest !== null && nearest <= 0.8) ||
+        mentions(/station|tube|underground|\bdlr\b|overground/i),
+    ],
+    [
+      "area_busyness",
+      true,
+      mentions(
+        /quiet|peaceful|tranquil|cul[- ]de[- ]sac|vibrant|bustling|lively|high street|village/i,
+      ),
+    ],
+    [
+      "space",
+      true,
+      mentions(
+        /spacious|generous|large|ample|\bhuge\b|sq\.? ?ft|sq\.? ?m\b|sqm/i,
+      ) || flag("sqm_estimate").length > 0,
+    ],
     ["kitchen", true, mentions(/kitchen/i)],
     ["layout", true, mentions(/open[- ]plan/i)],
-    ["condition", true, mentions(/refurbish|renovat|modern|newly|new build|immaculate|redecorat|updating|in need of/i) || flag("defects").length > 0],
-    ["bathrooms", true, mentions(/en[- ]?suite|bathroom|shower room|wet room/i)],
+    [
+      "condition",
+      true,
+      mentions(
+        /refurbish|renovat|modern|newly|new build|immaculate|redecorat|updating|in need of/i,
+      ) || flag("defects").length > 0,
+    ],
+    [
+      "bathrooms",
+      true,
+      mentions(/en[- ]?suite|bathroom|shower room|wet room/i),
+    ],
     ["floor_level", l.floor_level !== null && flatLike, true],
-    ["building_amenities", (type === "flat" || type === "maisonette") && mentions(/concierge|porter|\bgym\b|\blifts?\b|communal|residents|swimming|lounge/i), true],
+    [
+      "building_amenities",
+      (type === "flat" || type === "maisonette") &&
+        mentions(
+          /concierge|porter|\bgym\b|\blifts?\b|communal|residents|swimming|lounge/i,
+        ),
+      true,
+    ],
     ["lease", leaseholdLike && l.lease_years_remaining !== null, true],
     ["service_charge", leaseholdLike && l.service_charge_gbp_pa !== null, true],
-    ["energy_efficiency", l.epc_current !== null, ["A", "B", "E", "F", "G"].includes(l.epc_current ?? "")],
-    ["home_office", (l.bedrooms ?? 0) >= 2 || mentions(officeMention), mentions(officeMention)],
-    ["building_style", mentions(/period|victorian|georgian|edwardian|character|original|art deco|new build|purpose[- ]built|contemporary/i), true],
+    [
+      "energy_efficiency",
+      l.epc_current !== null,
+      ["A", "B", "E", "F", "G"].includes(l.epc_current ?? ""),
+    ],
+    [
+      "home_office",
+      (l.bedrooms ?? 0) >= 2 || mentions(officeMention),
+      mentions(officeMention),
+    ],
+    [
+      "building_style",
+      mentions(
+        /period|victorian|georgian|edwardian|character|original|art deco|new build|purpose[- ]built|contemporary/i,
+      ),
+      true,
+    ],
   ];
-  const offered = rules.map(([id, on, featured], i) => ({ id, on, featured, i })).filter((r) => r.on);
+  const offered = rules
+    .map(([id, on, featured], i) => ({ id, on, featured, i }))
+    .filter((r) => r.on);
   offered.sort((a, b) => Number(b.featured) - Number(a.featured) || a.i - b.i);
-  return offered.slice(0, 8).map((r) => ({ chip_id: r.id, label: PHRASES[r.id][0], phrases: [...PHRASES[r.id][1]] }));
+  return offered.slice(0, 8).map((r) => ({
+    chip_id: r.id,
+    label: PHRASES[r.id][0],
+    phrases: [...PHRASES[r.id][1]],
+  }));
 }
 
 export type Fixture = {

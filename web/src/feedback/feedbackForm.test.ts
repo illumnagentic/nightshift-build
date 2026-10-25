@@ -25,13 +25,17 @@ describe("emptyForm", () => {
 describe("setAnswer", () => {
   it("stores strength and text for a chip", () => {
     const form = setAnswer(emptyForm(), "garden", "must_have", "big lawn");
-    expect(form.answers).toEqual({ garden: { strength: "must_have", text: "big lawn" } });
+    expect(form.answers).toEqual({
+      garden: { strength: "must_have", text: "big lawn" },
+    });
   });
 
   it("replaces an existing answer for the same chip", () => {
     let form = setAnswer(emptyForm(), "garden", "must_have", "big lawn");
     form = setAnswer(form, "garden", "deal_breaker", "none");
-    expect(form.answers).toEqual({ garden: { strength: "deal_breaker", text: "none" } });
+    expect(form.answers).toEqual({
+      garden: { strength: "deal_breaker", text: "none" },
+    });
   });
 
   it("does not mutate the form it was given", () => {
@@ -79,11 +83,16 @@ describe("canSubmit", () => {
   });
 
   it("is true when compulsory with a chip answer and blank text", () => {
-    expect(canSubmit(setAnswer(emptyForm(), "garden", "nice_to_have", ""), true)).toBe(true);
+    expect(
+      canSubmit(setAnswer(emptyForm(), "garden", "nice_to_have", ""), true),
+    ).toBe(true);
   });
 
   it("is false again once the only answer is removed", () => {
-    const form = removeAnswer(setAnswer(emptyForm(), "garden", "nice_to_have", ""), "garden");
+    const form = removeAnswer(
+      setAnswer(emptyForm(), "garden", "nice_to_have", ""),
+      "garden",
+    );
     expect(canSubmit(form, true)).toBe(false);
   });
 });
@@ -92,7 +101,10 @@ describe("toRequest", () => {
   it("follows the card order, not the order answers were given", () => {
     let form = setAnswer(emptyForm(), "natural_light", "must_have", "");
     form = setAnswer(form, "garden", "nice_to_have", "");
-    expect(toRequest(form, chips).chips.map((c) => c.chip_id)).toEqual(["garden", "natural_light"]);
+    expect(toRequest(form, chips).chips.map((c) => c.chip_id)).toEqual([
+      "garden",
+      "natural_light",
+    ]);
   });
 
   it("trims text and turns blank text into null", () => {
@@ -107,15 +119,21 @@ describe("toRequest", () => {
   });
 
   it("trims free text and turns blank free text into null", () => {
-    expect(toRequest(setFreeText(emptyForm(), "  nice  "), chips).free_text).toBe("nice");
-    expect(toRequest(setFreeText(emptyForm(), " \t"), chips).free_text).toBeNull();
+    expect(
+      toRequest(setFreeText(emptyForm(), "  nice  "), chips).free_text,
+    ).toBe("nice");
+    expect(
+      toRequest(setFreeText(emptyForm(), " \t"), chips).free_text,
+    ).toBeNull();
     expect(toRequest(emptyForm(), chips).free_text).toBeNull();
   });
 
   it("ignores an answer for a chip that is not on the card", () => {
     let form = setAnswer(emptyForm(), "kitchen", "must_have", "big");
     form = setAnswer(form, "garden", "must_have", "");
-    expect(toRequest(form, chips).chips.map((c) => c.chip_id)).toEqual(["garden"]);
+    expect(toRequest(form, chips).chips.map((c) => c.chip_id)).toEqual([
+      "garden",
+    ]);
   });
 
   it("sends empty chips and no skipped key for an empty form", () => {
@@ -135,6 +153,10 @@ describe("toRequest", () => {
 
 describe("skipRequest", () => {
   it("is exactly the skip body", () => {
-    expect(skipRequest()).toStrictEqual({ chips: [], free_text: null, skipped: true });
+    expect(skipRequest()).toStrictEqual({
+      chips: [],
+      free_text: null,
+      skipped: true,
+    });
   });
 });

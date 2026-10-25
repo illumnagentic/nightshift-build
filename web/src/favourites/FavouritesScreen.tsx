@@ -6,12 +6,17 @@ import "./favourites.css";
 
 const NETWORK_MESSAGE = "Could not reach the server. Try again.";
 
-const errorText = (err: unknown) => (err instanceof ApiError ? err.message : NETWORK_MESSAGE);
+const errorText = (err: unknown) =>
+  err instanceof ApiError ? err.message : NETWORK_MESSAGE;
 
 function addedOn(addedAt: string): string | null {
   const date = new Date(addedAt);
   if (Number.isNaN(date.getTime())) return null;
-  return date.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+  return date.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
 }
 
 function summary(fav: Favourite) {
@@ -168,7 +173,9 @@ export function FavouritesScreen({ userId }: { userId: string }) {
   }
 
   function removed(listingId: string) {
-    setFavourites((list) => list && list.filter((f) => f.listing.id !== listingId));
+    setFavourites(
+      (list) => list && list.filter((f) => f.listing.id !== listingId),
+    );
     setRemoving(null);
     setSending(false);
   }
@@ -218,8 +225,12 @@ export function FavouritesScreen({ userId }: { userId: string }) {
               )}
               <div className="favourites-screen__info">
                 <p className="favourites-screen__price">{price}</p>
-                {address && <p className="favourites-screen__address">{address}</p>}
-                {added && <p className="favourites-screen__meta">Added {added}</p>}
+                {address && (
+                  <p className="favourites-screen__address">{address}</p>
+                )}
+                {added && (
+                  <p className="favourites-screen__meta">Added {added}</p>
+                )}
               </div>
               <button
                 type="button"
@@ -237,7 +248,10 @@ export function FavouritesScreen({ userId }: { userId: string }) {
   }
 
   return (
-    <section className="favourites-screen" aria-labelledby={`${headingId}-title`}>
+    <section
+      className="favourites-screen"
+      aria-labelledby={`${headingId}-title`}
+    >
       <h2 id={`${headingId}-title`} className="favourites-screen__title">
         Favourites
       </h2>

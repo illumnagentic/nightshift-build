@@ -1,7 +1,14 @@
 import { useCallback, useEffect, useReducer, useRef } from "react";
 import { api } from "../api";
 import type { SwipeAction } from "../api";
-import { canSwipe, currentCard, deckReducer, initialDeckState, needsRefetch, phase } from "./deckState";
+import {
+  canSwipe,
+  currentCard,
+  deckReducer,
+  initialDeckState,
+  needsRefetch,
+  phase,
+} from "./deckState";
 
 export function useDeck(userId: string) {
   const [state, dispatch] = useReducer(deckReducer, initialDeckState);
@@ -24,10 +31,12 @@ export function useDeck(userId: string) {
     const requested = generation.current;
     api.getDeck(userId).then(
       (response) => {
-        if (generation.current === requested) dispatch({ type: "fetchOk", response });
+        if (generation.current === requested)
+          dispatch({ type: "fetchOk", response });
       },
       (error: unknown) => {
-        if (generation.current === requested) dispatch({ type: "fetchFail", error });
+        if (generation.current === requested)
+          dispatch({ type: "fetchFail", error });
       },
     );
   }, [state, userId]);
@@ -43,19 +52,31 @@ export function useDeck(userId: string) {
       api.swipe(userId, card.decision_id, { action }).then(
         (response) => {
           swipeBusy.current = false;
-          if (generation.current === requested) dispatch({ type: "swipeOk", card, response });
+          if (generation.current === requested)
+            dispatch({ type: "swipeOk", card, response });
         },
         (error: unknown) => {
           swipeBusy.current = false;
-          if (generation.current === requested) dispatch({ type: "swipeFail", error });
+          if (generation.current === requested)
+            dispatch({ type: "swipeFail", error });
         },
       );
     },
     [card, state, userId],
   );
 
-  const continueAfterFeedback = useCallback(() => dispatch({ type: "continue" }), []);
+  const continueAfterFeedback = useCallback(
+    () => dispatch({ type: "continue" }),
+    [],
+  );
   const retry = useCallback(() => dispatch({ type: "retry" }), []);
 
-  return { state, phase: phase(state), card, swipe, continueAfterFeedback, retry };
+  return {
+    state,
+    phase: phase(state),
+    card,
+    swipe,
+    continueAfterFeedback,
+    retry,
+  };
 }

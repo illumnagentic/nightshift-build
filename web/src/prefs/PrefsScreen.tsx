@@ -12,9 +12,12 @@ const FAILED_MESSAGE =
 
 function hardLimits(hard: ParsedPrefs["hard"]): string[] {
   const lines: string[] = [];
-  if (hard.max_price_gbp !== null) lines.push(`Up to ${formatPrice(hard.max_price_gbp)}`);
+  if (hard.max_price_gbp !== null)
+    lines.push(`Up to ${formatPrice(hard.max_price_gbp)}`);
   if (hard.min_bedrooms !== null) {
-    lines.push(`At least ${hard.min_bedrooms} bedroom${hard.min_bedrooms === 1 ? "" : "s"}`);
+    lines.push(
+      `At least ${hard.min_bedrooms} bedroom${hard.min_bedrooms === 1 ? "" : "s"}`,
+    );
   }
   if (hard.property_types !== null && hard.property_types.length > 0) {
     const names = hard.property_types.map((t) => propertyTypeLabel(t) ?? t);
@@ -22,8 +25,10 @@ function hardLimits(hard: ParsedPrefs["hard"]): string[] {
   }
   if (hard.min_epc !== null) lines.push(`EPC ${hard.min_epc} or better`);
   if (hard.tenure !== null) lines.push(tenureLabel(hard.tenure) ?? hard.tenure);
-  if (hard.min_lease_years !== null) lines.push(`At least ${hard.min_lease_years} years on the lease`);
-  if (hard.max_commute_min !== null) lines.push(`Max ${hard.max_commute_min} min commute`);
+  if (hard.min_lease_years !== null)
+    lines.push(`At least ${hard.min_lease_years} years on the lease`);
+  if (hard.max_commute_min !== null)
+    lines.push(`Max ${hard.max_commute_min} min commute`);
   return lines;
 }
 
@@ -36,7 +41,11 @@ export function PrefsScreen({
   onReady: () => void;
   onSaved: () => void;
 }) {
-  const [form, setForm] = useState<PrefsForm>({ text: "", postcode: "", maxCommute: "" });
+  const [form, setForm] = useState<PrefsForm>({
+    text: "",
+    postcode: "",
+    maxCommute: "",
+  });
   const [parsed, setParsed] = useState<ParsedPrefs | null>(null);
   const [status, setStatus] = useState<CommuteStatus | null>(null);
   const [loading, setLoading] = useState(true);
@@ -101,7 +110,9 @@ export function PrefsScreen({
       .catch((err) => {
         if (cancelled) return;
         setError(
-          err instanceof ApiError ? err.message : "Could not reach the server. Try again.",
+          err instanceof ApiError
+            ? err.message
+            : "Could not reach the server. Try again.",
         );
       })
       .finally(() => {
@@ -127,7 +138,9 @@ export function PrefsScreen({
     } catch (err) {
       if (id !== pollId.current) return;
       setError(
-        err instanceof ApiError ? err.message : "Could not reach the server. Try again.",
+        err instanceof ApiError
+          ? err.message
+          : "Could not reach the server. Try again.",
       );
     }
     setSaving(false);
@@ -135,7 +148,8 @@ export function PrefsScreen({
 
   const limitProblem = limitError(form);
   const limits = parsed === null ? [] : hardLimits(parsed.hard);
-  const update = (patch: Partial<PrefsForm>) => setForm((f) => ({ ...f, ...patch }));
+  const update = (patch: Partial<PrefsForm>) =>
+    setForm((f) => ({ ...f, ...patch }));
 
   return (
     <form
@@ -183,7 +197,9 @@ export function PrefsScreen({
         value={form.maxCommute}
         disabled={loading}
         aria-invalid={limitProblem !== null}
-        aria-describedby={limitProblem !== null ? "prefs-limit-error" : undefined}
+        aria-describedby={
+          limitProblem !== null ? "prefs-limit-error" : undefined
+        }
         onChange={(e) => update({ maxCommute: e.target.value })}
       />
       {limitProblem !== null && (
@@ -218,7 +234,10 @@ export function PrefsScreen({
       )}
 
       {parsed !== null && (limits.length > 0 || parsed.soft.length > 0) && (
-        <section className="prefs-screen__parsed" aria-label="What we understood">
+        <section
+          className="prefs-screen__parsed"
+          aria-label="What we understood"
+        >
           <h3 className="prefs-screen__subtitle">What we understood</h3>
           {limits.length > 0 && (
             <ul className="prefs-screen__list">

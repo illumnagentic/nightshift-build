@@ -2,10 +2,16 @@ import { useEffect, useState, type FormEvent } from "react";
 import { api, ApiError, type User } from "./api";
 
 function messageFor(err: unknown): string {
-  return err instanceof ApiError ? err.message : "Could not reach the server. Try again.";
+  return err instanceof ApiError
+    ? err.message
+    : "Could not reach the server. Try again.";
 }
 
-export default function UserPicker({ onSelect }: { onSelect: (user: User) => void }) {
+export default function UserPicker({
+  onSelect,
+}: {
+  onSelect: (user: User) => void;
+}) {
   const [users, setUsers] = useState<User[] | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [username, setUsername] = useState("");

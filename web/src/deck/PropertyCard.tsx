@@ -51,7 +51,9 @@ export function PropertyCard({ card }: { card: Card }) {
             <button
               type="button"
               className="deck-card__nav deck-card__nav--prev"
-              onClick={() => setPhotoIndex((index + photos.length - 1) % photos.length)}
+              onClick={() =>
+                setPhotoIndex((index + photos.length - 1) % photos.length)
+              }
               aria-label="Previous photo"
             >
               ‹
@@ -74,9 +76,13 @@ export function PropertyCard({ card }: { card: Card }) {
         <p className="deck-card__price">
           {formatPriceWithQualifier(listing.price_gbp, listing.price_qualifier)}
         </p>
-        {facts.length > 0 && <p className="deck-card__facts">{facts.join(" · ")}</p>}
+        {facts.length > 0 && (
+          <p className="deck-card__facts">{facts.join(" · ")}</p>
+        )}
         {address && <p className="deck-card__address">{address}</p>}
-        {details.length > 0 && <p className="deck-card__details">{details.join(" · ")}</p>}
+        {details.length > 0 && (
+          <p className="deck-card__details">{details.join(" · ")}</p>
+        )}
         {features.length > 0 && (
           <ul className="deck-card__features">
             {features.map((feature) => (
@@ -87,7 +93,9 @@ export function PropertyCard({ card }: { card: Card }) {
         <p className="deck-card__commute">
           <span className="deck-card__pill">{commuteLine(commute)}</span>
           {commute.minutes !== null && (
-            <span className="deck-card__assumptions">{commute.assumptions}</span>
+            <span className="deck-card__assumptions">
+              {commute.assumptions}
+            </span>
           )}
         </p>
       </div>
