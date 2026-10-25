@@ -143,3 +143,21 @@ def test_term_matches_one_sentence_and_not_another(factor):
 
 def test_terms_are_case_insensitive_and_word_bounded():
     assert taste.TERMS["garden"].search("GARDEN") and not taste.TERMS["garden"].search("regardenise")
+
+
+def test_a_favourite_removal_reason_counts_once_as_offered_or_mentioned_and_once_as_chosen():
+    offered_row = taste.removal_row(["garden", "parking"], "No garden, sadly.", "2026-10-25T10:00:09Z")
+    assert offered_row["offered"] == ["garden"] and offered_row["chips"] == [] and not offered_row["skipped"]
+    assert taste.removal_row(["parking"], "No garden, sadly.", "2026-10-25T10:00:09Z")["offered"] == []
+    # Offered and matched: offered 1, chosen 1. Not offered but matched: mentioned_only 1, chosen 1. Same weight either way.
+    (offered,) = taste.compute_factors([offered_row])
+    (mentioned,) = taste.compute_factors([taste.removal_row(["parking"], "No garden, sadly.", "2026-10-25T10:00:09Z")])
+    assert offered == mentioned == {"factor": "garden", "direction": "mentioned in comments", "weight": 0.5}
+
+
+def test_a_removal_reason_does_not_lower_an_unrelated_offered_chip():
+    answered = row(["garden", "parking"], [("parking", "must_have", None)], at=1)
+    removal = taste.removal_row(["garden", "parking"], "Garden was too small.", "2026-10-25T10:00:09Z")
+    factors = by_name(taste.compute_factors([answered, removal]))
+    assert factors["parking"]["weight"] == 0.5
+    assert factors["garden"]["weight"] == round(1 / 3, 2)

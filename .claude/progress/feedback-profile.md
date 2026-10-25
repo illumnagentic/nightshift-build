@@ -260,11 +260,11 @@ no edit), `worker/tests/test_favourites.py` (new), `worker/tests/test_flags.py`
 
 **Evidence location**: `evidence/feedback-profile/step-3.md`
 
-- [ ] Implemented
-- [ ] Tested — evidence: (date)
-- [ ] Best practices met — evidence: (date)
-- [ ] Matches locked requirements — evidence: (date)
-- [ ] No scope drift — evidence: (date)
+- [x] Implemented — evidence: GET/DELETE /favourites, POST /flags/{id}/correction, GET /listings/{id}, swipe 404 re-read in worker/src/entry.py; favourite_removals in worker/schema.sql; taste.removal_row (2026-10-25)
+- [x] Tested — evidence: full suite 412 passed exit=0 twice on same D1 (reviewer worktree, :8850), server-less 206 passed exit=0; tests/test_favourites.py, tests/test_flags.py, removal tests in tests/test_profile_unit.py (2026-10-25)
+- [x] Best practices met — evidence: reason_required wins for every bad body (test_favourites parametrised), single-statement UPDATE...RETURNING restricted to train split, delete decides the race, check-process-refs.sh exit 0 (2026-10-25)
+- [x] Matches locked requirements — evidence: contract fields/names in listing detail (test_listing_detail_has_every_contract_field_and_nothing_else), eval 404s, Q5 removal counting (only matched chips offered; test_a_removal_reason_does_not_lower_an_unrelated_offered_chip), Q9 overwrite, Q10 new table only (2026-10-25)
+- [x] No scope drift — evidence: diff touches only worker/schema.sql, entry.py, taste.py, test_profile_unit.py (removal tests only), two new test files, evidence/step-3.md, progress file; deck.py unedited (2026-10-25)
 
 ### Step 4 — The curator reads the profile
 
@@ -386,6 +386,9 @@ Plan check — arbiter 2026-10-25: 4 steps, coarse vertical slices, within 3–5
 2026-10-25 | step 2 | Free-text term matching ignores negation and context: "no garden" counts as a mention of `garden` and raises its weight | Q5 fixes direction to the chips' strengths and texts; code only counts mentions, and a regex list cannot read sentences | Have the model read free text for direction as well as mention (ruled out in Q2), or accept the noise. — accepted by arbiter 2026-10-25: decisions.md makes weight a count of mentions and "no garden" does show the factor matters; direction stays with chip strengths (Q4, Q5), and reading negation needs the LLM call ruled out in Q2.
 2026-10-25 | step 2 | Every swipe and feedback bump recomputes the factors from all the user's feedback rows (one extra query, work grows with swipes) | Q8 stores the fresh snapshot per version; a user has tens to a few hundred rows | Keep the aggregate counts in a table and update them per PUT. — accepted by arbiter 2026-10-25: at tens to a few hundred rows per user the cost is negligible, and a fresh snapshot per version is what Q8 asks for; an aggregate table would be extra state to keep consistent.
 2026-10-25 | step 2 | A body with the wrong shape returns 422 before a missing or foreign decision returns 404 | Same order as the swipe endpoint; the contract fixes no order | Look the decision up first. — accepted by arbiter 2026-10-25: contract General says the backend owns which error wins when several apply; consistent with the swipe endpoint.
+
+2026-10-25 | step 3 | Removing a favourite deletes the favourites row, then writes the reason to `favourite_removals`, then bumps the version, as three separate D1 statements; a failure between them loses the reason or the version bump | D1 calls here are not batched elsewhere either, and a failure needs a D1 error mid-request | Use `db.batch` for the three statements. — accepted by arbiter 2026-10-25: not cheap and not blocking; `bump` computes factors from rows that include the new removal, so it cannot sit in one batch without re-deriving factors in Python, `db.batch` is unused and unproven from Pyodide here, and swipe already writes in separate statements; on a local single-laptop D1 a mid-request failure is unlikely and loses one reason or bump, not data integrity of the favourite.
+2026-10-25 | step 3 | `GET /listings/{id}` filters no photos: the schema has no `skip` marker on `listing_media` and the deck does not filter either | Nothing to filter on; skipped photos were already dropped in data prep | None needed unless a marker is added to the schema. — accepted by arbiter 2026-10-25: contract met upstream; `dataset/scripts/build_d1.py` (`drop_skipped`) removes skip-marked images from `listing_media` before seed, so none reach D1 and there is nothing to filter.
 
 ---
 

@@ -216,6 +216,9 @@ async def swipe(decision_id: str, request: Request, body: dict = Body(...), user
         "UPDATE decisions SET action = ?, swiped_at = ? WHERE decision_id = ? AND user_id = ? AND swiped_at IS NULL"
     ).bind(action, now, decision_id, user_id).run()
     if updated.meta.changes != 1:
+        # Nothing changed: either a concurrent prefs re-save dropped the row, or another swipe won.
+        if not await deck._all(db, "SELECT 1 FROM decisions WHERE decision_id = ? AND user_id = ?", decision_id, user_id):
+            raise ApiError(404, "decision_not_found", "No such decision.")
         raise ApiError(409, "already_swiped", "That card has already been swiped.")
     if action == "superlike":
         await db.prepare(
@@ -277,6 +280,80 @@ async def put_feedback(decision_id: str, request: Request, body: dict = Body(...
 @api.get("/profile")
 async def get_profile(request: Request, user_id: str = Depends(current_user)):
     return await taste.read(request.scope["env"].DB, user_id)
+
+
+@api.get("/favourites")
+async def get_favourites(request: Request, user_id: str = Depends(current_user)):
+    db = request.scope["env"].DB
+    rows = await deck._all(db, "SELECT listing_id, added_at FROM favourites WHERE user_id = ? ORDER BY added_at DESC, listing_id", user_id)
+    listings = await deck._load_listings(db, [r["listing_id"] for r in rows]) if rows else {}
+    return {"favourites": [{"added_at": r["added_at"], "listing": {k: listings[r["listing_id"]][k] for k in deck.CARD_LISTING_KEYS}}
+                           for r in rows]}
+
+
+@api.delete("/favourites/{listing_id}")
+async def remove_favourite(listing_id: str, request: Request, user_id: str = Depends(current_user)):
+    # The body is read here, not declared, so a missing or malformed one is reason_required and not invalid_request.
+    try:
+        reason = (await request.json()).get("reason")
+    except Exception:
+        reason = None
+    if not isinstance(reason, str) or not reason.strip():
+        raise ApiError(422, "reason_required", "Say why you are removing this favourite.")
+    db = request.scope["env"].DB
+    rows = await deck._all(db, "SELECT decision_id FROM favourites WHERE user_id = ? AND listing_id = ?", user_id, listing_id)
+    deleted = await db.prepare("DELETE FROM favourites WHERE user_id = ? AND listing_id = ?").bind(user_id, listing_id).run() if rows else None
+    # The delete decides, so two simultaneous removals cannot both win.
+    if deleted is None or deleted.meta.changes != 1:
+        raise ApiError(404, "not_favourited", "That listing is not in your favourites.")
+    await db.prepare(
+        "INSERT INTO favourite_removals (user_id, listing_id, decision_id, reason, removed_at) VALUES (?, ?, ?, ?, ?)"
+        " ON CONFLICT (user_id, listing_id) DO UPDATE SET reason = excluded.reason, removed_at = excluded.removed_at"
+    ).bind(user_id, listing_id, rows[0]["decision_id"], reason.strip(), deck._now()).run()
+    await taste.bump(db, user_id, "favourite_removed", listing_id=listing_id)
+    return {"listing_id": listing_id, "removed": True}
+
+
+FLAG_KEYS = "flag_id, scope, field, value, observation, source_photo, confidence, uncertainty, room, corrected_text"
+
+
+def flag_dict(row) -> dict:
+    return {k: row[k] for k in FLAG_KEYS.split(", ")}
+
+
+@api.post("/flags/{flag_id}/correction")
+async def correct_flag(flag_id: str, request: Request, body: dict = Body(...), user_id: str = Depends(current_user)):
+    text = body.get("text")
+    if not isinstance(text, str) or not text.strip():
+        raise ApiError(422, "invalid_request", "text is required and must not be blank.")
+    db = request.scope["env"].DB
+    # One statement: held-out listings are not users' to correct, and the flag is unchanged when nothing matches.
+    rows = await deck._all(
+        db,
+        f"UPDATE photo_flags SET corrected_text = ? WHERE flag_id = ? AND listing_id IN (SELECT id FROM listings WHERE split = 'train')"
+        f" RETURNING {FLAG_KEYS}", text.strip(), flag_id)
+    if not rows:
+        raise ApiError(404, "flag_not_found", "No such flag.")
+    version = await taste.bump(db, user_id, "flag_correction", flag_id=flag_id)
+    return {"profile_version": version, **flag_dict(rows[0])}
+
+
+@api.get("/listings/{listing_id}")
+async def get_listing(listing_id: str, request: Request, user_id: str = Depends(current_user)):
+    db = request.scope["env"].DB
+    extra = await deck._all(
+        db, "SELECT ground_rent_gbp_pa, council_tax_band, epc_potential, description, agent_name, listed_date FROM listings"
+        " WHERE id = ? AND split = 'train'", listing_id)
+    if not extra:
+        raise ApiError(404, "listing_not_found", "No such listing.")
+    listing = (await deck._load_listings(db, [listing_id]))[listing_id]
+    floorplans = await deck._all(db, "SELECT url FROM listing_media WHERE listing_id = ? AND kind = 'floorplan' ORDER BY position", listing_id)
+    flags = await deck._all(db, f"SELECT {FLAG_KEYS} FROM photo_flags WHERE listing_id = ? ORDER BY rowid", listing_id)
+    return {**{k: listing[k] for k in deck.CARD_LISTING_KEYS},
+            "lease_years_remaining": listing["lease_years_remaining"], "service_charge_gbp_pa": listing["service_charge_gbp_pa"],
+            **{k: extra[0][k] for k in ("ground_rent_gbp_pa", "council_tax_band", "epc_potential", "description", "agent_name", "listed_date")},
+            "floorplans": [r["url"] for r in floorplans], "stations": listing["stations"],
+            "photo_flags": [flag_dict(r) for r in flags]}
 
 
 app.include_router(api)

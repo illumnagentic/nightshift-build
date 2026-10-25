@@ -89,3 +89,12 @@ CREATE TABLE IF NOT EXISTS feedback (
   skipped INTEGER NOT NULL DEFAULT 0 CHECK (skipped IN (0, 1)), -- 1 only with no chips and no free text
   updated_at TEXT NOT NULL                   -- ISO 8601 UTC of the latest PUT
 );
+
+CREATE TABLE IF NOT EXISTS favourite_removals (
+  user_id TEXT NOT NULL REFERENCES users(user_id),
+  listing_id TEXT NOT NULL REFERENCES listings(id),
+  decision_id TEXT NOT NULL,                 -- the superliked decision the favourite came from
+  reason TEXT NOT NULL,                      -- the user's words; never blank
+  removed_at TEXT NOT NULL,                  -- ISO 8601 UTC
+  PRIMARY KEY (user_id, listing_id)
+);

@@ -66,16 +66,28 @@ def compute_factors(rows) -> list:
     return sorted(factors, key=lambda f: (-f["weight"], f["factor"]))
 
 
+def removal_row(offered, reason, removed_at) -> dict:
+    """A favourite-removal reason as a feedback row: free text only. Only the chips whose terms the reason matches count
+    as offered, so an unrelated chip on that card is not lowered by it."""
+    return {"offered": [f for f in offered if TERMS[f].search(reason)], "chips": [], "free_text": reason,
+            "skipped": False, "updated_at": removed_at}
+
+
 async def current_factors(db, user_id) -> list:
-    """compute_factors over the user's feedback on swiped decisions."""
+    """compute_factors over the user's feedback on swiped decisions and their favourite-removal reasons."""
     rows = await _all(
         db,
         "SELECT f.chips_json, f.free_text, f.skipped, f.updated_at, d.offered_chips FROM feedback f"
         " JOIN decisions d ON d.decision_id = f.decision_id WHERE f.user_id = ? AND d.swiped_at IS NOT NULL"
         " ORDER BY f.updated_at DESC, f.decision_id", user_id)
+    removals = await _all(
+        db,
+        "SELECT r.reason, r.removed_at, d.offered_chips FROM favourite_removals r"
+        " JOIN decisions d ON d.decision_id = r.decision_id WHERE r.user_id = ? ORDER BY r.removed_at DESC, r.listing_id", user_id)
     return compute_factors([{"offered": json.loads(r["offered_chips"]), "chips": json.loads(r["chips_json"]),
                              "free_text": r["free_text"], "skipped": bool(r["skipped"]), "updated_at": r["updated_at"]}
-                            for r in rows])
+                            for r in rows]
+                           + [removal_row(json.loads(r["offered_chips"]), r["reason"], r["removed_at"]) for r in removals])
 
 
 async def bump(db, user_id, cause_type, decision_id=None, flag_id=None, listing_id=None) -> int:
