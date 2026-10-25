@@ -12,5 +12,26 @@ the producer is never killed by SIGPIPE under `pipefail`. Logic of each check is
 - By hand with pipefail, PR 15 head commit d54ac25, its feature tracking file:
   - matching branch line, new form (`grep -Fx … >/dev/null`): exit 0.
   - non-matching branch line (`nope`), new form: exit 1 (still false).
-  - matching line, old form (`grep -Fxq`): exit 0 in this run, so the 141 was not reproduced on this
-    read; it depends on pipe timing and buffering. The new form does not depend on it.
+
+## Old form versus new form, measured
+
+Shell: `bash --norc`, `type grep` gives `grep is /usr/bin/grep`, `grep --version` first line
+`grep (GNU grep) 3.11`. Option `pipefail` set. Input: the feature tracking file of PR 15 at head
+commit d54ac2566915bfeb835434b27458045f2fe48181, read with `git show`, 63,223 bytes (measured with
+`wc -c`). Line searched: `- **Branch**: feat/prefs-filters` (present in the file).
+
+- Old form (`git show ... | grep -Fxq -- "<line>"`), 6 runs: exit 141 every time. PIPESTATUS
+  `141 0` every time: `git show` is killed by SIGPIPE because `-q` makes grep exit on the first match
+  while the producer is still writing.
+- New form (`git show ... | grep -Fx -- "<line>" >/dev/null`), 6 runs: exit 0 every time. PIPESTATUS
+  `0 0` every time.
+
+The failure still reproduces at 63,223 bytes. The new form works because GNU grep reads stdin to
+the end when its output goes to `/dev/null`, so the producer is never writing into a closed pipe.
+
+## Why an earlier run showed exit 0 for the old form
+
+That run was made from an agent shell where `grep` is a shell function wrapping ugrep. The function
+is not exported, so the merge guard script runs the system GNU grep instead, and there the old form
+fails as above. The earlier "not reproduced" result came from the wrapper, not from the script's
+behaviour, and is withdrawn.
