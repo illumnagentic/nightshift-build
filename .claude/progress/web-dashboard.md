@@ -5,7 +5,7 @@
 - **Started**: 2026-10-25
 - **Branch**: feat/web-dashboard
 - **BASE_SHA**: 8d9ed8d3a929dfe540ea221d9e2d8d52247f6e97
-- **Status**: in progress
+- **Status**: complete (2026-10-25)
 
 ---
 
@@ -227,11 +227,11 @@ measure per chart; switching user still resets to Deck; the rate chart passes a 
 
 ## TRADEOFFS
 
-- Step 2, `web/src/dashboard/BarChart.tsx` | no automated test for the chart (no test file in scope, no DOM test library installed) | rendering, hover, focus and table toggle are unchecked until the browser pass | add a DOM test environment (new dependency, needs approval) or rely on the browser checks in Step 3
-- Step 2, `BarChart.tsx` | when a bar's value text falls in the top band, the tooltip is drawn in a bottom band just above the baseline, where it can cover that bar's body and error bar (never its value text) | fixed two-band placement is the simplest rule that avoids the value text | HTML tooltip positioned from the pointer
-- Step 2, `BarChart.tsx` | ticks are 0 to 5 in steps of 1 for hits (five gridlines plus the baseline), 0, 50%, 100% for the rate, keyed on `axisMax` | keeps hit ticks integer | pass ticks as a prop
-- Step 3, `web/src/dashboard/DashboardScreen.tsx` | no automated test for the screen (no test file in scope, no DOM test library installed) | loading, error, empty, fallback and banner states are unchecked until the browser pass | add a DOM test environment (new dependency, needs approval)
-- Step 3 | Chart text scales with the SVG and renders about 9–10 px tall at 375 px wide | the recording is made on a laptop where text is full size; a fixed font size needs per-width layout | render text outside the scaled SVG or set a minimum size at narrow widths
+- Step 2, `web/src/dashboard/BarChart.tsx` | no automated test for the chart (no test file in scope, no DOM test library installed) | rendering, hover, focus and table toggle are unchecked until the browser pass | add a DOM test environment (new dependency, needs approval) or rely on the browser checks in Step 3 | accepted by human 2026-10-25
+- Step 2, `BarChart.tsx` | when a bar's value text falls in the top band, the tooltip is drawn in a bottom band just above the baseline, where it can cover that bar's body and error bar (never its value text) | fixed two-band placement is the simplest rule that avoids the value text | HTML tooltip positioned from the pointer | accepted by human 2026-10-25
+- Step 2, `BarChart.tsx` | ticks are 0 to 5 in steps of 1 for hits (five gridlines plus the baseline), 0, 50%, 100% for the rate, keyed on `axisMax` | keeps hit ticks integer | pass ticks as a prop | accepted by human 2026-10-25
+- Step 3, `web/src/dashboard/DashboardScreen.tsx` | no automated test for the screen (no test file in scope, no DOM test library installed) | loading, error, empty, fallback and banner states are unchecked until the browser pass | add a DOM test environment (new dependency, needs approval) | accepted by human 2026-10-25
+- Step 3 | Chart text scales with the SVG and renders about 9–10 px tall at 375 px wide | the recording is made on a laptop where text is full size; a fixed font size needs per-width layout | render text outside the scaled SVG or set a minimum size at narrow widths | accepted by human 2026-10-25
 
 ---
 
@@ -255,10 +255,10 @@ measure per chart; switching user still resets to Deck; the rate chart passes a 
 - [x] Typecheck run — result: `npm run typecheck` exit 0 (qa-gate 2026-10-25, second gate)
 - [x] Build run — result: `npm run build` exit 0. Bundle check: mock build 1 file with the banner text, plain build 0, http build 0, each build exit 0 (qa-gate 2026-10-25, second gate)
 - [x] Diff contains no files outside declared scope — every file is in a step's Files in scope, plus this progress file; redo commits 5e60c40 and 17db305 touch only their declared files (qa-gate 2026-10-25, second gate)
-- [ ] Tradeoff ledger reviewed and signed off by human — 5 entries, all unsigned
-- [ ] Human eye test completed
+- [x] Tradeoff ledger reviewed and signed off by human — all 5 entries accepted, "Sign off" (2026-10-25); progress-file scope waiver and the 2026-10-25 ARIA amendment confirmed in the same sign-off
+- [x] Human eye test completed — human: "Sign off" (2026-10-25); the human did not say the checks were run, so this is a sign-off, not a recorded human verification. Orchestrator browser checks are in the step 3 evidence
 
-QA-GATE: FAIL 2026-10-25 — 5 unsigned tradeoffs; evidence/web-dashboard/step-3.md wrongly says Base curator on the hits chart uses the top tooltip band (the code puts it in the bottom band). All commands green; duplications gone.
+QA-GATE: FAIL 2026-10-25 — 5 unsigned tradeoffs; evidence/web-dashboard/step-3.md wrongly says Base curator on the hits chart uses the top tooltip band (the code puts it in the bottom band). All commands green; duplications gone. (Evidence line corrected in 545aaf1; all human sign-offs given 2026-10-25.)
 
 ---
 
