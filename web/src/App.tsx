@@ -1,18 +1,20 @@
 import { useEffect, useState } from "react";
 import { api, type User } from "./api";
 import { clearSession, getSession, setSession } from "./session";
+import DashboardScreen from "./dashboard/DashboardScreen";
 import DeckScreen from "./deck/DeckScreen";
 import { FavouritesScreen } from "./favourites/FavouritesScreen";
 import { PrefsScreen } from "./prefs/PrefsScreen";
 import UserPicker from "./UserPicker";
 import "./nav.css";
 
-type Tab = "deck" | "prefs" | "favourites";
+type Tab = "deck" | "prefs" | "favourites" | "results";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "deck", label: "Deck" },
   { id: "prefs", label: "Preferences" },
   { id: "favourites", label: "Favourites" },
+  { id: "results", label: "Results" },
 ];
 
 export default function App() {
@@ -101,6 +103,7 @@ export default function App() {
             />
           </div>
           {tab === "favourites" && <FavouritesScreen userId={user.user_id} />}
+          {tab === "results" && <DashboardScreen />}
         </>
       ) : (
         <UserPicker onSelect={select} />

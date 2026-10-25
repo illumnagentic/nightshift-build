@@ -54,7 +54,7 @@ Branch names are proposals; set them at feature-kickoff.
   preset suggestions, free-text box, compulsory for the first 15–20 cards.
 - [x] **F4 Prefs and favourites** — `feat/web-prefs-favourites` — prefs input with
   workplace postcode, favourites with remove-with-reason.
-- [ ] **F5 Dashboard** — `feat/web-dashboard` — three-bar chart with error bars,
+- [x] **F5 Dashboard** — `feat/web-dashboard` — three-bar chart with error bars,
   false-exclude panel.
 - [ ] **F6 Recording** — `feat/demo-recording` — demo script, Alex → Jordan run,
   correction trail, final recording.
