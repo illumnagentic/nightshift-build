@@ -26,11 +26,10 @@ Branch names are proposals; set them at feature-kickoff.
 
 - [x] **B1 Scaffold** — `feat/backend-scaffold` — Python Worker + FastAPI, local D1
   schema, seed script, username-only accounts, Mubit gateway client.
-- [ ] **B2 Data prep** — `feat/data-prep` — RapidAPI dump (500+ rich for-sale
+- [x] **B2 Data prep** — `feat/data-prep` — RapidAPI dump (500+ rich for-sale
   listings), photo flags via Gemini Flash-Lite through Mubit, listing train/eval split.
-  Listing dump (635) and train/eval split merged (PRs #1, #2, #5). Still open: photo
-  and floorplan textualisation, own branch `feat/photo-flags` (needs its own kickoff);
-  workflow in decisions.md under Image textualisation workflow.
+  Listing dump (635) and train/eval split merged (PRs #1, #2, #5); photo and floorplan
+  flags (14,684 rows in D1 `photo_flags`) merged from `feat/photo-flags`.
 - [x] **B3 Preferences and filters** — `feat/prefs-filters` — natural-language prefs
   to hard limits + soft prefs, hard filters in code; TfL commute (cached per
   (listing, postcode)) is an optional stretch.

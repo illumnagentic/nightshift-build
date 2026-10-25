@@ -4,7 +4,7 @@
 - **Started**: 2026-10-25
 - **Branch**: feat/photo-flags
 - **BASE_SHA**: 8d9ed8d3a929dfe540ea221d9e2d8d52247f6e97
-- **Status**: in progress
+- **Status**: complete (2026-10-25)
 
 ---
 
@@ -334,17 +334,83 @@ output, test output).
 
 ## VERIFICATION
 
-- [ ] All step checkboxes ticked with evidence
-- [ ] Every evidence path in this file exists
-- [ ] Test suite run — result:
-- [ ] Lint run — result:
-- [ ] Typecheck run — result:
-- [ ] Build run — result:
-- [ ] Diff contains no files outside declared scope
-- [ ] Tradeoff ledger reviewed and signed off by human
-- [ ] Human eye test completed
+- [x] All step checkboxes ticked with evidence — 20/20 PLAN boxes ticked, each dated 2026-10-25 with evidence; order holds (all same day) (2026-10-25)
+- [x] Every evidence path in this file exists — evidence/photo-flags/step-1.md to step-4.md all present (2026-10-25)
+- [x] Test suite run — result: dataset `python3 -I -B -m unittest discover -s tests` 158 OK, exit 0; worker pytest against seeded test-mode server (port 8790, fake upstream 8801) 183 passed, exit 0; web `npm test` 178 passed, exit 0 (2026-10-25)
+- [ ] Lint run — n/a: no lint command configured in .claude/kit-config.md
+- [x] Typecheck run — result: web `npm run typecheck` exit 0 (web untouched by this branch) (2026-10-25)
+- [x] Build run — result: web `npm run build` exit 0; `worker/scripts/seed.sh` exit 0; d1-build-report self-check PASS (2026-10-25)
+- [x] Diff contains no files outside declared scope — 20 files from merge base 99c1e4d, all in a step's Files in scope or Evidence location, plus this progress file; no tracked file under dataset/photos/; no secrets (only a fake `mbt_abc` in a test) (2026-10-25)
+- [x] Tradeoff ledger reviewed — signed by arbiter (full automation): all 8 TRADEOFFS and 3 SPOTTED entries carry an arbiter verdict dated 2026-10-25 (2026-10-25)
+- [ ] Human eye test completed — not human-verified (full automation) — smoke check: pass. Local D1 after seed.sh: photo_flags 14,684 rows over 635 listings, listing_media 6,715, sqm_estimate stored as real; sample rows for rm-137220284 read correctly (floorplan 69.6 sqm "stated explicitly on the floor plan", kitchen/living room/bedroom photos with room and light set)
+- QA-GATE: PASS 2026-10-25
 
 ---
 
 ## HANDOVER
 
+**What was built**
+
+Every photo and floorplan for the 635 listings has been downloaded once and described by
+Gemini 3.5 Flash-Lite through Mubit. The descriptions are stored as 14,684 flags: for
+each photo the room, how much light, things that make it look bigger or smaller, visible
+defects and what is missing; for each floorplan layout notes and floor area in square
+metres. They are loaded into a new `photo_flags` table in the local D1, ready for the
+curator and the chips. Agent logos and duplicate photos were dropped from the listing's
+photo list. Nothing in the API serves the flags yet; that is B4/B5.
+
+**What to check yourself**
+
+1. From the repo root run `worker/scripts/seed.sh`. It should finish without an error.
+2. In `worker/`, run
+   `npx wrangler d1 execute haka --local --command "SELECT COUNT(*) FROM photo_flags"`.
+   You should see 14684.
+3. Pick a listing and read its flags:
+   `npx wrangler d1 execute haka --local --command "SELECT field, room, value, confidence, observation FROM photo_flags WHERE listing_id='rm-137220284'"`.
+   Open the same listing's photos (URLs in `source_photo`) in a browser and judge whether
+   the room, light and defects match what you see. Do this for two or three listings,
+   including one older or tired-looking house.
+4. Read `dataset/reports/d1-build-report.txt`. The self-check line at the bottom should say
+   PASS, and "skipped images removed" should be photo 120, floorplan 6.
+5. From `dataset/`, run `python3 -I -B -m unittest discover -s tests`. Expect 158 tests OK.
+6. Open the Mubit console and read the actual spend for 635 calls on
+   `gemini-3.5-flash-lite`. The progress file only has an estimate (GBP 0.73 to 3.57).
+
+**Tools that will help**
+
+- The wrangler D1 command above, or any SQLite client on `dataset/listings.sqlite`
+  (same data). Look at `photo_flags` grouped by `field` and `confidence`.
+- A browser, to open `source_photo` URLs next to their flags.
+- The Mubit console: request IDs are in `dataset/photo_flags.jsonl` status lines
+  (`"record_type": "listing_status"`), one `mreq_…` per listing. Use them to find calls
+  and check cost.
+
+**What is not done**
+
+- The API does not return flags yet. The listing detail and card endpoints (B4/B5) must
+  read `photo_flags`. Chip filtering from flags is not built.
+- Flag corrections (`corrected_text`) have a column but no endpoint (B5).
+- Cost is an estimate on measured tokens and assumed prices. The console was not read.
+- Two images in rm-90723729 (one photo, one floorplan) were not answered and have no
+  flags. 3 listings have no floorplan flags at all; some lack `sqm_estimate`.
+- In 8 listings a URL appears twice; the build keeps the first copy with its flags.
+- 20 floorplans are GIFs, which Google does not document as supported. All 20 were
+  accepted live; if the model starts refusing GIFs, the script resends without them.
+- Images live only in this worktree's gitignored `dataset/photos/`. The manifest lets
+  any checkout re-fetch them.
+- The downloader does not check magic bytes or retry within a run.
+- Lint is not configured for this repo.
+
+**What could bite you**
+
+1. The flags are optimistic. Light is "bright" on 4,254 of 6,045 photos, "ok" on 1,763,
+   "poor" on 28 and never "none". 476 of 635 listings have no defect flag. 13,056 of
+   14,684 flags are high confidence. Estate-agent photos are staged, so some of this is
+   real, but light barely tells listings apart. A persona rule such as
+   `prefers: light=bright` will score almost every listing as good and teach the curator
+   little. Check this before writing the persona rules block in B6.
+2. Photo positions in `listing_media` were renumbered after removing skipped images.
+   `flag_id` and the files in `dataset/photos/` still use the old positions. Join flags
+   to photos by URL (`source_photo` = `listing_media.url`), never by position.
+3. `seed.sql` is now 10 MB in 23,923 statements. It loads locally, but `seed.sh` deletes
+   the local D1 state first, so re-seeding wipes all users, swipes and prefs.
