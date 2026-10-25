@@ -45,12 +45,14 @@ def _flag_value(flag):
 
 
 def _flag_digest(flags) -> dict:
-    light, lists, digest = {}, {"defects": set(), "size_tricks": set(), "missing": set()}, {}
+    light, corrected_light, lists, digest = {}, {}, {"defects": set(), "size_tricks": set(), "missing": set()}, {}
     sqm, notes = None, None
     for f in flags:
         field, value = f["field"], _flag_value(f)
         if field == "light":
             light.setdefault(f["room"], []).append(str(value))
+            if f["corrected_text"] is not None:
+                corrected_light.setdefault(f["room"], []).append(str(value))
         elif field in lists:
             lists[field].add(f"{f['room']}: {value}")
         elif field == "sqm_estimate":
@@ -58,10 +60,14 @@ def _flag_digest(flags) -> dict:
         elif field == "floorplan_notes":
             notes = str(value)[:FLOORPLAN_NOTES_CHARS]
     if light:
-        # The most frequent value in the room; a tie goes to the worse reading.
-        def pick(values):
+        # A user's correction wins its room, whatever the counts: the most frequent corrected value, then the
+        # first in flag order. Without one, the most frequent reading; a tie goes to the worse reading.
+        def pick(room, values):
+            if room in corrected_light:
+                fixed = corrected_light[room]
+                return max(dict.fromkeys(fixed), key=fixed.count)
             return max(set(values), key=lambda v: (values.count(v), -(_LIGHT_ORDER.index(v) if v in _LIGHT_ORDER else -1), v))
-        digest["light"] = {room: pick(values) for room, values in sorted(light.items())}
+        digest["light"] = {room: pick(room, values) for room, values in sorted(light.items())}
     for field, items in lists.items():
         if items:
             digest[field] = sorted(items)

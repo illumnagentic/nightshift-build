@@ -126,6 +126,28 @@ def test_corrected_text_replaces_the_value():
     assert "damp patch" not in json.dumps(photos)
 
 
+def light_for(flags):
+    return curator.candidate_summary(listing(), flags, None)["photos"]["light"]
+
+
+def test_correction_wins_its_room_over_more_numerous_readings():
+    flags = [flag("light", "bright"), flag("light", "bright"), flag("light", "bright"),
+             flag("light", "ok", corrected_text="not bright at all")]
+    assert light_for(flags) == {"kitchen": "not bright at all"}
+
+
+def test_uncorrected_tie_goes_to_the_worse_reading():
+    assert light_for([flag("light", "bright"), flag("light", "poor")]) == {"kitchen": "poor"}
+
+
+def test_several_corrections_take_the_most_frequent_then_the_first():
+    flags = [flag("light", "ok", corrected_text="gloomy"), flag("light", "ok", corrected_text="sunny"),
+             flag("light", "ok", corrected_text="sunny"), flag("light", "bright")]
+    assert light_for(flags) == {"kitchen": "sunny"}
+    flags = [flag("light", "ok", corrected_text="gloomy"), flag("light", "ok", corrected_text="sunny")]
+    assert light_for(flags) == {"kitchen": "gloomy"}
+
+
 def test_same_input_gives_identical_bytes():
     flags = [flag("defects", "b"), flag("defects", "a"), flag("light", "ok")]
     one = json.dumps(body_for("x"), sort_keys=False)

@@ -193,6 +193,17 @@ frozen prompt and schema and request-size figures over 3–4 real train pools.
 - [x] Matches locked requirements — evidence: test_two_users_share_system_instruction_and_generation_config_byte_for_byte, test_thinking_is_explicit_low, test_schema_is_a_plain_string_array_with_no_enum, repair tests match Q3 (2026-10-25)
 - [x] No scope drift — evidence: diff = curator.py, test_curator_unit.py, fake_upstream.py (curator branch only), evidence/curator-deck/step-2.md, progress tradeoffs (2026-10-25)
 
+**Redo (arbiter FIX_NOW, 2026-10-25)**: corrected light flags win their room. Files:
+`worker/src/curator.py`, `worker/tests/test_curator_unit.py`,
+`evidence/curator-deck/step-2.md`. In `_flag_digest`, a light flag with
+`corrected_text` wins its room over uncorrected readings; several corrections → most
+frequent corrected value, then first in flag order; no corrections → current rule.
+SYSTEM_PROMPT, RESPONSE_SCHEMA and GENERATION_CONFIG unchanged (hashes still match).
+
+- [x] Redo implemented — _flag_digest pick(room, values): corrected light wins its room; test_correction_wins_its_room_over_more_numerous_readings, test_several_corrections_take_the_most_frequent_then_the_first (2026-10-25)
+- [x] Redo reviewed — evidence: 6 pure modules 166 passed exit 0; new tests fail on HEAD curator.py (2 failed), uncorrected tie test passes both; SHA-256 9b5a064b/10a031b5 recomputed; dataset 14684/14684 corrected_text null; check-process-refs exit 0 (2026-10-25)
+
+
 ### Step 3 — `GET /deck` end to end, `PUT /prefs` drop hook
 
 **Goal**: a user with prefs gets a real deck: decisions and curator-call rows with the
@@ -277,7 +288,7 @@ Exploration slots: a new card is `exploration` when (user's decision count befor
 ## SPOTTED, NOT FIXED
 
 - docs/api-contract.md (Chip catalogue, `natural_light` and `space` featured rules) | With flags, `natural_light` is featured on 635 of 635 listings and `space` on 623 of 635, so "featured" no longer separates listings and the cap cuts by priority number instead (featured chips exceed 8 on 254 of 635 cards, was 117). Evidence: `evidence/curator-deck/step-1.md` | low to medium (product quality of chip choice, not correctness) — FIX_NOW by arbiter 2026-10-25: Step 5 (arbiter) in AMENDMENTS.
-- worker/src/curator.py:63 (light tie-break, step-reviewer note on Step 2) | A corrected free-text light value not in `_LIGHT_ORDER` gets key 1 and wins every tie (above `none`), untested. Wider problem found by the arbiter: a single corrected light flag is dropped whenever the room has more uncorrected readings (e.g. three `bright` and one corrected "not bright at all" gives `bright`), so the curator never reads the correction, against decisions.md (Photo flags: "the curator reads the corrected text") | medium (B5 corrections would be invisible to the curator) — FIX_NOW by arbiter 2026-10-25: redo of Step 2 within its files; a corrected light value in a room wins over uncorrected readings, ties among enum readings still go to the worse one; must land before the first persona run.
+- worker/src/curator.py:63 (light tie-break, step-reviewer note on Step 2) | A corrected free-text light value not in `_LIGHT_ORDER` gets key 1 and wins every tie (above `none`), untested. Wider problem found by the arbiter: a single corrected light flag is dropped whenever the room has more uncorrected readings (e.g. three `bright` and one corrected "not bright at all" gives `bright`), so the curator never reads the correction, against decisions.md (Photo flags: "the curator reads the corrected text") | medium (B5 corrections would be invisible to the curator) — resolved by Step 2 redo 2026-10-25 — FIX_NOW by arbiter 2026-10-25: redo of Step 2 within its files; a corrected light value in a room wins over uncorrected readings, ties among enum readings still go to the worse one; must land before the first persona run.
 
 ---
 

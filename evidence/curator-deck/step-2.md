@@ -41,3 +41,13 @@ the figures are the floor.
 `pytest tests/test_curator_unit.py tests/test_chips.py tests/test_filters.py tests/test_prefs_unit.py tests/test_mubit.py tests/test_tfl_unit.py -q`: 163 passed, exit 0.
 
 Full suite in test mode (fake upstream on 8801, server on 8792, fresh seed, throwaway worktree with the same changes): 247 passed, exit 0.
+
+## Corrected light readings
+
+A light reading the buyer has corrected now wins its room, whatever the counts: three
+`bright` readings and one corrected "not bright at all" give "not bright at all". With
+several corrections in a room the most frequent corrected value wins, then the first in
+flag order. With no correction the rule is unchanged: most frequent, a tie going to the
+worse reading. The system prompt, response schema and generation config are untouched;
+their SHA-256 hashes still match the figures above. No flag in `dataset/photo_flags.jsonl`
+carries a correction, so the digest for real data, and the request sizes above, are unchanged.
