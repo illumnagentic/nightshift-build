@@ -1,0 +1,220 @@
+# Feature: F5 Dashboard (frontend)
+
+- **Slug**: web-dashboard
+- **Owner**: Yewen
+- **Started**: 2026-10-25
+- **Branch**: feat/web-dashboard
+- **BASE_SHA**: 8d9ed8d3a929dfe540ea221d9e2d8d52247f6e97
+- **Status**: in progress
+
+---
+
+## REQUIREMENTS (LOCKED)
+
+Human, in session, 2026-10-25: "merged" (after the formatting PR, in reply to "tell me to go"
+for F5).
+
+Binding line from `docs/plan.md` (Frontend — Yewen):
+
+> "**F5 Dashboard** — `feat/web-dashboard` — three-bar chart with error bars,
+> false-exclude panel."
+
+Binding lines from `docs/decisions.md` (Headline metric):
+
+> "**Graph:** one chart, three bars — base curator / base + memory / updated + same
+> memory. Bar 1 vs 2 shows memory (Layer 1); bar 2 vs 3 shows the adapter (Layer 2)."
+
+> "**Primary number:** hits in the top 5 — of the curator's five highest-ranked
+> held-out listings, how many the persona's hidden rules count as good. Averaged
+> across held-out personas, with error bars for the spread."
+
+> "**Second panel:** false-exclude rate — rule-good listings ranked below the cut."
+
+> "D. none — graph shows bars 1 and 2; the update is shown with Mubit's version
+> history, ..."
+
+Binding lines from `docs/api-contract.md` (Stats):
+
+> "`GET /stats` No header needed. Not per user. Feeds the dashboard graph."
+
+> "`updated_memory` is `null` if no adapter route works (fallback D in decisions.md)."
+
+> "Before any eval has run, all three arms are `null` and the response is still 200 ...
+> The dashboard shows an empty state."
+
+Answers to kickoff questions, human, 2026-10-25:
+
+1. Charting: "Inline SVG" — hand-built SVG, no chart library, no new dependency.
+2. Placement: "Fourth tab" — a "Results" tab after Deck / Preferences / Favourites, shown
+   after sign-in.
+3. Delegation: "Yes, delegate" — the orchestrator locks the plan with the advisor and
+   approves step commits; the human keeps tradeoff sign-off, the eye test and any push/PR.
+
+### Source
+
+This session's conversation, quoted above. `docs/plan.md`, `docs/decisions.md`,
+`docs/api-contract.md` on `main` at `8d9ed8d`. Chart rules from the `dataviz` skill.
+
+### Explicitly out of scope
+
+- Any backend, eval or scoring code; the stats endpoint itself (B7).
+- Mubit version history, cost/latency panels, "matched X%" (fallback D extras).
+- "Swipes until first great find" (recording illustration only, per decisions).
+- Live updating; the tab fetches when opened.
+- A chart library or any new dependency.
+- Dark mode (the app is light-only by an earlier F2 decision).
+- Exploration hit-rate metrics.
+- Ticking `docs/plan.md` — done in the merging PR.
+
+---
+
+## AMENDMENTS
+
+_None._
+
+---
+
+## RULES IN FORCE
+
+| Rule                                                                                                                                                                                 | Source                                                  | Applies to              |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------- | ----------------------- |
+| Commits only via `.claude/scripts/safe-commit.sh`, title only, no signature; step commits approved by the orchestrator under delegation                                              | `.claude/CLAUDE.md`, kickoff answer 3                   | commits                 |
+| Commit title `type(scope): message`; scope `web` (progress-only commits `kit`)                                                                                                       | `.claude/CLAUDE.md`, `.claude/kit-config.md`            | commits                 |
+| Plain British English, short sentences, banned marketing words                                                                                                                       | `.claude/CLAUDE.md`                                     | docs, comments, UI text |
+| No scope creep: touch only the step's declared files                                                                                                                                 | `.claude/CLAUDE.md` #1                                  | code, docs              |
+| No new dependencies                                                                                                                                                                  | `.claude/CLAUDE.md` #2, kickoff answer 1                | code                    |
+| Never weaken a test to make it pass                                                                                                                                                  | `.claude/CLAUDE.md` #3                                  | tests                   |
+| No speculative generalisation; walk the ladder                                                                                                                                       | `.claude/CLAUDE.md` #4                                  | code                    |
+| Every tradeoff inserted as the last entry of TRADEOFFS (above `## SPOTTED, NOT FIXED`) when made, and the report says so                                                             | `.claude/CLAUDE.md` #5, `.claude/agents/implementer.md` | progress file           |
+| Implementer never ticks its own boxes                                                                                                                                                | `.claude/CLAUDE.md` #6                                  | progress file           |
+| Evidence has no process wording; the process-wording check runs last and exits 0                                                                                                     | kit check script                                        | evidence                |
+| This laptop runs Prettier on every Edit/Write; `web/src` is now Prettier-formatted, but check `git diff` for unrelated hunks                                                         | `.claude/kit-config.md` brief note                      | code                    |
+| Use the existing `api` client and types; do not duplicate them                                                                                                                       | ladder rung 2                                           | code                    |
+| Arms always in the fixed order base / base + memory / updated + memory, with fixed labels; a `null` arm is shown as missing, never as zero                                           | `docs/decisions.md`, `docs/api-contract.md` (Stats)     | code                    |
+| One measure per chart, never two y-axes; hits on a 0–5 scale, false-exclude rate as a percentage on 0–100%                                                                           | `dataviz` non-negotiables                               | code                    |
+| Error bars show ±1 standard deviation, clipped to the axis range; `n_personas` shown                                                                                                 | `docs/decisions.md` (Headline metric)                   | code                    |
+| Thin marks, recessive grid and axes, text in text colours not bar colours, a hover tooltip per bar, a table view of the numbers, colours validated with the dataviz validator script | `dataviz` skill                                         | code                    |
+| In mock mode only, a visible "Sample numbers from the mock, not real results" banner above the charts; gated on `VITE_API_MODE === "mock"` and absent from other builds | advisor at kickoff (the dashboard is the project's proof) | code |
+| Done-when checks restate rules a step depends on; the human eye test is in VERIFICATION                                                                                              | F3 retro                                                | plan                    |
+| `docs/plan.md` changes only to tick F5, in the merging PR                                                                                                                            | `docs/decisions.md` (Overview)                          | docs                    |
+
+---
+
+## PLAN
+
+All paths are relative to the repo root. Each step leaves the app working in mock mode.
+
+### Step 1 — Stats view model
+
+**Goal**: A pure, tested module that turns a `StatsResponse` into what the two charts show.
+
+**Files in scope**: `web/src/dashboard/statsModel.ts`, `web/src/dashboard/statsModel.test.ts`,
+`evidence/web-dashboard/step-1.md`.
+
+**Done when**: for each metric (hits in the top 5; false-exclude rate) it returns the
+three arms in the fixed order with fixed labels ("Base curator", "Base + memory",
+"Updated + memory"), each with mean, standard deviation, its own `n_personas`, the error-bar low
+and high clipped to the axis range (0–5 for hits; 0–1 for the rate), and display text
+(e.g. "2.2 ± 0.8", "31% ± 9%"); a `null` arm is marked missing, never turned into zero;
+`isEmpty` is true when all three arms are `null`; `updatedMissing` is true when only `updated_memory` is `null` (fallback D); a shared `n` is returned when all present arms agree, otherwise `null` (per-arm n still available); tests cover the contract example, all-null,
+fallback D, clipping at both ends and the text; typecheck and tests exit 0; the
+process-wording check exits 0.
+
+**Evidence location**: `evidence/web-dashboard/step-1.md`.
+
+- [x] Implemented — web/src/dashboard/statsModel.ts buildStatsModel; typecheck/build exit 0 (2026-10-25)
+- [x] Tested — evidence: statsModel.test.ts 8 tests; npm test exit 0 (2026-10-25)
+- [x] Best practices met — evidence: pure function, reuses api types, null arms never zero; check-process-refs exit 0 (2026-10-25)
+- [x] Matches locked requirements — evidence: labels, order, axes 0-5/0-1, clipping, text, per-arm n, shared n null on mismatch, isEmpty/updatedMissing per done-when (2026-10-25)
+- [x] No scope drift — evidence: git status shows only dashboard/ (2 files), evidence/web-dashboard/, progress file (2026-10-25)
+
+### Step 2 — Bar chart component
+
+**Goal**: An inline-SVG bar chart with error bars, hover tooltips and a table view, driven
+by one metric from the view model.
+
+**Files in scope**: `web/src/dashboard/BarChart.tsx`, `web/src/dashboard/dashboard.css`,
+`evidence/web-dashboard/step-2.md`.
+
+**Done when**: it draws one bar per arm in the fixed order on a single y-axis (0–5 or
+0–100%), with a baseline, a few recessive gridlines, axis tick labels, the arm label under
+each bar and the value text above it (text colours, not the bar colour); each bar has an
+error bar (±1 SD, clipped) with caps; a missing arm shows a labelled empty slot ("Not
+available"), never a zero bar; bars use one hue from the dataviz reference palette (`references/palette.md` in the skill directory) whose
+contrast against the chart surface passes the validator script
+(`node /private/tmp/claude-501/bundled-skills/2.1.308/4590c007cd3c4552cbbbdef4319a8183/dataviz/scripts/validate_palette.js`)
+— run in light mode against the app's white surface, output recorded in the evidence; marks follow the dataviz mark specs (thin bars, 4px
+rounded top, 2px gap); each bar has a hover and keyboard-focus tooltip with arm, mean, SD
+and n; the SVG has `role="img"` and an `aria-label` summary, and a "Show table" toggle
+reveals an HTML table of the same numbers; styles scoped under a dashboard root class; typecheck, tests and build exit 0;
+the process-wording check exits 0. Not wired into the app yet.
+
+**Evidence location**: `evidence/web-dashboard/step-2.md`.
+
+- [ ] Implemented
+- [ ] Tested — evidence: (date)
+- [ ] Best practices met — evidence: (date)
+- [ ] Matches locked requirements — evidence: (date)
+- [ ] No scope drift — evidence: (date)
+
+### Step 3 — Results tab
+
+**Goal**: A Results tab loads `GET /stats` and shows the two charts, the empty state and
+the fallback-D note.
+
+**Files in scope**: `web/src/dashboard/DashboardScreen.tsx`, `web/src/dashboard/dashboard.css`,
+`web/src/App.tsx`, `evidence/web-dashboard/step-3.md`.
+
+**Done when**: App gains a fourth tab "Results" after Favourites (same tab pattern,
+`aria-current`); DashboardScreen renders only while its tab is open, calls `api.getStats()`
+(no user header) each time it opens, shows a loading state, an error with Retry
+(`error.message` for an ApiError, otherwise the generic message), the empty state "No
+evaluation has run yet." when all arms are `null`, otherwise two titled charts — "Hits in
+the top 5" (with a one-line explanation from the decisions text) and "False-exclude rate"
+— with "Across N held-out personas" under each when all arms share one n (otherwise per-arm n in the tooltip and table) and the caption "Error bars: ±1 standard deviation across held-out personas." under each; in mock mode only, a banner "Sample numbers from the mock, not real results" above the charts, present in a mock build and absent from plain and http builds (bundle check recorded); when only `updated_memory` is `null` it
+shows two bars and the note "The updated curator is not available, so only the base
+arms are shown."; restated rules: fixed arm order, a `null` arm never shown as zero, one
+measure per chart; switching user still resets to Deck; orchestrator browser checks recorded in the evidence: the empty state and the fallback-D note shown by overriding `mockClient.getStats` in the page (no code change), and a pass at about 375px wide (no label collisions, tooltips by hover and keyboard, table toggle works, four tabs fit without sideways scrolling); typecheck, tests and build exit
+0; the process-wording check exits 0.
+
+**Evidence location**: `evidence/web-dashboard/step-3.md`.
+
+- [ ] Implemented
+- [ ] Tested — evidence: (date)
+- [ ] Best practices met — evidence: (date)
+- [ ] Matches locked requirements — evidence: (date)
+- [ ] No scope drift — evidence: (date)
+
+---
+
+## TRADEOFFS
+
+_None logged._
+
+---
+
+## SPOTTED, NOT FIXED
+
+- `.claude/worktrees/` | untracked and not gitignored | low
+- `web/src/deck/useDeck.ts` | `swipeBusy` ref race on a rapid user switch mid-swipe (from F2) | low
+- `web/src/feedback/ChipDialog.tsx`, `FeedbackScreen.tsx` | strength labels written out in both files (from F3) | low
+- `web/src/deck/deck.css` | orphaned `.deck-feedback` rules (from F3) | low
+- `web/src/prefs/PrefsScreen.tsx`, `web/src/favourites/FavouritesScreen.tsx` | generic network message written out instead of reusing `GENERIC_ERROR_MESSAGE` (from F4 gate) | low
+
+---
+
+## VERIFICATION
+
+- [ ] All step checkboxes ticked with evidence
+- [ ] Every evidence path in this file exists
+- [ ] Test suite run — result:
+- [ ] Lint run — result:
+- [ ] Typecheck run — result:
+- [ ] Build run — result:
+- [ ] Diff contains no files outside declared scope
+- [ ] Tradeoff ledger reviewed and signed off by human
+- [ ] Human eye test completed
+
+---
+
+## HANDOVER
