@@ -4,7 +4,7 @@
 - **Started**: 2026-10-25
 - **Branch**: claude/frontend-design-tailwind-91a8a0
 - **BASE_SHA**: d080bd1f4683c37c8d9e93f11eb9817048a724ce
-- **Status**: in progress
+- **Status**: complete (2026-10-25)
 
 ---
 
@@ -196,6 +196,8 @@ design in mock mode, chart error-bar halo matches its surface.
 - [x] Redo implemented (supersedes earlier Step 3 ticks) — `.dashboard button:not([class])` rule + hover + focus-visible + reduced-motion entry in dashboard.css only; only unclassed button is Retry (DashboardScreen.tsx:74), `.chart__toggle` is classed (BarChart.tsx:189) so not matched (2026-10-25)
 - [x] Redo tested (supersedes earlier) — typecheck exit 0, npm test exit 0, build exit 0, run by reviewer vs HEAD 15eb378 (2026-10-25)
 - [x] Redo best practices (supersedes earlier) — min-height 48px, 3px focus-visible outline income-1 on white (~5.4:1), ink/white 16.85, ink/mist hover 15.36; check-process-refs exit 0 (2026-10-25)
+- [x] Redo matches locked requirements (supersedes earlier Step 3 ticks) — arbiter-escalated fix "CSS only, no TSX change" for the unclassed Retry button to reach 44px with visible focus: rule in dashboard.css, min-height 48px, 3px focus outline; git diff 15eb378 f1d1b3a -- web shows no TSX change (2026-10-25)
+- [x] Redo no scope drift (supersedes earlier Step 3 ticks) — Step 3 hunk is only dashboard.css (rule, hover, focus, reduced-motion entry); deck.css in f1d1b3a belongs to the Step 2 redo, already reviewed; check-process-refs exit 0 (2026-10-25)
 - [x] Tested — evidence: typecheck exit 0, npm test exit 0, build exit 0, run by reviewer (2026-10-25)
 - [x] Best practices met — evidence: white/#d6246e 4.84, muted/white 5.23, #9d1450/#fdeaf1 6.88, ink/white 16.85; 44px+ targets, 3px focus-visible outlines, reduced-motion blocks kept, .favourites-dialog margin:auto (2026-10-25)
 - [x] Matches locked requirements — evidence: all tokens exist in index.css @theme; no --pf-/--fv-/system-ui left; chart halo uses --color-page matching panel; every TSX class has a selector (favourites-screen__address had none before either) (2026-10-25)
@@ -238,11 +240,11 @@ records all three commands with exit 0.
 
 **Evidence location**: `evidence/web-design/checks.md`
 
-- [ ] Implemented
-- [ ] Tested — evidence: (date)
-- [ ] Best practices met — evidence: (date)
-- [ ] Matches locked requirements — evidence: (date)
-- [ ] No scope drift — evidence: (date)
+- [x] Implemented — evidence/web-design/checks.md added in HEAD db85ec4 (docs-only commit; diff vs f1d1b3a is that file plus progress-file evidence lines) (2026-10-25)
+- [x] Tested — evidence: typecheck exit 0, npm test exit 0 (8 files, 186 tests, per-file counts match), build exit 0 (CSS 36,271 B, JS 439,994 B match), check-process-refs exit 0, re-run by reviewer on HEAD (2026-10-25)
+- [x] Best practices met — evidence: metadata only (commit, date, exit codes, counts, sizes), no raw logs; contrast stated as not re-run (2026-10-25)
+- [x] Matches locked requirements — evidence: file exists, committed, records f1d1b3a, 2026-10-25 and three commands at exit 0 (2026-10-25)
+- [x] No scope drift — evidence: HEAD touches only evidence/web-design/checks.md and Evidence location lines in the progress file (2026-10-25)
 
 ---
 
@@ -260,17 +262,17 @@ _None logged._
 
 ## VERIFICATION
 
-- [x] All step checkboxes ticked with evidence — all 20 PLAN boxes ticked, dated 2026-10-25, in step order (qa-gate 2026-10-25)
-- [x] Every evidence path in this file exists — no evidence paths; every step says "the diff, plus command output recorded in the review", and that output is not stored anywhere durable (qa-gate 2026-10-25)
-- [x] Test suite run — result: `cd web && npm test`, 8 files, 186 tests passed, exit 0 (qa-gate 2026-10-25)
+- [x] All step checkboxes ticked with evidence — 30 PLAN boxes ticked, 0 open, all dated 2026-10-25, in step order. Step 3 redo now carries all five review ticks (Redo implemented, tested, best practices, matches locked requirements, no scope drift) (qa-gate re-run 2026-10-25)
+- [x] Every evidence path in this file exists — `evidence/web-design/checks.md` exists and is committed (db85ec4). It records f1d1b3a; HEAD db85ec4 adds only docs, and the re-run sizes match exactly. "the diff" and "command output recorded in the review" are not paths (qa-gate 2026-10-25)
+- [x] Test suite run — result: `cd web && npm test`, 8 files, 186 tests passed, exit 0 (qa-gate re-run 2026-10-25)
 - [ ] Lint run — result: not configured in kit-config
-- [x] Typecheck run — result: `cd web && npm run typecheck`, exit 0 (qa-gate 2026-10-25)
-- [x] Build run — result: `cd web && npm run build`, exit 0, CSS 35.14 kB, JS 439.99 kB (qa-gate 2026-10-25)
-- [x] Diff contains no files outside declared scope — all code files declared; `docs/plan.md` (F6 tick) and this progress file are allowed by safe-merge.sh (qa-gate 2026-10-25)
-- [ ] Tradeoff ledger reviewed and signed off by human — no entries; nothing to sign
-- [ ] Human eye test completed — not human-verified (full automation) — smoke check: Vite dev server in mock mode on :5181 served `/` (200) with the Inter Google Fonts link; `/src/index.css` compiled with `--color-income-1: #4f5fd0`, `.min-h-11` and `.bg-pulse-1`; `/src/deck/deck.css` 200. The orchestrator checked by eye in mock mode: user picker, deck card with Like, Love and Dislike, compulsory feedback and chip dialog, prefs, empty favourites, results. Not seen: favourites remove dialog, dashboard error state, deck blocked and error panels.
+- [x] Typecheck run — result: `cd web && npm run typecheck`, exit 0 (qa-gate re-run 2026-10-25)
+- [x] Build run — result: `cd web && npm run build`, exit 0, CSS 36.27 kB (gzip 6.80 kB), JS 439.99 kB (gzip 140.52 kB) (qa-gate re-run 2026-10-25)
+- [x] Diff contains no files outside declared scope — every web/ file is declared in Steps 1-3; `evidence/web-design/checks.md` declared in Step 5; `docs/plan.md` (F6 tick) and this progress file allowed by safe-merge.sh. `.claude/launch.json` is untracked, not in the branch, and must not be committed (qa-gate re-run 2026-10-25)
+- [ ] Tradeoff ledger reviewed and signed off by human — no entries; nothing to sign. One SPOTTED, NOT FIXED entry, accepted by arbiter.
+- [ ] Human eye test completed — not human-verified (full automation) — smoke check: `VITE_API_MODE=mock npx vite --port 5182` in web/; `/` 200 with the Inter Google Fonts link (`wght@300..700`); `/src/main.tsx` 200; `/src/index.css` 200, compiled with `--color-income-1: #4f5fd0`, `.min-h-11`, `.bg-pulse-1`; `/src/deck/deck.css` 200 with `font-weight: 300`, `backdrop-filter: blur(14px)`, `linear-gradient(135deg, #5866d6`; `/src/dashboard/dashboard.css` 200 with `button:not([class])`. Retry sits inside `<div className="dashboard">` (DashboardScreen.tsx:71-77), so the rule applies. During the session the human saw the deck, feedback, prefs, empty favourites and results screens as screenshots from the orchestrator and gave design feedback. That is not a formal eye test. Not seen by anyone: favourites remove dialog, dashboard error state, deck blocked and error panels.
 
-QA-GATE: FAIL 2026-10-25 — three lines of the "glow cards" amendment unmet (Like not a blue gradient, Dislike not white glass, price not light weight); dashboard Retry button lost all button styling under Tailwind preflight.
+QA-GATE: PASS 2026-10-25 — test, typecheck, build and check-process-refs exit 0 on db85ec4 (no code change since); every step has five ticks with evidence; requirements and amendments met; scope clean; ledger empty; smoke check passed.
 
 ---
 
@@ -278,40 +280,42 @@ QA-GATE: FAIL 2026-10-25 — three lines of the "glow cards" amendment unmet (Li
 
 **What was built**
 
-The web app has a new look. It now uses Tailwind v4 with a white page, the Inter font, and soft pink and blue "glow card" colours. The property card is a blue gradient card with a faint inner glow, the photo inset, and white text. Every screen (user picker, deck, feedback, chip dialog, prefs, favourites, results) uses the same colours. Behaviour, copy and tests are unchanged. `docs/plan.md` also ticks F6 (recording).
+The web app has a new look. It uses Tailwind v4, a white page, the Inter font, and soft pink and blue "glow card" colours. The property card is a blue gradient card with layered glows, a faint white inner edge, an inset photo and a large light-weight white price. Under it, Dislike is frosted white glass, Love is a round pink gradient heart, and Like is a blue gradient. Every screen uses the same colours, and the dashboard Retry button is now a proper pill. Behaviour, copy and tests are unchanged. `docs/plan.md` also ticks F6 (recording).
 
 **What to check yourself**
 
 1. In `web/`, run `npm ci`, then `VITE_API_MODE=mock npm run dev`. Open http://localhost:5173.
 2. User picker: a white rounded panel. "Create user" is solid pink with white text. Create a user and select it.
-3. Deck tab: the card is blue with a white inner edge. Look at the three buttons under it. Dislike is plain white. Love is a round pink gradient with a heart. Like is solid blue, not a gradient. Decide if that is what you wanted (see What is not done).
-4. Look at the price on the card. It is semibold (600), not light. Decide if that matches your reference.
+3. Deck tab: the card is blue with a faint white inner edge and soft glows. The price is large and thin.
+4. The three buttons under the card: Dislike is translucent white glass, Love is a round pink gradient, Like is a blue gradient. Press Tab to move through them. Each should show a visible blue focus ring.
 5. Swipe a card. Check the feedback screen and tap a chip. The dialog should sit centred with a blurred backdrop.
 6. Prefs and Results tabs: white panels, pink primary button on prefs, blue bars on the chart.
-7. Dashboard error state. Run without mock mode and with the worker stopped (`npm run dev` only), then open Results. The "Retry" button now looks like plain text, with no border or fill. This is a bug.
-8. Favourites with at least one saved property (needs the real worker). Press Remove. Check that the dialog is centred and readable. Nobody has looked at it yet.
-9. Narrow the window to 375px. Check that the nav pills wrap and the card fits.
+7. Dashboard error state, not yet seen by anyone. Stop the mock server. Run `npm run dev` with no worker running, open Results. You should see an error line and a white rounded "Retry" pill at least 44px tall, with a grey hairline border. It goes light grey on hover.
+8. Deck error state, not yet seen. In the same setup, open the Deck tab. The error panel and its Retry button should be styled, not plain text.
+9. Favourites remove dialog, not yet seen. This needs the real worker (`worker/scripts/seed.sh`, then `cd worker && uvx --from workers-py pywrangler dev`). Like a property, open Favourites, press Remove. The dialog should be centred and readable.
+10. Narrow the window to 375px. Check that the nav pills wrap and the card fits.
 
 **Tools that will help**
 
-- Browser devtools, Elements panel: select the Like button and read its `background`. It is `rgb(79, 95, 208)`, solid.
+- Browser devtools, Elements panel: select Like and read `background`. It should be a radial plus linear gradient, not a flat colour. Select Dislike and check `backdrop-filter: blur(14px)`.
 - Devtools, Rendering panel, "Emulate CSS prefers-reduced-motion": hover transitions should stop.
-- Devtools, Network tab with "Offline" ticked: Inter fails to load and text falls back to the system font. Do this before recording.
-- Devtools contrast picker on the white text over the card, especially the feature tags and the bottom of the card.
+- Devtools, Network tab with "Offline" ticked: Inter fails to load and text falls back to the system font. Try this before any re-recording.
+- Devtools contrast picker on white text over the card, especially the feature tags, the commute pill and the bottom-right corner.
 
 **What is not done**
 
-- Like is solid blue (`#4f5fd0`), not the blue gradient the amendment asks for.
-- Dislike is solid white with a grey hairline, not "white glass" (no translucency or blur).
-- The card price is weight 600. The reference asks for a large, light number.
-- The dashboard "Retry" button (`web/src/dashboard/DashboardScreen.tsx` line 74) has no class. Tailwind's reset strips its border and fill, so it reads as plain text and is under 44px tall.
-- The favourites remove dialog, the dashboard error state and the deck blocked and error panels were not checked by eye.
-- Step evidence is "command output recorded in the review". That output is not saved anywhere you can look at now.
-- The REQUIREMENTS block could not be checked for edits. The progress file first appears in the same commit as the restyle.
+- The favourites remove dialog, the dashboard error state and the deck blocked and error panels have not been looked at by anyone.
+- The human saw the main screens only as screenshots. There has been no formal eye test. In full automation the smoke check stands in, recorded as not human-verified.
+- The Like button's styling relies on `:last-child` (SPOTTED, NOT FIXED, accepted by arbiter). Not fixed.
+- Lint is not configured, so nothing was linted.
+- The REQUIREMENTS block is identical in all three commits that contain this file. It cannot be checked before 15eb378, where the file first appears.
+- Contrast figures were worked out by hand by reviewers. No tool re-checked them.
 - Tradeoff ledger: no entries.
+- `.claude/launch.json` is an untracked local file. It is outside the declared scope and must not be committed.
+- The Step 3 and Step 5 ticks and this gate result are uncommitted. safe-merge reads the committed progress file, so it must be committed first.
 
 **What could bite you**
 
-- The Like button's blue look comes from `:last-child` in `deck.css`. If anyone reorders or adds a button in the action row, the wrong button turns blue and Like goes white, with no error.
-- Inter loads from Google Fonts. Record offline or on a flaky network and the font falls back to the system font, so the recording looks different from what you checked.
-- Tailwind's reset (preflight) applies to the whole app. Any future element with no class (a button, list or heading) loses its browser styling. The Retry button is the one case found now. New unstyled markup will look broken in the same way.
+- Like's blue look comes from `:last-child` in `web/src/deck/deck.css`, and Dislike's glass look from `:first-child`. Reorder or add a button in the action row and the wrong buttons change colour, with no error.
+- Inter loads from Google Fonts. Offline or on a poor network the text falls back to the system font, so a recording can look different from what you checked.
+- Tailwind's reset (preflight) applies to the whole app. Any new element with no class (a button, list or heading) loses its browser styling. Retry was the one case. New unstyled markup will look broken the same way.
