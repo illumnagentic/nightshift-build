@@ -82,7 +82,9 @@ export default function DeckScreen({
 
   return (
     <div className="deck-screen">
-      {phase === "loading" && <p>Loading cards…</p>}
+      {phase === "loading" && (
+        <p className="deck-screen__state">Loading cards…</p>
+      )}
 
       {phase === "card" && card && (
         <>
@@ -144,7 +146,7 @@ export default function DeckScreen({
       )}
 
       {phase === "empty" && (
-        <p>
+        <p className="deck-screen__state">
           {state.emptyReason === "no_matches"
             ? "No properties match your preferences."
             : "You have seen every matching property."}
@@ -152,7 +154,7 @@ export default function DeckScreen({
       )}
 
       {phase === "blocked" && failure?.kind === "blocked" && (
-        <div role="alert">
+        <div role="alert" className="deck-screen__panel">
           <p>{failure.message}</p>
           <p>{BLOCKED_LINES[failure.code]}</p>
           {(failure.code === "prefs_missing" ||
@@ -170,7 +172,7 @@ export default function DeckScreen({
       )}
 
       {phase === "error" && failure && (
-        <div role="alert">
+        <div role="alert" className="deck-screen__panel">
           <p>{failure.message}</p>
           <button type="button" className="deck-action" onClick={retry}>
             Retry

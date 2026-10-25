@@ -1,27 +1,53 @@
 .app-nav {
   display: flex;
-  gap: 0.5rem;
-  margin: 0 0 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px;
+  width: fit-content;
+  max-width: calc(100% - 32px);
+  margin: 0 auto 24px;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--color-mist);
 }
 
 .app-nav .app-nav__tab {
   min-width: 44px;
   min-height: 44px;
-  padding: 0 1rem;
-  border: 2px solid transparent;
-  border-bottom-color: currentColor;
-  background: none;
-  color: inherit;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--color-muted);
   font: inherit;
+  font-weight: 500;
   cursor: pointer;
+  transition:
+    color 150ms ease,
+    background-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.app-nav .app-nav__tab:hover:not([aria-current="page"]) {
+  color: var(--color-ink);
 }
 
 .app-nav .app-nav__tab:focus-visible {
-  outline: 3px solid currentColor;
+  outline: 3px solid var(--color-income-1);
   outline-offset: 2px;
 }
 
 .app-nav .app-nav__tab[aria-current="page"] {
-  border-color: currentColor;
-  font-weight: 700;
+  background: #fff;
+  color: var(--color-ink);
+  font-weight: 600;
+  box-shadow:
+    0 1px 2px rgba(28, 28, 40, 0.08),
+    0 4px 12px -4px rgba(79, 95, 208, 0.25);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-nav .app-nav__tab {
+    transition: none;
+  }
 }

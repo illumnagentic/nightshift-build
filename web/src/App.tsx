@@ -59,14 +59,22 @@ export default function App() {
 
   return (
     <>
-      <h1>Property Swipe</h1>
+      <h1 className="mx-auto mb-5 max-w-[440px] px-4 text-center text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
+        Property Swipe
+      </h1>
       {checking ? (
-        <p>Loading…</p>
+        <p className="mx-auto max-w-[440px] px-4 text-center text-sm text-muted">
+          Loading…
+        </p>
       ) : user ? (
         <>
-          <p>
+          <p className="mx-auto mb-3 max-w-[440px] px-4 text-center text-sm text-muted">
             Signed in as {user.username}{" "}
-            <button type="button" onClick={switchUser}>
+            <button
+              type="button"
+              className="min-h-11 text-ink underline underline-offset-2 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-income-1"
+              onClick={switchUser}
+            >
               Switch user
             </button>
           </p>
@@ -83,7 +91,7 @@ export default function App() {
               </button>
             ))}
           </nav>
-          <div hidden={tab !== "deck"}>
+          <div hidden={tab !== "deck"} className="px-4 pb-12">
             <DeckScreen
               key={`${user.user_id}:${deckKey}`}
               userId={user.user_id}
@@ -91,7 +99,10 @@ export default function App() {
               onNeedPrefs={() => setTab("prefs")}
             />
           </div>
-          <div hidden={tab !== "prefs"}>
+          <div
+            hidden={tab !== "prefs"}
+            className="px-4 pb-12 [&:not([hidden])]:flex [&:not([hidden])]:justify-center"
+          >
             <PrefsScreen
               key={user.user_id}
               userId={user.user_id}

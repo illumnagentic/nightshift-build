@@ -1,5 +1,36 @@
-.dashboard.chart {
+.dashboard {
+  box-sizing: border-box;
+  width: calc(100% - 32px);
   max-width: 480px;
+  margin: 0 auto 20px;
+  padding: 22px;
+  border: 1px solid var(--color-hairline);
+  border-radius: 28px;
+  background: var(--color-page);
+  color: var(--color-ink);
+  box-shadow:
+    0 1px 2px rgba(28, 28, 40, 0.06),
+    0 24px 60px -24px rgba(79, 95, 208, 0.45);
+  line-height: 1.4;
+}
+
+.dashboard.chart {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.dashboard h2 {
+  margin: 0 0 4px;
+  color: var(--color-ink);
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 .dashboard .chart__svg {
@@ -10,23 +41,23 @@
 }
 
 .dashboard .chart__grid {
-  stroke: #e8e8e6;
+  stroke: var(--color-hairline);
   stroke-width: 1;
 }
 
 .dashboard .chart__axis {
-  stroke: #c9c8c4;
+  stroke: #c9c9d6;
   stroke-width: 1;
 }
 
 .dashboard .chart__tick {
-  fill: #52514e;
+  fill: var(--color-muted);
   font-size: 11px;
   font-variant-numeric: tabular-nums;
 }
 
 .dashboard .chart__bar {
-  fill: #2a78d6;
+  fill: var(--color-income-1);
 }
 
 .dashboard .chart__err,
@@ -36,28 +67,28 @@
 }
 
 .dashboard .chart__err {
-  stroke: #52514e;
+  stroke: rgba(28, 28, 40, 0.7);
   stroke-width: 1.5;
 }
 
 .dashboard .chart__err-halo {
-  stroke: #ffffff;
+  stroke: var(--color-page);
   stroke-width: 4;
 }
 
 .dashboard .chart__value {
-  fill: #0b0b0b;
+  fill: var(--color-ink);
   font-size: 13px;
   font-weight: 600;
 }
 
 .dashboard .chart__label {
-  fill: #0b0b0b;
+  fill: var(--color-ink);
   font-size: 12px;
 }
 
 .dashboard .chart__missing {
-  fill: #52514e;
+  fill: var(--color-muted);
   font-size: 12px;
   font-style: italic;
 }
@@ -68,7 +99,7 @@
 }
 
 .dashboard .chart__hit:hover {
-  fill: rgba(11, 11, 11, 0.04);
+  fill: rgba(79, 95, 208, 0.06);
 }
 
 .dashboard .chart__hit:focus {
@@ -76,8 +107,8 @@
 }
 
 .dashboard .chart__hit:focus-visible {
-  fill: rgba(11, 11, 11, 0.04);
-  stroke: #0b0b0b;
+  fill: rgba(79, 95, 208, 0.06);
+  stroke: var(--color-income-1);
   stroke-width: 2;
 }
 
@@ -86,34 +117,64 @@
 }
 
 .dashboard .chart__tip rect {
-  fill: #fcfcfb;
-  stroke: #c9c8c4;
+  fill: var(--color-page);
+  stroke: var(--color-hairline);
 }
 
 .dashboard .chart__tip-value {
-  fill: #0b0b0b;
+  fill: var(--color-ink);
   font-size: 13px;
   font-weight: 600;
 }
 
 .dashboard .chart__tip-label {
-  fill: #52514e;
+  fill: var(--color-muted);
   font-size: 11px;
 }
 
 .dashboard .chart__toggle {
   min-width: 44px;
   min-height: 44px;
-  padding: 0 1rem;
-  border: 1px solid #c9c8c4;
-  background: none;
-  color: inherit;
+  padding: 0 20px;
+  border: 1px solid var(--color-hairline);
+  border-radius: 999px;
+  background: var(--color-page);
+  color: var(--color-ink);
   font: inherit;
+  font-weight: 600;
   cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.dashboard .chart__toggle:hover {
+  background: var(--color-mist);
 }
 
 .dashboard .chart__toggle:focus-visible {
-  outline: 3px solid currentColor;
+  outline: 3px solid var(--color-income-1);
+  outline-offset: 2px;
+}
+
+.dashboard button:not([class]) {
+  min-height: 48px;
+  margin-top: 12px;
+  padding: 0 20px;
+  border: 1px solid var(--color-hairline);
+  border-radius: 999px;
+  background: var(--color-page);
+  color: var(--color-ink);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.dashboard button:not([class]):hover {
+  background: var(--color-mist);
+}
+
+.dashboard button:not([class]):focus-visible {
+  outline: 3px solid var(--color-income-1);
   outline-offset: 2px;
 }
 
@@ -133,7 +194,7 @@
 .dashboard .chart__table th,
 .dashboard .chart__table td {
   padding: 0.35rem 0.5rem;
-  border-bottom: 1px solid #e8e8e6;
+  border-bottom: 1px solid var(--color-hairline);
   text-align: left;
 }
 
@@ -142,23 +203,33 @@
 }
 
 .dashboard .dashboard__banner {
-  padding: 0.5rem 0.75rem;
-  border: 1px solid #0b0b0b;
+  padding: 10px 14px;
+  border-radius: 16px;
+  background: #fdeaf1;
+  color: #9d1450;
   font-weight: 600;
 }
 
 .dashboard .dashboard__note {
-  padding: 0.5rem 0.75rem;
-  border: 1px solid #c9c8c4;
+  padding: 10px 14px;
+  border-radius: 16px;
+  background: var(--color-mist);
 }
 
 .dashboard .dashboard__caption {
   margin: 0.25rem 0;
   max-width: 480px;
-  color: #52514e;
+  color: var(--color-muted);
   font-size: 0.9rem;
 }
 
 .dashboard section {
   margin-bottom: 2rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard .chart__toggle,
+  .dashboard button:not([class]) {
+    transition: none;
+  }
 }

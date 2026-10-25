@@ -47,37 +47,59 @@ export default function UserPicker({
   }
 
   return (
-    <section>
-      <h2>Choose a user</h2>
+    <section className="mx-auto mb-12 w-[calc(100%-2rem)] max-w-[440px] rounded-[28px] border border-hairline bg-white p-6 shadow-[0_1px_2px_rgba(28,28,40,.06),0_24px_60px_-24px_rgba(79,95,208,.45)]">
+      <h2 className="mb-4 text-xl font-semibold text-ink">
+        Choose a user
+      </h2>
       {loadError !== null ? (
-        <p role="alert">{loadError}</p>
+        <p role="alert" className="mb-4">
+          {loadError}
+        </p>
       ) : users === null ? (
-        <p>Loading users…</p>
+        <p className="mb-4 text-muted">Loading users…</p>
       ) : users.length === 0 ? (
-        <p>No users yet. Create one below.</p>
+        <p className="mb-4 text-muted">No users yet. Create one below.</p>
       ) : (
-        <ul>
+        <ul className="mb-4 flex flex-col gap-2">
           {users.map((u) => (
             <li key={u.user_id}>
-              <button type="button" onClick={() => onSelect(u)}>
+              <button
+                type="button"
+                className="min-h-12 w-full cursor-pointer rounded-2xl bg-mist px-4 text-left font-medium hover:bg-income-3/40 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-income-1"
+                onClick={() => onSelect(u)}
+              >
                 {u.username}
               </button>
             </li>
           ))}
         </ul>
       )}
-      <form onSubmit={create}>
-        <label htmlFor="new-username">New username</label>{" "}
+      <form onSubmit={create} className="flex flex-wrap items-end gap-2">
+        <label
+          htmlFor="new-username"
+          className="mb-1 block w-full font-semibold"
+        >
+          New username
+        </label>{" "}
         <input
           id="new-username"
+          className="min-h-11 min-w-0 flex-1 rounded-xl border border-hairline bg-white px-3 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-income-1"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           autoComplete="off"
         />{" "}
-        <button type="submit" disabled={submitting}>
+        <button
+          type="submit"
+          disabled={submitting}
+          className="min-h-11 cursor-pointer rounded-full bg-pulse-1 px-5 font-semibold text-white shadow-[0_8px_20px_-8px_rgba(214,36,110,.6)] hover:brightness-95 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-income-1 disabled:cursor-not-allowed disabled:opacity-50"
+        >
           Create user
         </button>
-        {createError !== null && <p role="alert">{createError}</p>}
+        {createError !== null && (
+          <p role="alert" className="w-full">
+            {createError}
+          </p>
+        )}
       </form>
     </section>
   );

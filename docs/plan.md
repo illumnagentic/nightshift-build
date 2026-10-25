@@ -57,7 +57,7 @@ Branch names are proposals; set them at feature-kickoff.
   workplace postcode, favourites with remove-with-reason.
 - [x] **F5 Dashboard** — `feat/web-dashboard` — three-bar chart with error bars,
   false-exclude panel.
-- [ ] **F6 Recording** — `feat/demo-recording` — demo script, Alex → Jordan run,
+- [x] **F6 Recording** — `feat/demo-recording` — demo script, Alex → Jordan run,
   correction trail, final recording.
 
 ## Order
