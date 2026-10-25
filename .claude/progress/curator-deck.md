@@ -114,6 +114,46 @@ test module and the other unit modules from step 1 pass.
 - [ ] Matches locked requirements — evidence: (date)
 - [ ] No scope drift — evidence: (date)
 
+2026-10-25 (arbiter): Step 6 added from the SPOTTED, NOT FIXED entry on `curator_calls.mreq_id`
+having no automated test. Not a REQUIREMENTS change.
+
+### Step 6 — Test that the stored `mreq_` id is the call's header id (arbiter)
+
+**Goal**: an API test proves each `curator_calls` row stores the `x-middleware-request-id`
+the fake upstream sent for that call, and that each decision row points at that call.
+The fake sends a distinct id per curator response (e.g. `mreq_fake` + a counter or
+`secrets.token_hex`) and records it in `curator_requests`, so a stored id can be matched
+to its own call. The test reads the local D1 from the test process with
+`subprocess.run(["npx", "--yes", "wrangler", "d1", "execute", "haka", "--local", "--json",
+"--command", <SELECT with the user_id inlined after checking it is the API's id format>],
+cwd=<worker dir>)` and `json.loads` — the same route `worker/scripts/seed.sh` uses. No
+change to `worker/src/`, no new endpoint, no new dependency. If `wrangler` is not on the
+path, the test fails with a clear message (no skip).
+
+**Files in scope**: `worker/tests/fake_upstream.py` (distinct request id per curator
+response, recorded), `worker/tests/test_deck.py` (new test(s) and a small D1-read helper),
+`worker/README.md` (one line in the test list that `test_deck.py` reads the local D1 and
+needs the server's D1 state in the same `worker/` directory),
+`evidence/curator-deck/step-6.md`.
+
+**Done when**: a new user's first `GET /api/deck?n=10` → exactly one `curator_calls` row
+for that user, its `mreq_id` equals the id the fake sent for that call and starts `mreq_`,
+its `profile_version` equals the empty-profile value from Step 3, and all 10 `decisions`
+rows for the user have `curator_call_id` equal to that row's `call_id` and the same
+`profile_version`; a second user's call gets a different id that does not appear on the
+first user's rows; a curator-failure-marker call whose fake response carries an id stores
+that id with status `failed`; the test fails when `request_id` is replaced with `None`
+in the `deck.py` insert (checked once by hand, reverted, recorded in evidence); the full
+suite passes in test mode on one seeded D1.
+
+**Evidence location**: `evidence/curator-deck/step-6.md`
+
+- [ ] Implemented
+- [ ] Tested — evidence: (date)
+- [ ] Best practices met — evidence: (date)
+- [ ] Matches locked requirements — evidence: (date)
+- [ ] No scope drift — evidence: (date)
+
 ---
 
 ## RULES IN FORCE
@@ -233,6 +273,21 @@ suite passes twice on one seeded D1.
 - [x] Matches locked requirements — evidence: card keys match contract example; Q1-Q11 and exploration-slot ruling implemented (deck.py place, BAND, K=30); mreq_ and profile_version 0 stored per call and decision; curator.py unchanged, prompt SHA 9b5a064b matches (2026-10-25)
 - [x] No scope drift — evidence: diff = schema.sql, deck.py, entry.py, test_deck.py, README.md, step-3 evidence, progress tradeoffs (2026-10-25)
 
+**Redo (arbiter FIX_NOW, 2026-10-25)**: one deck build per user at a time. Files:
+`worker/src/deck.py`, `worker/tests/test_deck.py`, `evidence/curator-deck/step-3.md`.
+A module-level per-user `asyncio.Lock` held for the whole of `serve`, so overlapping
+requests for one user make at most one curator call. — withdrawn by arbiter 2026-10-25:
+the lock cannot work on workerd (a request cannot await a promise resolved in another
+request's I/O context; the waiting request is cancelled and returns 500), and the
+working alternative, a D1 claim row with polling and stale-claim expiry, is a schema
+change plus a polling loop for a dev-only cost. The duplicate is about £0.005–0.008 per
+deck load that needs new cards, only under React StrictMode in dev; no duplicate card is
+served (unique pair); the persona batch, which supplies most kept examples, is
+serialised by B6. Nothing in the plan or a checkpoint is blocked. Code reverted to the
+reviewed Step 3; its boxes removed by the arbiter (nothing was built, so nothing to
+verify, and open boxes would block Step 4). The tested attempt is not in the repo.
+
+
 ### Step 4 — Live check, contract and README
 
 **Goal**: one real curator call through Mubit from the endpoint, `mreq_` stored,
@@ -240,7 +295,8 @@ tokens, latency and cost measured; the ruled contract additions and README notes
 
 **Files in scope**: `docs/api-contract.md` (Deck errors; Server-side only note on
 train-only decks), `worker/README.md` (curator, paid call, cost note),
-`evidence/curator-deck/step-4.md`.
+`evidence/curator-deck/step-4.md`, this progress file (`## HANDOVER` notes only:
+rulings Q4, Q8 and the Step 3 concurrency conditions).
 
 **Done when**: one `GET /deck` against the normal dev server returns cards; the
 `curator_calls` row carries the same `mreq_` id as the response header; usage tokens
@@ -250,11 +306,11 @@ paid.
 
 **Evidence location**: `evidence/curator-deck/step-4.md`
 
-- [ ] Implemented
-- [ ] Tested — evidence: (date)
-- [ ] Best practices met — evidence: (date)
-- [ ] Matches locked requirements — evidence: (date)
-- [ ] No scope drift — evidence: (date)
+- [x] Implemented — evidence: contract (Deck errors 502, Server-side only), worker/README.md 'Curator and deck', HANDOVER notes, evidence/curator-deck/step-4.md present (2026-10-25)
+- [x] Tested — evidence: one live GET /api/deck?n=10 200 in 5.29s, 1 curator_calls row ok, mreq_ stored (read from x-middleware-request-id, src/mubit.py:34,60), tokens 6995/335; test_curator_unit 29 pass, offline modules 38 pass; check-process-refs exit 0 (2026-10-25)
+- [x] Best practices met — evidence: evidence is metadata only, no key or bodies; contract change additive; no web/ change (2026-10-25)
+- [x] Matches locked requirements — evidence: Done-when met in intent (stored mreq_ is header-sourced; endpoint does not expose the header; console not opened); cost per call at two price assumptions plus 150/1000 projection (2026-10-25)
+- [x] No scope drift — evidence: git diff HEAD = contract, README, progress file (HANDOVER, arbiter edits only), untracked step-4.md; REQUIREMENTS and ticked boxes untouched (2026-10-25)
 
 ---
 
@@ -287,7 +343,7 @@ Exploration slots: a new card is `exploration` when (user's decision count befor
 
 2026-10-25 | step 3 | `exhausted` and `feedback_required` false after 15 swipes have no API-level test | Unswiped cards are re-served and a page holds 10, so no user can empty the pool or pass 15 swipes before the swipe endpoint exists | Add both tests with the swipe step; `empty_reason` logic is three lines in `deck.serve`. — accepted by arbiter 2026-10-25: genuinely unreachable before the swipe endpoint, and nothing in B4 depends on it. B5's kickoff must require, as Done-when items of its swipe step: (1) an API test that swipes through a user's whole train pool and then gets `exhausted` with no cards and no curator call, distinct from `no_matches`; (2) an API test that after 15 swipes every card has `feedback_required` false, and a boundary test where a page served after 12 swipes has true at positions 0–2 and false from position 3; (3) both in `worker/tests/test_deck.py` or the B5 swipe test module, with the `fake` fixture.
 
-2026-10-25 | step 3 | A `GET /deck` that fails part-way through inserting a page leaves the cards inserted so far, and two concurrent requests for one user can each make a curator call (the unique pair keeps one row per listing, so no duplicate is served) | D1 writes here are sequential `run()` calls; a batch or transaction API is not used | Insert the page in one D1 batch; serialise per user if the persona batch fires concurrent deck requests. — FIX_NOW by arbiter 2026-10-25: redo of Step 3 within its files. Not because of B6 but because of `web/`: `web/src/main.tsx` wraps the app in `StrictMode` and `web/src/deck/useDeck.ts` fetches the deck from an effect, so every deck load in dev fires two concurrent `GET /deck` for one user — two paid curator calls, near-duplicate kept examples in the Mubit task, and overlapping `first_slot`/positions. Fix is a per-user `asyncio.Lock` around `deck.serve`'s read-then-write; the partial-page-on-failure half is accepted (rows are individually valid, re-served next time, one extra call at worst; a D1 batch through Pyodide is not worth the risk). B6's kickoff must require the persona swiper to keep at most one `GET /deck` in flight per persona.
+2026-10-25 | step 3 | A `GET /deck` that fails part-way through inserting a page leaves the cards inserted so far, and two concurrent requests for one user can each make a curator call (the unique pair keeps one row per listing, so no duplicate is served) | D1 writes here are sequential `run()` calls; a batch or transaction API is not used | Insert the page in one D1 batch; serialise per user if the persona batch fires concurrent deck requests. — FIX_NOW by arbiter 2026-10-25: redo of Step 3 within its files. Not because of B6 but because of `web/`: `web/src/main.tsx` wraps the app in `StrictMode` and `web/src/deck/useDeck.ts` fetches the deck from an effect, so every deck load in dev fires two concurrent `GET /deck` for one user — two paid curator calls, near-duplicate kept examples in the Mubit task, and overlapping `first_slot`/positions. Fix is a per-user `asyncio.Lock` around `deck.serve`'s read-then-write; the partial-page-on-failure half is accepted (rows are individually valid, re-served next time, one extra call at worst; a D1 batch through Pyodide is not worth the risk). B6's kickoff must require the persona swiper to keep at most one `GET /deck` in flight per persona. — FIX_NOW withdrawn; accepted by arbiter 2026-10-25: the per-user `asyncio.Lock` fails on workerd (the waiting request is cancelled as hung, 500), and a D1 claim row with polling is a schema change and new failure modes for a dev-only cost of about £0.005–0.008 per StrictMode double fetch that needs new cards. No duplicate card is ever served (unique pair); the second build only adds extra outstanding cards that are served later. Near-identical kept examples from team dev use are few next to the persona batch. Conditions: (1) B6's kickoff must require one `GET /deck` in flight per persona (unchanged); (2) Step 4's HANDOVER must state that a dev-mode deck load can make two curator calls and that the recording should be run with this in mind; (3) the fix, if ever wanted, is in `web/` (dedupe the doubled effect), which is Yewen's and escalates in automation.
 
 ---
 
@@ -295,6 +351,7 @@ Exploration slots: a new card is `exploration` when (user's decision count befor
 
 - docs/api-contract.md (Chip catalogue, `natural_light` and `space` featured rules) | With flags, `natural_light` is featured on 635 of 635 listings and `space` on 623 of 635, so "featured" no longer separates listings and the cap cuts by priority number instead (featured chips exceed 8 on 254 of 635 cards, was 117). Evidence: `evidence/curator-deck/step-1.md` | low to medium (product quality of chip choice, not correctness) — FIX_NOW by arbiter 2026-10-25: Step 5 (arbiter) in AMENDMENTS.
 - worker/src/curator.py:63 (light tie-break, step-reviewer note on Step 2) | A corrected free-text light value not in `_LIGHT_ORDER` gets key 1 and wins every tie (above `none`), untested. Wider problem found by the arbiter: a single corrected light flag is dropped whenever the room has more uncorrected readings (e.g. three `bright` and one corrected "not bright at all" gives `bright`), so the curator never reads the correction, against decisions.md (Photo flags: "the curator reads the corrected text") | medium (B5 corrections would be invisible to the curator) — resolved by Step 2 redo 2026-10-25 — FIX_NOW by arbiter 2026-10-25: redo of Step 2 within its files; a corrected light value in a room wins over uncorrected readings, ties among enum readings still go to the worse one; must land before the first persona run.
+- worker/src/deck.py:108–113 (`curator_calls.mreq_id` write, step-reviewer note on Step 4) | No pytest asserts that `curator_calls.mreq_id` holds the `x-middleware-request-id` of the curator call that produced it. `tests/test_mubit.py` covers reading the header; the write in `deck._ask_curator` is covered only by a manual D1 inspection (Step 3 evidence) and the one live row (Step 4 evidence). The fake sends one constant id, so even a D1 read could not tell one call's id from another's. The line is in REQUIREMENTS (LOCKED) and the B4 plan line ("`mreq_` IDs stored"), and the correction trail for the recording and B7 depends on it | medium (an unguarded locked requirement; a later edit to `deck.py` could drop or misattribute the id silently) — FIX_NOW by arbiter 2026-10-25: Step 6 (arbiter) in AMENDMENTS. About 40 lines, stdlib plus the `npx wrangler d1 execute haka --local` route `worker/scripts/seed.sh` already uses; no new dependency, no new endpoint.
 
 ---
 
@@ -313,3 +370,12 @@ Exploration slots: a new card is `exploration` when (user's decision count befor
 ---
 
 ## HANDOVER
+
+### Notes for later features
+
+- Q4: `GET /listings/{id}` is not built in B4. The B5 kickoff decides it (neither the B4 nor the B5 plan line names it; only `web/src/api/http.ts` defines `getListing`).
+- Q8: before the persona batch, a human opens Mubit's Tasks page after the first few real curator calls and confirms there is ONE curator task. The live check in B4 made one call and did not look at the console.
+- A dev deck load can make two curator calls: `web/src/main.tsx` uses StrictMode and the deck is fetched from an effect, so two concurrent `GET /deck` fire for one user. Both are paid and both become kept examples. Keep this in mind when recording. The fix, if wanted, is in `web/` (Yewen's, escalates in automation).
+- B6 must keep at most one `GET /deck` in flight per persona and never pass `source` to the persona LLM (the fixed exploration slot would be a tell).
+- B5 kickoff must add the `exhausted` and post-15 `feedback_required` tests listed in the Step 3 TRADEOFFS row.
+- Measured in B4: one live call is 6,995 prompt and 335 output tokens, about 0.002 GBP at an assumed price (evidence/curator-deck/step-4.md). Read the real price from the bill after the first 50 calls.

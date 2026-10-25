@@ -44,7 +44,10 @@ Not part of the frontend contract:
 - Mubit's `x-middleware-request-id` (`mreq_...`) and the profile version used are stored
   per decision in D1.
 - The chips offered on each card are logged when the deck is served (see `GET /deck`).
-- The listing `split` column (train / eval) is never exposed.
+- The listing `split` column (train / eval) is never exposed. Decks serve train-split
+  listings only, so no held-out listing reaches any user.
+- Each curator call is stored as its own record: the candidates sent, the full ranking
+  returned, status, the `mreq_` id and the token counts.
 
 The only place these surface is `GET /profile`, whose `history` references decisions.
 
@@ -290,7 +293,10 @@ Response 200 (`empty_reason` is `null` here; an empty deck is
 - `photos` is an ordered list of URLs.
 
 Errors: 409 `prefs_missing` (no prefs saved), 422 `invalid_request` (`n` out of range or
-not an integer).
+not an integer), 502 `curator_failed` (the ranking call failed or its reply was unusable).
+A 502 happens only when new cards are needed and the call fails, and the user has no
+outstanding cards to serve. If there are outstanding cards, they are served as a normal
+200 with fewer than `n` cards. No cards are created on a failure, so a retry is safe.
 
 ## Listings
 
