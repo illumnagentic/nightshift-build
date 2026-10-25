@@ -139,7 +139,7 @@ def sample_records(n=40):
         return [json.loads(line) for _, line in zip(range(n), f)]
 
 
-def build(records, tmp):
+def build(records, tmp, flag_lines=()):
     """Run the real build script on records in a temporary dataset dir; return it as a Path."""
     ds = Path(tmp)
     (ds / "d1").mkdir(parents=True, exist_ok=True)
@@ -147,12 +147,14 @@ def build(records, tmp):
     with open(ds / "listings.jsonl", "w", encoding="utf-8", newline="\n") as f:
         for r in records:
             f.write(json.dumps(r, ensure_ascii=False) + "\n")
+    if flag_lines is not None:
+        (ds / "photo_flags.jsonl").write_text("".join(json.dumps(x) + "\n" for x in flag_lines), encoding="utf-8")
     subprocess.run([sys.executable, "-I", "-B", str(DATASET / "scripts" / "build_d1.py"), "--dataset", str(ds)],
                    check=True, capture_output=True)
     return ds
 
 
-def build_raw(records, tmp):
+def build_raw(records, tmp, flag_lines=()):
     """Like build, but return the finished process instead of raising when the build fails."""
     ds = Path(tmp)
     (ds / "d1").mkdir(parents=True, exist_ok=True)
@@ -160,6 +162,8 @@ def build_raw(records, tmp):
     with open(ds / "listings.jsonl", "w", encoding="utf-8", newline="\n") as f:
         for r in records:
             f.write(json.dumps(r, ensure_ascii=False) + "\n")
+    if flag_lines is not None:
+        (ds / "photo_flags.jsonl").write_text("".join(json.dumps(x) + "\n" for x in flag_lines), encoding="utf-8")
     return subprocess.run([sys.executable, "-I", "-B", str(DATASET / "scripts" / "build_d1.py"), "--dataset", str(ds)],
                           capture_output=True, text=True)
 
@@ -400,6 +404,115 @@ class BuildOnlyColumnTests(unittest.TestCase):
             with self.subTest(col=col):
                 self.assertIn(col, b.LISTING_COLS)
                 self.assertRegex(listings, r"(?m)^  %s " % col)
+
+
+def flag(listing, image, field, value, scope="photo", room="kitchen", n=0, **over):
+    row = {"flag_id": "%s:%s:%s:%d" % (listing, image, field, n), "listing_id": listing, "scope": scope,
+           "field": field, "value": value, "observation": "seen", "source_photo": image,
+           "confidence": "high", "uncertainty": None, "room": room if scope == "photo" else None,
+           "corrected_text": None}
+    row.update(over)
+    return row
+
+
+def status(listing, *skipped_urls):
+    return {"record_type": "listing_status", "listing_id": listing, "request_id": "mreq_x",
+            "skipped": [{"url": u, "reason": "duplicate"} for u in skipped_urls]}
+
+
+def sql_rows(ds, query, args=()):
+    con = sqlite3.connect(str(ds / "listings.sqlite"))
+    try:
+        return con.execute(query, args).fetchall()
+    finally:
+        con.close()
+
+
+class FlagTests(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+
+    def test_flags_load_and_values_keep_their_type(self):
+        recs = sample_records()
+        r = recs[0]
+        url = next(m["url"] for m in r["media"] if m["kind"] == "photo")
+        lines = [flag(r["id"], url, "room", "kitchen"), flag(r["id"], url, "light", "bright"),
+                 flag(r["id"], url, "defects", "58", n=0),
+                 flag(r["id"], url, "sqm_estimate", 58, scope="listing"),
+                 flag(r["id"], url, "floorplan_notes", "two beds", scope="listing"),
+                 status(r["id"])]
+        ds = build(recs, self.tmp.name, lines)
+        self.assertEqual(sql_rows(ds, "SELECT COUNT(*) FROM photo_flags"), [(5,)])
+        types = dict(sql_rows(ds, "SELECT field, typeof(value) FROM photo_flags"))
+        self.assertEqual(types["sqm_estimate"], "integer")
+        self.assertEqual(types["defects"], "text")  # numeric-looking text stays text
+        self.assertEqual(types["room"], "text")
+        # same holds after schema then seed into an empty database
+        con = sqlite3.connect(":memory:")
+        con.executescript((ds / "d1" / "schema.sql").read_text(encoding="utf-8"))
+        con.executescript((ds / "d1" / "seed.sql").read_text(encoding="utf-8"))
+        self.assertEqual(dict(con.execute("SELECT field, typeof(value) FROM photo_flags")), types)
+        con.close()
+
+    def test_real_sqm_stays_real(self):
+        recs = sample_records()
+        r = recs[0]
+        url = r["media"][0]["url"]
+        ds = build(recs, self.tmp.name, [flag(r["id"], url, "sqm_estimate", 61.5, scope="listing")])
+        self.assertEqual(sql_rows(ds, "SELECT typeof(value), value FROM photo_flags"), [("real", 61.5)])
+
+    def test_check_constraints_reject_bad_rows(self):
+        recs = sample_records()
+        r = recs[0]
+        url = next(m["url"] for m in r["media"] if m["kind"] == "photo")
+        bad = {
+            "light value": flag(r["id"], url, "light", "dim"),
+            "photo scope without room": dict(flag(r["id"], url, "room", "kitchen"), room=None),
+            "room on listing scope": dict(flag(r["id"], url, "sqm_estimate", 50, scope="listing"), room="kitchen"),
+            "field from the other scope": flag(r["id"], url, "sqm_estimate", 50),
+            "bad confidence": flag(r["id"], url, "room", "kitchen", confidence="certain"),
+            "null value": flag(r["id"], url, "defects", None),
+        }
+        for label, row in bad.items():
+            with self.subTest(label):
+                p = build_raw(recs, self.tmp.name, [row])
+                self.assertNotEqual(p.returncode, 0)
+                self.assertIn("photo_flags", p.stderr)
+
+    def test_missing_flags_file_aborts(self):
+        p = build_raw(sample_records(), self.tmp.name, None)
+        self.assertNotEqual(p.returncode, 0)
+        self.assertIn("photo_flags.jsonl", p.stderr)
+
+    def test_skipped_photos_removed_and_positions_renumbered(self):
+        recs = sample_records()
+        r = recs[0]
+        photos = [m["url"] for m in sorted(r["media"], key=lambda m: m["position"]) if m["kind"] == "photo"]
+        self.assertGreaterEqual(len(photos), 4)
+        gone = [photos[0], photos[2]]
+        ds = build(recs, self.tmp.name, [status(r["id"], *gone)])
+        got = sql_rows(ds, "SELECT position, url FROM listing_media WHERE kind = 'photo' AND listing_id = ? ORDER BY position", (r["id"],))
+        self.assertEqual(got, list(enumerate([u for u in photos if u not in gone])))
+        floor = sql_rows(ds, "SELECT COUNT(*) FROM listing_media WHERE kind = 'floorplan' AND listing_id = ?", (r["id"],))
+        self.assertEqual(floor[0][0], len([m for m in r["media"] if m["kind"] == "floorplan"]))
+
+    def test_flag_on_removed_photo_aborts(self):
+        recs = sample_records()
+        r = recs[0]
+        url = next(m["url"] for m in r["media"] if m["kind"] == "photo")
+        other = flag(r["id"], "https://example.test/not-an-image.jpg", "room", "kitchen")
+        p = build_raw(recs, self.tmp.name, [other, status(r["id"], url)])
+        self.assertNotEqual(p.returncode, 0)
+        self.assertIn("not an image", p.stderr)
+
+    def test_url_listed_twice_keeps_one_copy_when_flagged(self):
+        recs = sample_records()
+        r = recs[0]
+        photo = next(m for m in r["media"] if m["kind"] == "photo")
+        r["media"] = r["media"] + [{"kind": "photo", "position": 99, "url": photo["url"]}]
+        ds = build(recs, self.tmp.name, [flag(r["id"], photo["url"], "room", "kitchen"), status(r["id"], photo["url"])])
+        self.assertEqual(sql_rows(ds, "SELECT COUNT(*) FROM listing_media WHERE url = ?", (photo["url"],)), [(1,)])
 
 
 if __name__ == "__main__":

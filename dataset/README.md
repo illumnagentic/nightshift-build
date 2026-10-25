@@ -288,7 +288,17 @@ a comment on each column giving its unit and what NULL means. In brief:
 - `listing_stations` - one row per nearby station: `(listing_id, position, name,
   distance_km, types)`, nearest first. `types` is a JSON array.
 
-Both child tables have a foreign key to `listings.id` with `ON DELETE CASCADE`. The old
+- `photo_flags` - one row per flag from `photo_flags.jsonl`, in the shape of `photo_flags`
+  in `docs/api-contract.md`. CHECK constraints cover `scope`, `field` per scope, `light`
+  values, `confidence` and `room` (set on photo scope, NULL on listing scope). `value`
+  has no declared type on purpose, so `sqm_estimate` stays a number and every other value
+  stays text. `build_d1.py` writes `sqm_estimate` unquoted in `seed.sql`.
+  Images the model skipped (logos, duplicates) are removed from `listing_media` and the
+  remaining positions renumbered 0-based per kind. A URL a listing lists twice, which the
+  model both skipped and flagged, keeps its first copy. The build aborts if
+  `photo_flags.jsonl` is missing or a flag points to an image that is not left.
+
+All three child tables have a foreign key to `listings.id` with `ON DELETE CASCADE`. The old
 columns `photo_urls`, `floorplan_urls`, `epc_image_urls` and `nearest_stations` no longer
 exist as columns; the child tables replace them.
 
@@ -669,6 +679,41 @@ writing `__pycache__`. Real environment variables take precedence over `.env`. T
 `details` command skips search results that fail the selection rules and homes already
 in `listings.jsonl`, because the detail response holds the same data.
 
+## Downloading the images
+
+Photos and floorplans are fetched once from the Rightmove CDN, so later steps read local
+files and never call Rightmove again. From `dataset/`:
+
+```bash
+python3 -I -B scripts/fetch_images.py --dataset .
+```
+
+Files land in `photos/<listing_id>/<kind>-<position>.<ext>`. `photos/` is gitignored
+(about 6,800 images). Existing files are skipped, so an interrupted run resumes and a
+second run downloads nothing. `images-manifest.csv` is committed: one row per image with
+`listing_id, kind, position, url, path, sha256, bytes, status`. A failed image has status
+`failed: <reason>` and an empty path; the script lists failures and carries on. The
+manifest is the same after a re-run unless a failed image is fetched on the retry.
+
+## Flagging the images
+
+Each listing's photos and floorplans are sent in one request to `gemini-3.5-flash-lite`
+through the Mubit gateway, and the answer is stored as flag rows. From `dataset/`:
+
+```bash
+python3 -I -B scripts/flag_images.py --limit 10      # first 10 listings, id order
+python3 -I -B scripts/flag_images.py --listing rm-137220284
+python3 -I -B scripts/flag_images.py                 # all listings, 4 requests at a time
+```
+
+`MUBIT_API_KEY` is read from the environment, else from the repo-root `.env`. Output is
+`photo_flags.jsonl`: flag rows in the shape of `photo_flags` in `docs/api-contract.md`,
+plus one `"record_type": "listing_status"` line per listing (request ID, token usage,
+skipped photos, images not sent, rows rejected for a bad enum). A listing with a status
+line is skipped on re-run. A listing whose call fails writes nothing and is retried by
+the next run. Images are sent as the type their first bytes say; a type Gemini does not
+take is left out and listed as `unsupported_format`.
+
 ## Loading into D1
 
 **Not yet run.** No D1 database exists yet, so these commands have not been tried. Create
@@ -686,6 +731,6 @@ Known limits:
 - `seed.sql` needs empty tables. It is plain `INSERT`s with no `BEGIN`/`COMMIT` (D1 rejects
   them), so a second import fails on the primary keys. Drop and recreate the tables before
   re-seeding.
-- `seed.sql` is 3.7 MB (3,655,077 bytes) in 9,365 statements, the largest 13,327 bytes against D1's limit of
+- `seed.sql` is 10.1 MB (10,053,183 bytes) in 23,923 statements, the largest 13,327 bytes against D1's limit of
   about 100 KB per statement. An import of that size has not been tried. If D1 rejects it,
   split the file.

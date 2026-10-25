@@ -404,8 +404,8 @@ The response has no `commute` and no `chips`; those only come with a card.
 ### Enums and nullability
 
 Listing and media rows come from `dataset/d1/schema.sql`. The photo flag rows (`scope`,
-`field`, `light`, `confidence`, `room`) are defined by this contract, because no flag
-table exists yet. Every value is a string, written exactly as shown
+`field`, `light`, `confidence`, `room`) are defined by this contract and enforced by
+the `photo_flags` table in `dataset/d1/schema.sql`. Every value is a string, written exactly as shown
 (case matters).
 
 | Field | Allowed values | Null? |

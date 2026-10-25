@@ -50,3 +50,23 @@ CREATE TABLE IF NOT EXISTS listing_stations (
   PRIMARY KEY (listing_id, position),
   FOREIGN KEY (listing_id) REFERENCES listings(id) ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS photo_flags (
+  flag_id TEXT PRIMARY KEY,                  -- '<listing_id>:<image>:<field>:<n>'; never NULL
+  listing_id TEXT NOT NULL,                  -- listings.id; never NULL
+  scope TEXT NOT NULL CHECK (scope IN ('photo', 'listing')), -- photo = about one photo, listing = about the floorplan
+  field TEXT NOT NULL CHECK (
+    (scope = 'photo' AND field IN ('room', 'light', 'size_tricks', 'defects', 'missing')) OR
+    (scope = 'listing' AND field IN ('floorplan_notes', 'sqm_estimate'))), -- what the flag is about
+  -- No type affinity on purpose: sqm_estimate stays a number, every other value stays text.
+  value CHECK (value IS NOT NULL AND (field <> 'light' OR value IN ('none', 'poor', 'ok', 'bright'))), -- the flag itself; never NULL
+  observation TEXT NOT NULL,                 -- what the model saw; never NULL
+  source_photo TEXT NOT NULL,                -- URL of the photo or floorplan it came from; never NULL
+  confidence TEXT NOT NULL CHECK (confidence IN ('high', 'medium', 'low')), -- never NULL
+  uncertainty TEXT,                          -- what the model was unsure of; NULL = nothing noted
+  room TEXT CHECK (
+    (scope = 'photo' AND room IS NOT NULL AND room IN ('living_room', 'kitchen', 'bedroom', 'bathroom', 'hallway', 'garden', 'exterior', 'other')) OR
+    (scope = 'listing' AND room IS NULL)), -- room shown; set on photo scope, NULL on listing scope
+  corrected_text TEXT,                       -- the user's correction; NULL = not corrected
+  FOREIGN KEY (listing_id) REFERENCES listings(id) ON DELETE CASCADE
+);

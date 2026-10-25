@@ -1,14 +1,18 @@
 == row counts (listings.sqlite) ==
   listings: 635
-  listing_media: 6841
+  listing_media: 6715
   listing_stations: 1889
+  photo_flags: 14684
 == pragma results ==
   foreign_key_check: clean
   integrity_check: ok
+== photo flags ==
+  flags by field: listing.floorplan_notes 1010, listing.sqm_estimate 626, photo.defects 546, photo.light 6045, photo.missing 81, photo.room 6045, photo.size_tricks 331
+  skipped images removed from listing_media: floorplan 6, photo 120
 == epc (demo values, see README) ==
   epc_current: A 4, B 143, C 281, D 184, E 23
   epc_potential: A 200, B 227, C 159, D 43, E 6
-  media rows by kind: floorplan 672, photo 6169
+  media rows by kind: floorplan 666, photo 6049
 == train/eval split (seed 20261025, groups by coordinates) ==
   all: 635 listings, train 488, eval 147 (23.1% eval)
   London: 401 listings, train 301, eval 100 (24.9% eval)
@@ -35,11 +39,12 @@
   area WC: 3 listings, train 1, eval 2 (66.7% eval)
   area WD: 21 listings, train 15, eval 6 (28.6% eval)
 == seed.sql ==
-  statements: 9365
-  size: 3655077 bytes
+  statements: 23923
+  size: 10053183 bytes
   largest statement: 13327 bytes (D1 limit about 100000)
 == self-check: schema.sql then seed.sql into empty in-memory db, foreign_keys=ON ==
   listings: 635 (listings.sqlite 635)
-  listing_media: 6841 (listings.sqlite 6841)
+  listing_media: 6715 (listings.sqlite 6715)
   listing_stations: 1889 (listings.sqlite 1889)
+  photo_flags: 14684 (listings.sqlite 14684)
   result: PASS
