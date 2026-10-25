@@ -187,11 +187,11 @@ frozen prompt and schema and request-size figures over 3–4 real train pools.
 
 **Evidence location**: `evidence/curator-deck/step-2.md`
 
-- [ ] Implemented
-- [ ] Tested — evidence: (date)
-- [ ] Best practices met — evidence: (date)
-- [ ] Matches locked requirements — evidence: (date)
-- [ ] No scope drift — evidence: (date)
+- [x] Implemented — curator.py: fixed SYSTEM_PROMPT, RESPONSE_SCHEMA, GENERATION_CONFIG, build_body, parse_ranking; fake answers curator calls (2026-10-25)
+- [x] Tested — evidence: pytest 6 pure modules 163 passed exit 0; full suite 247 passed exit 0 in fresh worktree on :8792, fake :8801; SHA-256s recomputed 9b5a064b.../10a031b5... match (2026-10-25)
+- [x] Best practices met — evidence: pure functions, CuratorError on unusable reply, half-valid rule, no new deps, check-process-refs.sh exit 0 (2026-10-25)
+- [x] Matches locked requirements — evidence: test_two_users_share_system_instruction_and_generation_config_byte_for_byte, test_thinking_is_explicit_low, test_schema_is_a_plain_string_array_with_no_enum, repair tests match Q3 (2026-10-25)
+- [x] No scope drift — evidence: diff = curator.py, test_curator_unit.py, fake_upstream.py (curator branch only), evidence/curator-deck/step-2.md, progress tradeoffs (2026-10-25)
 
 ### Step 3 — `GET /deck` end to end, `PUT /prefs` drop hook
 
@@ -268,11 +268,16 @@ Exploration slots: a new card is `exploration` when (user's decision count befor
 
 2026-10-25 | step 1 | Chip rules read flags loosely where the contract is silent: any flag row with room `garden`, any `defects` or `sqm_estimate` row regardless of value or confidence | The contract gives a confidence condition only for `light`; adding others would invent rules | Tighten the contract wording (for example ignore `low` confidence or a defects value of none) and update the two rules and tests; about 20 lines. — accepted by arbiter 2026-10-25: the readings are the literal contract text, and the data shows tightening would change almost nothing (garden: 335 listings either way when restricted to `field` `room` with high/medium confidence; defects: 159 to 155 listings when `low` is dropped, and no defects value means "none"). Not worth a contract change.
 
+2026-10-25 | step 2 | The light digest keeps one value per room (the most frequent, a tie going to the worse reading), and defects, size tricks and missing items are listed without their confidence; low-confidence flags are not filtered | The brief asked for a compact digest and the contract sets no confidence rule for the curator | Add a confidence filter or counts per room and update the digest tests; about 15 lines. The prompt would not change, but the user message would. — accepted by arbiter 2026-10-25: in `dataset/photo_flags.jsonl` only 36 of about 15,000 flags are `low` (33 defects, 2 size tricks, 1 missing) and no `light` flag is, so a confidence filter would change almost nothing; one light value per room is the compact digest asked for. The one real gap, a user correction being outvoted in its room, is ruled FIX_NOW under the SPOTTED row for curator.py:63.
+
+2026-10-25 | step 2 | Request size is about 6,000 tokens per call at K=30 before any taste profile or feedback; measured on characters divided by four, not a tokeniser | Compactness was asked for and 6k is lean for 30 candidates, but the real count is only known from `usageMetadata` | Step 4's live call records the true prompt tokens; shrink K or the digest if the cost projection is too high. — accepted by arbiter 2026-10-25: an estimate is enough to build on; Step 4 already must record `usageMetadata` tokens and a persona-batch cost projection, and K and the digest live in the user message, so shrinking them later does not split the Mubit task.
+
 ---
 
 ## SPOTTED, NOT FIXED
 
 - docs/api-contract.md (Chip catalogue, `natural_light` and `space` featured rules) | With flags, `natural_light` is featured on 635 of 635 listings and `space` on 623 of 635, so "featured" no longer separates listings and the cap cuts by priority number instead (featured chips exceed 8 on 254 of 635 cards, was 117). Evidence: `evidence/curator-deck/step-1.md` | low to medium (product quality of chip choice, not correctness) — FIX_NOW by arbiter 2026-10-25: Step 5 (arbiter) in AMENDMENTS.
+- worker/src/curator.py:63 (light tie-break, step-reviewer note on Step 2) | A corrected free-text light value not in `_LIGHT_ORDER` gets key 1 and wins every tie (above `none`), untested. Wider problem found by the arbiter: a single corrected light flag is dropped whenever the room has more uncorrected readings (e.g. three `bright` and one corrected "not bright at all" gives `bright`), so the curator never reads the correction, against decisions.md (Photo flags: "the curator reads the corrected text") | medium (B5 corrections would be invisible to the curator) — FIX_NOW by arbiter 2026-10-25: redo of Step 2 within its files; a corrected light value in a room wins over uncorrected readings, ties among enum readings still go to the worse one; must land before the first persona run.
 
 ---
 
