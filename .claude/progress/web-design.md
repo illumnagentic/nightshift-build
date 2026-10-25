@@ -134,7 +134,7 @@ restyle the page, header, nav and user picker.
 and the signed-in shell (wordmark, signed-in line, Switch user, nav tabs) render in the
 new palette and Archivo in mock mode; no non-`className` change in the TSX diff.
 
-**Evidence location**: the diff, plus command output recorded in the review.
+**Evidence location**: the diff, plus command output recorded in the review, plus `evidence/web-design/checks.md`.
 
 - [x] Implemented — earlier ticks (paint-chip palette) superseded by 2026-10-25 amendment and unticked; re-ticked: Inter link, glow @theme tokens, white page, segmented-pill nav.css, white glow panel in UserPicker, solid pulse-1 Create user, in diff vs d080bd1 (2026-10-25)
 - [x] Tested — evidence: typecheck exit 0, npm test exit 0, build exit 0, run by reviewer (2026-10-25)
@@ -162,7 +162,7 @@ feedback screen and chip dialog against the tokens.
 **Done when**: typecheck, tests and build pass; card, actions, feedback (compulsory and
 with Skip) and chip dialog render in the new design in mock mode at 375px and desktop.
 
-**Evidence location**: the diff, plus command output recorded in the review.
+**Evidence location**: the diff, plus command output recorded in the review, plus `evidence/web-design/checks.md`.
 
 - [x] Implemented — SUPERSEDES earlier Step 2 ticks (pre-redo 2). deck.css: Like blue gradient (radial highlight + linear #5866d6/income-1/#4352c6), Dislike white glass (translucent fill, blur, white rim), price 300 at 2.25rem; git diff HEAD shows only these hunks, Step 4 intact (2026-10-25)
 - [x] Tested — supersedes earlier tick: typecheck exit 0, npm test exit 0, build exit 0, check-process-refs exit 0, run by reviewer on uncommitted deck.css vs HEAD 15eb378 (2026-10-25)
@@ -190,7 +190,7 @@ against the tokens.
 **Done when**: typecheck, tests and build pass; the three screens render in the new
 design in mock mode, chart error-bar halo matches its surface.
 
-**Evidence location**: the diff, plus command output recorded in the review.
+**Evidence location**: the diff, plus command output recorded in the review, plus `evidence/web-design/checks.md`.
 
 - [x] Implemented — prefs.css, favourites.css, dashboard.css glow restyle in diff vs d080bd1; no TSX changed (2026-10-25)
 - [x] Redo implemented (supersedes earlier Step 3 ticks) — `.dashboard button:not([class])` rule + hover + focus-visible + reduced-motion entry in dashboard.css only; only unclassed button is Retry (DashboardScreen.tsx:74), `.chart__toggle` is classed (BarChart.tsx:189) so not matched (2026-10-25)
@@ -212,7 +212,7 @@ card; faint white inner shadow on the pink Love button and the blue Like button.
 at least 4.5:1 for small text over the deepest-lightened region behind it); the card
 and buttons show the inner glow in mock mode.
 
-**Evidence location**: the diff, plus command output recorded in the review.
+**Evidence location**: the diff, plus command output recorded in the review, plus `evidence/web-design/checks.md`.
 
 **Redo (2026-10-25, step-reviewer FAIL)**: feature tags (white on white .16 fill, about
 3.9–4.3:1) and commute pill (white on white .22 fill, about 3.5–3.9:1) fail AA; these
