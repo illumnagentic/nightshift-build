@@ -70,7 +70,13 @@ This session's conversation, quoted above. `docs/plan.md`, `docs/decisions.md`,
 
 ## AMENDMENTS
 
-_None._
+- 2026-10-25, orchestrator under the human's F5 delegation, after the Step 2 review
+  (FAIL): focusable hit targets inside `<svg role="img">` are an ARIA anti-pattern. Step 2's
+  done-when "the SVG has `role="img"` and an `aria-label` summary" is replaced by: the SVG
+  has `role="group"` with an `aria-label` summary, and each bar's focusable hit target has
+  `role="img"` with its own `aria-label`. Step 3's done-when gains: the rate chart passes a
+  percentage `format` (ticks, tooltip and table show e.g. 31%, not 0.31); browser checks of
+  keyboard focus on each bar and of the tooltip not hiding value text at about 375px.
 
 ---
 
@@ -151,11 +157,11 @@ the process-wording check exits 0. Not wired into the app yet.
 
 **Evidence location**: `evidence/web-dashboard/step-2.md`.
 
-- [ ] Implemented
-- [ ] Tested — evidence: (date)
-- [ ] Best practices met — evidence: (date)
-- [ ] Matches locked requirements — evidence: (date)
-- [ ] No scope drift — evidence: (date)
+- [x] Implemented — web/src/dashboard/BarChart.tsx; typecheck/build exit 0 after ARIA redo (2026-10-25)
+- [x] Tested — evidence: npm test exit 0 (186 tests); no chart test, logged as tradeoff, browser pass in Step 3; validator exit 0 (2026-10-25)
+- [x] Best practices met — evidence: svg role=group, per-bar role=img focusable with aria-label, no focusable inside role=img; table view; check-process-refs exit 0 (2026-10-25)
+- [x] Matches locked requirements — evidence: done-when as amended 2026-10-25 (AMENDMENTS); order, missing arm, error bars, tooltip hover+focus, table (2026-10-25)
+- [x] No scope drift — evidence: git status shows only BarChart.tsx, dashboard.css, evidence/web-dashboard/step-2.md, progress file (2026-10-25)
 
 ### Step 3 — Results tab
 
@@ -174,7 +180,7 @@ the top 5" (with a one-line explanation from the decisions text) and "False-excl
 — with "Across N held-out personas" under each when all arms share one n (otherwise per-arm n in the tooltip and table) and the caption "Error bars: ±1 standard deviation across held-out personas." under each; in mock mode only, a banner "Sample numbers from the mock, not real results" above the charts, present in a mock build and absent from plain and http builds (bundle check recorded); when only `updated_memory` is `null` it
 shows two bars and the note "The updated curator is not available, so only the base
 arms are shown."; restated rules: fixed arm order, a `null` arm never shown as zero, one
-measure per chart; switching user still resets to Deck; orchestrator browser checks recorded in the evidence: the empty state and the fallback-D note shown by overriding `mockClient.getStats` in the page (no code change), and a pass at about 375px wide (no label collisions, tooltips by hover and keyboard, table toggle works, four tabs fit without sideways scrolling); typecheck, tests and build exit
+measure per chart; switching user still resets to Deck; the rate chart passes a percentage `format` (AMENDMENTS 2026-10-25); orchestrator browser checks recorded in the evidence: the empty state and the fallback-D note shown by overriding `mockClient.getStats` in the page (no code change), and a pass at about 375px wide (no label collisions, tooltips by hover and keyboard, table toggle works, four tabs fit without sideways scrolling); typecheck, tests and build exit
 0; the process-wording check exits 0.
 
 **Evidence location**: `evidence/web-dashboard/step-3.md`.
@@ -189,7 +195,9 @@ measure per chart; switching user still resets to Deck; orchestrator browser che
 
 ## TRADEOFFS
 
-_None logged._
+- Step 2, `web/src/dashboard/BarChart.tsx` | no automated test for the chart (no test file in scope, no DOM test library installed) | rendering, hover, focus and table toggle are unchecked until the browser pass | add a DOM test environment (new dependency, needs approval) or rely on the browser checks in Step 3
+- Step 2, `BarChart.tsx` | tooltip is drawn in SVG at a fixed height over the plot and can cover the value text of neighbouring bars | simplest placement without measuring text | HTML tooltip positioned from the pointer
+- Step 2, `BarChart.tsx` | ticks are 0 to 5 in steps of 1 for hits (six gridlines), 0, 50%, 100% for the rate, keyed on `axisMax` | keeps hit ticks integer | pass ticks as a prop
 
 ---
 
