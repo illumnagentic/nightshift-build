@@ -52,7 +52,7 @@ Built-in browser, mock dev server on port 5183.
 
 - Hover on all six bars (three hits, three rate): each shows its tooltip; no tooltip rectangle intersects that bar's value text.
 - Keyboard (real Tab key presses from each chart heading): each of the six bars receives focus, announces e.g. "Base curator: 2.2 ± 0.8, 5 personas", and shows its tooltip (e.g. "Base curator · Mean 2.2 · SD 0.8 · Personas 5"); no tooltip covers that bar's value text.
-- The two tall hits bars (Base + memory, Updated + memory) draw their tooltip in the bottom band above the baseline; the others use the top band.
+- Corrected 2026-10-25 after re-measuring each bar on hover: all three hits bars (Base curator, Base + memory, Updated + memory) draw their tooltip in the bottom band above the baseline (y 156), because each value label sits in the top band; all three false-exclude bars use the top band (y 30). No tooltip covers its own bar's value text. (An earlier version of this line wrongly said only the two tall hits bars used the bottom band.)
 
 ## Code
 
