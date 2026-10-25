@@ -60,3 +60,41 @@ CREATE TABLE IF NOT EXISTS decisions (
   swiped_at TEXT,                            -- ISO 8601 UTC; NULL = not swiped yet
   UNIQUE (user_id, listing_id)               -- a listing is served to a user once
 );
+
+CREATE TABLE IF NOT EXISTS favourites (
+  user_id TEXT NOT NULL REFERENCES users(user_id),
+  listing_id TEXT NOT NULL REFERENCES listings(id),
+  decision_id TEXT NOT NULL,                 -- the superliked decision; no foreign key, a prefs re-save never drops a swiped one
+  added_at TEXT NOT NULL,                    -- ISO 8601 UTC
+  PRIMARY KEY (user_id, listing_id)
+);
+
+CREATE TABLE IF NOT EXISTS profile_versions (
+  user_id TEXT NOT NULL REFERENCES users(user_id),
+  version INTEGER NOT NULL,                  -- 1, 2, 3 ... per user; no row = version 0
+  created_at TEXT NOT NULL,                  -- ISO 8601 UTC
+  cause_type TEXT NOT NULL CHECK (cause_type IN ('swipe', 'feedback', 'flag_correction', 'favourite_removed')),
+  decision_id TEXT,                          -- set for swipe and feedback
+  flag_id TEXT,                              -- set for flag_correction
+  listing_id TEXT,                           -- set for favourite_removed
+  factors_json TEXT NOT NULL CHECK (json_valid(factors_json) AND json_type(factors_json) = 'array'), -- the profile at this version
+  UNIQUE (user_id, version)
+);
+
+CREATE TABLE IF NOT EXISTS feedback (
+  decision_id TEXT PRIMARY KEY REFERENCES decisions(decision_id), -- one row per swiped decision; a PUT replaces it
+  user_id TEXT NOT NULL REFERENCES users(user_id),
+  chips_json TEXT NOT NULL CHECK (json_valid(chips_json) AND json_type(chips_json) = 'array'), -- [{chip_id, strength, text}]
+  free_text TEXT,                            -- NULL = none; never blank
+  skipped INTEGER NOT NULL DEFAULT 0 CHECK (skipped IN (0, 1)), -- 1 only with no chips and no free text
+  updated_at TEXT NOT NULL                   -- ISO 8601 UTC of the latest PUT
+);
+
+CREATE TABLE IF NOT EXISTS favourite_removals (
+  user_id TEXT NOT NULL REFERENCES users(user_id),
+  listing_id TEXT NOT NULL REFERENCES listings(id),
+  decision_id TEXT NOT NULL,                 -- the superliked decision the favourite came from
+  reason TEXT NOT NULL,                      -- the user's words; never blank
+  removed_at TEXT NOT NULL,                  -- ISO 8601 UTC
+  PRIMARY KEY (user_id, listing_id)
+);
