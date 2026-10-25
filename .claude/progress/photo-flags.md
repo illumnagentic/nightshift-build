@@ -227,11 +227,11 @@ that is a redo of step 2.
 
 **Evidence location**: `evidence/photo-flags/step-3.md`.
 
-- [ ] Implemented
-- [ ] Tested — evidence: (date)
-- [ ] Best practices met — evidence: (date)
-- [ ] Matches locked requirements — evidence: (date)
-- [ ] No scope drift — evidence: (date)
+- [x] Implemented — 635/635 listings have one listing_status line (ids equal listings.id in listings.sqlite), 0 without flags, 14,684 flag rows, 635 distinct request IDs (2026-10-25)
+- [x] Tested — evidence: reviewer script over photo_flags.jsonl: exact 11 keys, enums, room set/null, sqm numeric, flag_id unique, 0 violations; token totals 3,970,404/1,378,774 and counts match step-3.md (2026-10-25)
+- [x] Best practices met — evidence: no code changed, no response bodies or key in evidence, process-refs check exit 0, cost est USD 0.95-4.64 (GBP 0.73-3.57) under GBP 5 cap (2026-10-25)
+- [x] Matches locked requirements — evidence: all counts in evidence/photo-flags/step-3.md reproduced from the file; 0 failed listings (limit 2%); cost under cap on stated assumptions (2026-10-25)
+- [x] No scope drift — evidence: diff vs HEAD touches only progress file and dataset/photo_flags.jsonl, plus untracked evidence/photo-flags/step-3.md (2026-10-25)
 
 ### Step 4 — Flags into D1 build
 
@@ -304,6 +304,13 @@ output, test output).
   listing hung once and succeeded on the next run in 10 s. | Failed listings are retried by
   re-running, as the step specifies. | Add a shorter timeout with one automatic retry. — accepted by arbiter 2026-10-25: step 3's done-when allows a rerun of failures, which is the retry; one hang in 10 listings costs minutes, not flags.
 
+- 2026-10-25 | 3 | Two images in rm-90723729 (one photo, one floorplan) came back
+  unanswered by the model and have no flags; the listing itself has flags. Cost is an estimate
+  (assumed prices on measured tokens), the Mubit console cost was not read. | Re-running would
+  not resume the listing (it has a status line), and the loss is two images of 6,841. No console
+  access from this session. | Delete that listing's lines from the output and rerun; read the
+  console cost page. — accepted by arbiter 2026-10-25: 2 of 6,841 images (one listing's floorplan and one photo) is a 0.03% gap; that listing keeps 17 photo flags and simply lacks `sqm_estimate`/`floorplan_notes`, as 8 other listings already do, and flags are soft curator input. A rerun means hand-editing the output and a fresh Step 3 review for one listing. Cost: tokens are measured (3.97 M in, 1.38 M out), the estimate sits under the GBP 5 cap on stated assumptions, and console access is not available here; the human can read the console page when back, and decisions.md already requires a real cost check before the persona batch.
+
 ---
 
 ## SPOTTED, NOT FIXED
@@ -311,6 +318,8 @@ output, test output).
 - `dataset/photos/*/floorplan-0.gif` (20 files) | Floorplans are GIF; Gemini's
   documented image types are PNG, JPEG, WebP, HEIC, HEIF. Step 2 must skip or handle
   them (no Pillow) | medium — accepted by arbiter 2026-10-25: handled in Step 2 Redo 1 (sent as image/gif, resend without GIFs on 400); 20/20 accepted live.
+
+- `dataset/photo_flags.jsonl` | `sqm_estimate` values are numbers (626 rows); every other `value` is text. The contract already allows this ("a string, or a number for `sqm_estimate`"). Step 4's schema must keep the type: a `value TEXT` column would coerce 58 to '58', and `NUMERIC` would turn numeric-looking text into numbers. | low — arbiter 2026-10-25: FIX_NOW inside Step 4 (in its files, no amendment): declare `value` with no type affinity (or keep numbers in a typed way the contract allows), emit `sqm_estimate` unquoted in `seed.sql`, and test that it round-trips as a number while text values stay text.
 
 ---
 
