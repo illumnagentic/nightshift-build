@@ -5,7 +5,7 @@
 - **Started**: 2026-10-25
 - **Branch**: feat/feedback-profile
 - **BASE_SHA**: d080bd1f4683c37c8d9e93f11eb9817048a724ce
-- **Status**: in progress
+- **Status**: complete (2026-10-25)
 - **Mode**: full automation (on since 2026-10-24)
 
 ---
@@ -412,17 +412,17 @@ Plan check — arbiter 2026-10-25: 4 steps, coarse vertical slices, within 3–5
 
 ## VERIFICATION
 
-- [x] All step checkboxes ticked with evidence — 20 of 20, all dated 2026-10-25, order holds (qa-gate 2026-10-25)
-- [x] Every evidence path in this file exists — `evidence/feedback-profile/step-1.md` to `step-4.md` present (qa-gate 2026-10-25)
-- [x] Test suite run — result: throwaway worktree at d2077e1, seeded, test-mode server :8860, fake :8861. Backend full suite 416 passed exit 0, then 416 passed exit 0 on the same D1; server-less modules (filters, prefs_unit, mubit, tfl_unit, chips, curator_unit, profile_unit) 206 passed exit 0; web `npm ci` exit 0, `npm test` 186 passed exit 0 (qa-gate 2026-10-25)
-- [x] Lint run — result: no lint command configured in `.claude/kit-config.md`; not run (qa-gate 2026-10-25)
-- [x] Typecheck run — result: `npm run typecheck` in `web/` exit 0 (qa-gate 2026-10-25)
-- [x] Build run — result: `npm run build` in `web/` exit 0 (qa-gate 2026-10-25)
-- [x] Diff contains no files outside declared scope — all 16 branch files are in some step's Files in scope or Evidence location. Finding: commit 1024f94 (Step 3) edited `worker/tests/test_profile_unit.py`, which is in Step 2's scope but not Step 3's (qa-gate 2026-10-25)
-- [x] Tradeoff ledger reviewed — signed by arbiter (full automation): 7 entries, each with an arbiter verdict (5 accepted, 1 FIX_NOW done in Step 3, plus the 3 SPOTTED items all FIX_NOW and done) (qa-gate 2026-10-25)
-- [ ] Human eye test completed — not human-verified (full automation) — smoke check: pass, 11 of 11 steps against the test-mode server, see HANDOVER
+- [x] All step checkboxes ticked with evidence — 20 of 20, all dated 2026-10-25, order holds; REDO OF STEP 4 reviewed PASS by step-reviewer 2026-10-25 (qa-gate re-run 2026-10-25)
+- [x] Every evidence path in this file exists — `evidence/feedback-profile/step-1.md` to `step-4.md` present; `step-4.md` records the redo (qa-gate re-run 2026-10-25)
+- [x] Test suite run — result: throwaway worktree at adb56b9, seeded (`seed.sh` exit 0), test-mode server :8860, fake :8861. Backend `uv sync --group dev` exit 0. Full suite 417 passed exit 0, then 417 passed exit 0 on the same D1. Server-less command exactly as `worker/README.md` line 117 gives it: 207 passed exit 0. Web `npm ci` exit 0, `npm test` 186 passed (8 files) exit 0 (qa-gate re-run 2026-10-25)
+- [x] Lint run — result: no lint command configured in `.claude/kit-config.md`; not run (qa-gate re-run 2026-10-25)
+- [x] Typecheck run — result: `npm run typecheck` in `web/` exit 0 (qa-gate re-run 2026-10-25)
+- [x] Build run — result: `npm run build` in `web/` exit 0 (qa-gate re-run 2026-10-25)
+- [x] Diff contains no files outside declared scope — 16 branch files; every commit's files are inside its step's Files in scope or Evidence location, with `worker/tests/test_profile_unit.py` in Step 3 and the Step 4 redo covered by AMENDMENTS (arbiter 2026-10-25). `docs/api-contract.md`, `web/` and `worker/src/curator.py` unchanged. `check-process-refs.sh` exit 0, no hits (qa-gate re-run 2026-10-25)
+- [x] Tradeoff ledger reviewed — signed by arbiter (full automation): 7 TRADEOFFS entries (6 accepted by arbiter, 1 FIX_NOW done in Step 3) and 3 SPOTTED, NOT FIXED entries (all FIX_NOW, done). Earlier qa-gate findings: 1 accepted (AMENDMENTS), 2 and 3 fixed in the Step 4 redo (adb56b9), 4 accepted by arbiter; finding 4's ruling is not written in this file, but it restates decisions.md ("Weight from how often a factor comes up"), so it is no divergence and needs no ledger entry (qa-gate re-run 2026-10-25)
+- [ ] Human eye test completed — not human-verified (full automation) — smoke check: pass, 14 of 14 steps against the test-mode server at adb56b9, see HANDOVER
 
-QA-GATE: PASS WITH FINDINGS 2026-10-25 — (1) Step 3 touched `worker/tests/test_profile_unit.py` outside its declared scope, and its "No scope drift" tick names the file but no AMENDMENT or arbiter ruling covers it (`.claude/CLAUDE.md` Standing prohibitions 1); (2) `worker/README.md` is wrong in three places: line 113 says the fake guard covers four modules, but `test_feedback.py`, `test_favourites.py` and `test_flags.py` use it too; line 116 leaves `test_chips.py` and `test_curator_unit.py` out of the server-less command (already true before B5); line 143 says the swipe feature adds only `favourites` and `profile_versions`, but B5 adds `feedback` and `favourite_removals` as well.
+QA-GATE: PASS 2026-10-25 — re-run at adb56b9 after the arbiter's rulings; nothing left unruled.
 
 ---
 
@@ -481,34 +481,45 @@ rest cost nothing.
 
 **Smoke check run by qa-gate (full automation, not human-verified)**
 
-Throwaway worktree at d2077e1, seeded, test-mode server on :8860 with the fake upstream
-on :8861. No paid calls, :8787 not touched. All 11 steps passed:
+Re-run 2026-10-25 at adb56b9. Throwaway worktree, seeded, test-mode server on :8860 with
+the fake upstream on :8861. Every Gemini request carried the fake key. No paid calls,
+:8787 not touched. All 14 steps passed:
 
 1. `POST /api/users` → 201.
-2. `PUT /api/prefs` → 200, parsed prefs returned.
-3. `GET /api/deck?n=5` → 200, 5 cards, one `exploration`, all `feedback_required: true`.
-4. Swipes left, right and superlike → 200, versions 1, 2, 3, `favourited` true only on
-   the superlike. A second swipe → 409 `already_swiped`.
-5. Feedback with two chips and free text → 200, version 4, blank chip text returned as
-   `null`. A second card → version 5. A skip → version 6. A chip not offered → 422
-   `chip_not_offered`. An unswiped card → 409 `not_swiped`.
-6. `GET /api/profile` → version 6, five factors (area_busyness, balcony_terrace and
-   kitchen at 0.5; garden and natural_light at 0.33), six history entries newest first.
-7. `GET /api/favourites` → the superliked listing.
-8. `DELETE /api/favourites/rm-89042490` with a blank reason → 422 `reason_required`.
-   With a reason → 200 `removed: true`. Again → 404 `not_favourited`. List is now empty.
-9. `GET /api/listings/rm-89042490` → 200 for the removed favourite, exactly the 26
-   contract keys, 29 photo flags. An unknown id → 404 `listing_not_found`.
-10. Flag correction → 200 with `corrected_text` and version 8. Blank text → 422
+2. `GET /api/profile` for the new user → `version: 0`, empty `factors`, empty `history`.
+3. `PUT /api/prefs` → 200, parsed prefs returned.
+4. `GET /api/deck?n=5` → 200, 5 cards, one `exploration`, all `feedback_required: true`.
+   The curator request carried `taste_profile: {}` and `recent_feedback: []`.
+5. Swipes left, right and superlike → 200, versions 1, 2, 3, `favourited` true only on
+   the superlike. Second swipe → 409 `already_swiped`. Action `meh` → 422
+   `invalid_request`. Unknown id → 404 `decision_not_found`.
+6. Feedback with two chips and free text → 200, version 4, a blank chip text returned as
+   `null`. Second card → version 5. Skip → version 6. Chip not offered → 422
+   `chip_not_offered`. Unswiped card → 409 `not_swiped`. Missing `free_text` key → 422
+   `invalid_request`.
+7. `GET /api/profile` → version 6, four factors, directions such as
+   `deal-breaker "Far too dark"` and `nice to have (no comment)`; the street "noisy"
+   comment gave `area_busyness` `mentioned in comments`; the skip added no factor.
+8. `GET /api/favourites` → the superliked listing.
+9. `DELETE /api/favourites/<id>` with a blank reason → 422 `reason_required`. With a
+   reason → 200 `removed: true`. Again → 404 `not_favourited`.
+10. `GET /api/listings/<removed favourite>` → 200, 26 keys, 22 photo flags, no `split`,
+    `chips` or `commute`. Unknown id → 404 `listing_not_found`.
+11. Flag correction → 200 with `corrected_text` and version 8. Blank text → 422
     `invalid_request`. Unknown id → 404 `flag_not_found`.
-11. `GET /api/deck?n=5` again → second curator call. Its recorded body carries
-    `taste_profile` (six factors, the same as `GET /api/profile`) and `recent_feedback`
-    (two feedback entries and the removal, newest last, the skip left out). System
-    prompt and generation config SHA-256s match the frozen values. D1 shows that call
-    at `profile_version` 8 with `mreq_…0002`, and its 3 new decisions at version 8. The
-    corrected listing was not in this call's random sample, so the digest change was not
-    seen here. `test_a_corrected_flag_reaches_the_next_candidate_digest` covers it, and it
-    passed.
+12. `GET /api/profile` → version 8; history newest first: `flag_correction`,
+    `favourite_removed`, three `feedback`, three `swipe`. The reason "Too far from the
+    station" added `station_access`.
+13. `GET /api/deck?n=5` again → one new curator request. Its `taste_profile` equals
+    `GET /api/profile` `factors` exactly. `recent_feedback` holds the two feedback
+    entries and the removal, newest last, the skip left out. System prompt and
+    generation config SHA-256s match the frozen values.
+14. D1 trail: versions 1–8 with their causes; version 8 joins to a curator call with
+    `mreq_…0002`; the 3 new decisions are stored at version 8, the first 5 at 0.
+
+The corrected listing was not in the second call's random sample, so the digest change
+was not seen here. `test_a_corrected_flag_reaches_the_next_candidate_digest` covers it,
+and it passed in both full runs.
 
 **Tools that will help**
 
@@ -540,22 +551,22 @@ on :8861. No paid calls, :8787 not touched. All 11 steps passed:
   profiles.
 - No live curator call was made in B5. The profile in the user message has only been
   seen by the fake upstream, not by Gemini.
-- qa-gate findings, not yet ruled on: the Step 3 scope breach on
-  `worker/tests/test_profile_unit.py`, and the three README errors listed under
-  VERIFICATION.
+- Weight counts how often a factor comes up, not how strongly the user feels. Accepted
+  by arbiter (it is what decisions.md asks for); see below.
+- The arbiter's acceptance of that point is not written in this progress file. It
+  restates decisions.md, so nothing diverges, but the trail for it is only in the
+  session.
 
 **What could bite you**
 
 - Weight measures how often a factor comes up, not how strongly the user feels. In the
-  smoke check, one passing mention of "noisy" scored 0.5. An explicit `must_have` on
+  first smoke check, one passing mention of "noisy" scored 0.5. An explicit `must_have` on
   natural light scored 0.33, because that chip was also shown on another card and left
   alone. The curator sees both numbers. If the persona results look wrong, check this
   first. The direction text carries the strength, but only if the curator reads it.
-- `taste.TERMS` must have an entry for every catalogue chip. Add a chip to
-  `chips.CATALOGUE` without a regex and, once a user has any comment or removal
-  reason, every swipe, feedback and removal for that user returns 500, because
-  `compute_factors` and `removal_row` look up `TERMS[...]` directly. The kickoff ruling
-  says a factor may have no regex; the code does not allow that. All 20 have one today.
+- A chip added to `chips.CATALOGUE` later without a regex in `taste.TERMS` no longer
+  crashes anything (fixed in adb56b9), but free text and removal reasons then never
+  move that factor's weight. Nothing warns you. Add the regex with the chip.
 - Old D1 on Yewen's laptop. If the schema command is not run after merging, a swipe
   writes the action and then returns 500 (no `profile_versions` table). A retry then
   gets 409 `already_swiped`, so the card looks stuck. The deck itself still loads.

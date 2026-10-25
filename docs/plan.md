@@ -36,9 +36,10 @@ Branch names are proposals; set them at feature-kickoff.
 - [x] **B4 Curator and deck** — `feat/curator-deck` — fixed-prompt curator on
   `gemini-3.8-flash`, deck with percentile-band exploration (seeded per user), decision
   IDs and `mreq_` IDs stored.
-- [ ] **B5 Feedback and taste profile** — `feat/feedback-profile` — swipe / superlike /
+- [x] **B5 Feedback and taste profile** — `feat/feedback-profile` — swipe / superlike /
   chip feedback endpoints, offered-vs-chosen logging, versioned profile (direction +
   weight), flag corrections, favourites.
+  Also `GET /listings/{id}`; the curator now reads the profile and recent feedback.
 - [ ] **B6 Personas** — `feat/personas` — persona CSV with rules block, 15/5 split,
   persona swiper calling the API, batch runner.
 - [ ] **B7 Eval and stats** — `feat/eval-stats` — scoring script against persona rules,
