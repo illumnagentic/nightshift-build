@@ -3,7 +3,11 @@ import type { Card, DeckResponse, SwipeResponse } from "../api/types";
 
 export const REFETCH_THRESHOLD = 3;
 
-export const BLOCKED_CODES = ["prefs_missing", "commute_pending", "commute_failed"] as const;
+export const BLOCKED_CODES = [
+  "prefs_missing",
+  "commute_pending",
+  "commute_failed",
+] as const;
 export type BlockedCode = (typeof BLOCKED_CODES)[number];
 
 export const GENERIC_ERROR_MESSAGE = "Could not reach the server. Try again.";
@@ -16,12 +20,20 @@ export type Failure =
 
 export type FeedbackOutcome = "compulsory" | "optional" | "none";
 
-export type PendingFeedback = { card: Card; response: SwipeResponse; compulsory: boolean };
+export type PendingFeedback = {
+  card: Card;
+  response: SwipeResponse;
+  compulsory: boolean;
+};
 
 // A left swipe on an exploration card teaches nothing: the curator was right.
-export function feedbackOutcome(response: SwipeResponse, card: Card): FeedbackOutcome {
+export function feedbackOutcome(
+  response: SwipeResponse,
+  card: Card,
+): FeedbackOutcome {
   if (response.feedback_required) return "compulsory";
-  if (card.source === "exploration" && response.action === "left") return "none";
+  if (card.source === "exploration" && response.action === "left")
+    return "none";
   return "optional";
 }
 
@@ -39,7 +51,8 @@ export type DeckState = {
   swipedIds: string[];
 };
 
-export type Phase = "feedback" | "blocked" | "error" | "card" | "empty" | "loading";
+export type Phase =
+  "feedback" | "blocked" | "error" | "card" | "empty" | "loading";
 
 export type DeckAction =
   | { type: "reset" }
@@ -107,15 +120,23 @@ export function deckReducer(state: DeckState, action: DeckAction): DeckState {
       return { ...state, loading: true };
 
     case "fetchOk": {
-      const known = new Set([...state.queue.map((c) => c.decision_id), ...state.swipedIds]);
-      const fresh = action.response.cards.filter((c) => !known.has(c.decision_id));
+      const known = new Set([
+        ...state.queue.map((c) => c.decision_id),
+        ...state.swipedIds,
+      ]);
+      const fresh = action.response.cards.filter(
+        (c) => !known.has(c.decision_id),
+      );
       // Nothing new only means exhausted when the deck is low enough to have asked.
-      const exhausted = fresh.length === 0 && state.queue.length <= REFETCH_THRESHOLD;
+      const exhausted =
+        fresh.length === 0 && state.queue.length <= REFETCH_THRESHOLD;
       return {
         ...state,
         loading: false,
         queue: [...state.queue, ...fresh],
-        emptyReason: exhausted ? (action.response.empty_reason ?? "exhausted") : null,
+        emptyReason: exhausted
+          ? (action.response.empty_reason ?? "exhausted")
+          : null,
       };
     }
 
@@ -123,7 +144,9 @@ export function deckReducer(state: DeckState, action: DeckAction): DeckState {
       return { ...state, loading: false, failure: toFailure(action.error) };
 
     case "swipeStart":
-      return canSwipe(state) ? { ...state, swiping: true, favourited: false } : state;
+      return canSwipe(state)
+        ? { ...state, swiping: true, favourited: false }
+        : state;
 
     case "swipeOk": {
       const { card, response } = action;
@@ -134,7 +157,10 @@ export function deckReducer(state: DeckState, action: DeckAction): DeckState {
         queue: state.queue.filter((c) => c.decision_id !== card.decision_id),
         swipedIds: [...state.swipedIds, card.decision_id],
         favourited: response.favourited,
-        pendingFeedback: outcome === "none" ? null : { card, response, compulsory: outcome === "compulsory" },
+        pendingFeedback:
+          outcome === "none"
+            ? null
+            : { card, response, compulsory: outcome === "compulsory" },
       };
     }
 

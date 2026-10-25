@@ -38,11 +38,27 @@ export interface ApiClient {
   putPrefs(userId: string, req: PutPrefsRequest): Promise<PrefsResponse>;
   getDeck(userId: string, n?: number): Promise<DeckResponse>;
   getListing(userId: string, listingId: string): Promise<ListingDetail>;
-  swipe(userId: string, decisionId: string, req: SwipeRequest): Promise<SwipeResponse>;
-  putFeedback(userId: string, decisionId: string, req: FeedbackRequest): Promise<FeedbackResponse>;
-  correctFlag(userId: string, flagId: string, req: FlagCorrectionRequest): Promise<FlagCorrectionResponse>;
+  swipe(
+    userId: string,
+    decisionId: string,
+    req: SwipeRequest,
+  ): Promise<SwipeResponse>;
+  putFeedback(
+    userId: string,
+    decisionId: string,
+    req: FeedbackRequest,
+  ): Promise<FeedbackResponse>;
+  correctFlag(
+    userId: string,
+    flagId: string,
+    req: FlagCorrectionRequest,
+  ): Promise<FlagCorrectionResponse>;
   getFavourites(userId: string): Promise<FavouritesResponse>;
-  removeFavourite(userId: string, listingId: string, req: RemoveFavouriteRequest): Promise<RemoveFavouriteResponse>;
+  removeFavourite(
+    userId: string,
+    listingId: string,
+    req: RemoveFavouriteRequest,
+  ): Promise<RemoveFavouriteResponse>;
   getProfile(userId: string): Promise<ProfileResponse>;
   getStats(): Promise<StatsResponse>;
 }

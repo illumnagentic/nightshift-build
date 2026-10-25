@@ -18,7 +18,12 @@
   background: var(--pf-bg);
   color: var(--pf-text);
   box-shadow: 0 8px 28px rgba(20, 30, 40, 0.14);
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
   line-height: 1.4;
 }
 

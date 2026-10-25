@@ -24,7 +24,8 @@ export type ChipId =
   | "home_office"
   | "building_style";
 
-export type PriceQualifier = "guide_price" | "offers_over" | "offers_in_region" | "fixed_price";
+export type PriceQualifier =
+  "guide_price" | "offers_over" | "offers_in_region" | "fixed_price";
 export type PropertyType =
   | "flat"
   | "maisonette"
@@ -112,7 +113,14 @@ export type FlagRoom =
 export type PhotoFlag = {
   flag_id: string;
   scope: "photo" | "listing";
-  field: "room" | "light" | "size_tricks" | "defects" | "missing" | "floorplan_notes" | "sqm_estimate";
+  field:
+    | "room"
+    | "light"
+    | "size_tricks"
+    | "defects"
+    | "missing"
+    | "floorplan_notes"
+    | "sqm_estimate";
   // A number for sqm_estimate, text otherwise. Light values: none, poor, ok, bright.
   value: string | number;
   observation: string;
@@ -171,8 +179,13 @@ export type SwipeResponse = {
   profile_version: number;
 };
 
-export type ChipStrength = "must_have" | "nice_to_have" | "would_prefer_not" | "deal_breaker";
-export type ChipFeedback = { chip_id: ChipId; strength: ChipStrength; text: string | null };
+export type ChipStrength =
+  "must_have" | "nice_to_have" | "would_prefer_not" | "deal_breaker";
+export type ChipFeedback = {
+  chip_id: ChipId;
+  strength: ChipStrength;
+  text: string | null;
+};
 export type FeedbackRequest = {
   chips: ChipFeedback[];
   free_text: string | null;
@@ -195,7 +208,8 @@ export type RemoveFavouriteRequest = { reason: string };
 export type RemoveFavouriteResponse = { listing_id: string; removed: boolean };
 
 // Profile
-export type ProfileCauseType = "swipe" | "feedback" | "flag_correction" | "favourite_removed";
+export type ProfileCauseType =
+  "swipe" | "feedback" | "flag_correction" | "favourite_removed";
 export type ProfileResponse = {
   version: number;
   factors: { factor: ChipId; direction: string; weight: number }[];
@@ -213,7 +227,10 @@ export type ProfileResponse = {
 
 // Stats
 export type StatSummary = { mean: number; sd: number; n_personas: number };
-export type StatsArm = { hits_top5: StatSummary; false_exclude_rate: StatSummary };
+export type StatsArm = {
+  hits_top5: StatSummary;
+  false_exclude_rate: StatSummary;
+};
 export type StatsResponse = {
   arms: {
     base: StatsArm | null;

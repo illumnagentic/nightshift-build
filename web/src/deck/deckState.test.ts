@@ -14,7 +14,11 @@ import {
   type DeckState,
 } from "./deckState";
 
-function card(id: string, feedbackHint = false, source: Card["source"] = "ranked"): Card {
+function card(
+  id: string,
+  feedbackHint = false,
+  source: Card["source"] = "ranked",
+): Card {
   return {
     decision_id: id,
     source,
@@ -41,11 +45,17 @@ function card(id: string, feedbackHint = false, source: Card["source"] = "ranked
   };
 }
 
-function batch(ids: string[], empty_reason: DeckResponse["empty_reason"] = null): DeckResponse {
+function batch(
+  ids: string[],
+  empty_reason: DeckResponse["empty_reason"] = null,
+): DeckResponse {
   return { cards: ids.map((id) => card(id)), empty_reason };
 }
 
-function swipeResponse(id: string, over: Partial<SwipeResponse> = {}): SwipeResponse {
+function swipeResponse(
+  id: string,
+  over: Partial<SwipeResponse> = {},
+): SwipeResponse {
   return {
     decision_id: id,
     action: "right",
@@ -56,7 +66,10 @@ function swipeResponse(id: string, over: Partial<SwipeResponse> = {}): SwipeResp
   };
 }
 
-function run(actions: DeckAction[], from: DeckState = initialDeckState): DeckState {
+function run(
+  actions: DeckAction[],
+  from: DeckState = initialDeckState,
+): DeckState {
   return actions.reduce(deckReducer, from);
 }
 
@@ -120,7 +133,11 @@ describe("fetching", () => {
     expect(s.emptyReason).toBeNull();
     for (const id of first.slice(0, 7)) {
       s = deckReducer(s, { type: "swipeStart" });
-      s = deckReducer(s, { type: "swipeOk", card: card(id), response: swipeResponse(id) });
+      s = deckReducer(s, {
+        type: "swipeOk",
+        card: card(id),
+        response: swipeResponse(id),
+      });
       s = deckReducer(s, { type: "continue" });
     }
     expect(ids(s)).toEqual(["c7", "c8", "c9"]);
@@ -130,7 +147,12 @@ describe("fetching", () => {
 
 describe("refetch threshold", () => {
   const withCards = (n: number) =>
-    run([{ type: "fetchOk", response: batch(Array.from({ length: n }, (_, i) => `c${i}`)) }]);
+    run([
+      {
+        type: "fetchOk",
+        response: batch(Array.from({ length: n }, (_, i) => `c${i}`)),
+      },
+    ]);
 
   it("asks for more at exactly 3 cards", () => {
     expect(needsRefetch(withCards(3))).toBe(true);
@@ -172,23 +194,42 @@ describe("failures", () => {
   it.each(["prefs_missing", "commute_pending", "commute_failed"])(
     "blocks on %s and keeps the server message",
     (code) => {
-      const s = run([{ type: "fetchFail", error: new ApiError(409, code, `Server says ${code}`) }]);
+      const s = run([
+        {
+          type: "fetchFail",
+          error: new ApiError(409, code, `Server says ${code}`),
+        },
+      ]);
       expect(phase(s)).toBe("blocked");
-      expect(s.failure).toEqual({ kind: "blocked", code, message: `Server says ${code}` });
+      expect(s.failure).toEqual({
+        kind: "blocked",
+        code,
+        message: `Server says ${code}`,
+      });
       expect(needsRefetch(s)).toBe(false);
     },
   );
 
   it("shows the message of any other ApiError as a generic error", () => {
-    const s = run([{ type: "fetchFail", error: new ApiError(422, "invalid_request", "n is out of range") }]);
+    const s = run([
+      {
+        type: "fetchFail",
+        error: new ApiError(422, "invalid_request", "n is out of range"),
+      },
+    ]);
     expect(phase(s)).toBe("error");
     expect(s.failure).toEqual({ kind: "error", message: "n is out of range" });
   });
 
   it("uses the fixed message for a network failure", () => {
-    const s = run([{ type: "fetchFail", error: new TypeError("Failed to fetch") }]);
+    const s = run([
+      { type: "fetchFail", error: new TypeError("Failed to fetch") },
+    ]);
     expect(phase(s)).toBe("error");
-    expect(s.failure).toEqual({ kind: "error", message: GENERIC_ERROR_MESSAGE });
+    expect(s.failure).toEqual({
+      kind: "error",
+      message: GENERIC_ERROR_MESSAGE,
+    });
   });
 
   it("does not refetch while failed, and does again after retry", () => {
@@ -201,7 +242,10 @@ describe("failures", () => {
     const s = run([
       { type: "fetchOk", response: batch(["a", "b", "c", "d"]) },
       { type: "swipeStart" },
-      { type: "swipeFail", error: new ApiError(404, "decision_not_found", "Decision not found") },
+      {
+        type: "swipeFail",
+        error: new ApiError(404, "decision_not_found", "Decision not found"),
+      },
     ]);
     expect(phase(s)).toBe("error");
     expect(s.swiping).toBe(false);
@@ -213,7 +257,9 @@ describe("failures", () => {
 });
 
 describe("swiping", () => {
-  const loaded = run([{ type: "fetchOk", response: batch(["a", "b", "c", "d", "e"]) }]);
+  const loaded = run([
+    { type: "fetchOk", response: batch(["a", "b", "c", "d", "e"]) },
+  ]);
 
   it("sets the in-flight flag and ignores a second swipe", () => {
     const s = deckReducer(loaded, { type: "swipeStart" });
@@ -223,7 +269,9 @@ describe("swiping", () => {
   });
 
   it("does not start a swipe with no card", () => {
-    expect(deckReducer(initialDeckState, { type: "swipeStart" })).toBe(initialDeckState);
+    expect(deckReducer(initialDeckState, { type: "swipeStart" })).toBe(
+      initialDeckState,
+    );
   });
 
   it("drops the swiped card and opens optional feedback when none is required", () => {
@@ -245,7 +293,11 @@ describe("swiping", () => {
     const s = run(
       [
         { type: "swipeStart" },
-        { type: "swipeOk", card: e, response: swipeResponse("a", { action: "left" }) },
+        {
+          type: "swipeOk",
+          card: e,
+          response: swipeResponse("a", { action: "left" }),
+        },
       ],
       loaded,
     );
@@ -260,7 +312,11 @@ describe("swiping", () => {
     const s = run(
       [
         { type: "swipeStart" },
-        { type: "swipeOk", card: a, response: swipeResponse("a", { feedback_required: true }) },
+        {
+          type: "swipeOk",
+          card: a,
+          response: swipeResponse("a", { feedback_required: true }),
+        },
       ],
       loaded,
     );
@@ -276,7 +332,11 @@ describe("swiping", () => {
     const s = run(
       [
         { type: "swipeStart" },
-        { type: "swipeOk", card: a, response: swipeResponse("a", { feedback_required: false }) },
+        {
+          type: "swipeOk",
+          card: a,
+          response: swipeResponse("a", { feedback_required: false }),
+        },
       ],
       loaded,
     );
@@ -288,7 +348,11 @@ describe("swiping", () => {
     const paused = run(
       [
         { type: "swipeStart" },
-        { type: "swipeOk", card: card("a"), response: swipeResponse("a", { feedback_required: true }) },
+        {
+          type: "swipeOk",
+          card: card("a"),
+          response: swipeResponse("a", { feedback_required: true }),
+        },
       ],
       loaded,
     );
@@ -302,7 +366,14 @@ describe("swiping", () => {
     const s = run(
       [
         { type: "swipeStart" },
-        { type: "swipeOk", card: card("a"), response: swipeResponse("a", { action: "superlike", favourited: true }) },
+        {
+          type: "swipeOk",
+          card: card("a"),
+          response: swipeResponse("a", {
+            action: "superlike",
+            favourited: true,
+          }),
+        },
       ],
       loaded,
     );
@@ -315,7 +386,14 @@ describe("swiping", () => {
     const paused = run(
       [
         { type: "swipeStart" },
-        { type: "swipeOk", card: card("a"), response: swipeResponse("a", { action: "superlike", favourited: true }) },
+        {
+          type: "swipeOk",
+          card: card("a"),
+          response: swipeResponse("a", {
+            action: "superlike",
+            favourited: true,
+          }),
+        },
       ],
       loaded,
     );
@@ -372,30 +450,45 @@ describe("feedbackOutcome", () => {
   const res = (action: SwipeResponse["action"], feedback_required = false) =>
     swipeResponse("d", { action, feedback_required });
 
-  it.each(["left", "right", "superlike"] as const)("is compulsory when required, ranked, %s", (a) => {
-    expect(feedbackOutcome(res(a, true), ranked)).toBe("compulsory");
-  });
+  it.each(["left", "right", "superlike"] as const)(
+    "is compulsory when required, ranked, %s",
+    (a) => {
+      expect(feedbackOutcome(res(a, true), ranked)).toBe("compulsory");
+    },
+  );
 
-  it.each(["left", "right", "superlike"] as const)("is compulsory when required, exploration, %s", (a) => {
-    expect(feedbackOutcome(res(a, true), exploration)).toBe("compulsory");
-  });
+  it.each(["left", "right", "superlike"] as const)(
+    "is compulsory when required, exploration, %s",
+    (a) => {
+      expect(feedbackOutcome(res(a, true), exploration)).toBe("compulsory");
+    },
+  );
 
-  it.each(["left", "right", "superlike"] as const)("is optional for ranked, %s", (a) => {
-    expect(feedbackOutcome(res(a), ranked)).toBe("optional");
-  });
+  it.each(["left", "right", "superlike"] as const)(
+    "is optional for ranked, %s",
+    (a) => {
+      expect(feedbackOutcome(res(a), ranked)).toBe("optional");
+    },
+  );
 
   it("is none for exploration, left", () => {
     expect(feedbackOutcome(res("left"), exploration)).toBe("none");
   });
 
-  it.each(["right", "superlike"] as const)("is optional for exploration, %s", (a) => {
-    expect(feedbackOutcome(res(a), exploration)).toBe("optional");
-  });
+  it.each(["right", "superlike"] as const)(
+    "is optional for exploration, %s",
+    (a) => {
+      expect(feedbackOutcome(res(a), exploration)).toBe("optional");
+    },
+  );
 });
 
 describe("reset", () => {
   it("returns to the initial state", () => {
-    const s = run([{ type: "fetchOk", response: batch(["a"]) }, { type: "reset" }]);
+    const s = run([
+      { type: "fetchOk", response: batch(["a"]) },
+      { type: "reset" },
+    ]);
     expect(s).toEqual(initialDeckState);
   });
 });

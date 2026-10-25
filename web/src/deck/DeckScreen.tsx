@@ -91,11 +91,7 @@ export default function DeckScreen({
             card.source === "exploration" && (
               <p className="deck-screen__test-tag">Exploration (test only)</p>
             )}
-          <SwipeableCard
-            key={card.decision_id}
-            disabled={busy}
-            onSwipe={swipe}
-          >
+          <SwipeableCard key={card.decision_id} disabled={busy} onSwipe={swipe}>
             <PropertyCard card={card} />
           </SwipeableCard>
           <div className="deck-screen__actions">

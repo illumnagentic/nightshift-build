@@ -24,7 +24,11 @@ export function SwipeableCard({ children, disabled, onSwipe }: Props) {
   const reduced = useReducedMotion();
   const x = useMotionValue(0);
   const y = useMotionValue(0);
-  const rotate = useTransform(x, [-200, 0, 200], reduced ? [0, 0, 0] : [-8, 0, 8]);
+  const rotate = useTransform(
+    x,
+    [-200, 0, 200],
+    reduced ? [0, 0, 0] : [-8, 0, 8],
+  );
   const likeOpacity = useTransform(x, [20, 100], [0, 1]);
   const dislikeOpacity = useTransform(x, [-100, -20], [1, 0]);
   const loveOpacity = useTransform(y, [-100, -20], [1, 0]);

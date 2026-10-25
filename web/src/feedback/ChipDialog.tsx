@@ -27,7 +27,9 @@ function ChipForm({
   onRemove,
   onClose,
 }: Props & { chip: Chip; headingId: string }) {
-  const [strength, setStrength] = useState<ChipStrength | null>(initial?.strength ?? null);
+  const [strength, setStrength] = useState<ChipStrength | null>(
+    initial?.strength ?? null,
+  );
   const [text, setText] = useState(initial?.text ?? "");
   const textId = useId();
 
@@ -95,7 +97,11 @@ function ChipForm({
         >
           Save
         </button>
-        <button type="button" className="feedback-dialog__button" onClick={onClose}>
+        <button
+          type="button"
+          className="feedback-dialog__button"
+          onClick={onClose}
+        >
           Cancel
         </button>
         {initial && (
@@ -142,7 +148,14 @@ export function ChipDialog(props: Props) {
         onClose();
       }}
     >
-      {chip && <ChipForm key={chip.chip_id} {...props} chip={chip} headingId={headingId} />}
+      {chip && (
+        <ChipForm
+          key={chip.chip_id}
+          {...props}
+          chip={chip}
+          headingId={headingId}
+        />
+      )}
     </dialog>
   );
 }

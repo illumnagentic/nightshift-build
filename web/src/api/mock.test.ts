@@ -708,7 +708,9 @@ describe("feedback", () => {
     });
     expect(res.skipped).toBe(false);
     const { factors } = await api.getProfile(ALEX);
-    expect(factors).toEqual([{ factor: id, direction: "must have", weight: 1 }]);
+    expect(factors).toEqual([
+      { factor: id, direction: "must have", weight: 1 },
+    ]);
   });
 });
 

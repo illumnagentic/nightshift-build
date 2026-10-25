@@ -15,7 +15,10 @@ export function setAnswer(
   strength: ChipStrength,
   text: string,
 ): FeedbackForm {
-  return { ...form, answers: { ...form.answers, [chipId]: { strength, text } } };
+  return {
+    ...form,
+    answers: { ...form.answers, [chipId]: { strength, text } },
+  };
 }
 
 export function removeAnswer(form: FeedbackForm, chipId: ChipId): FeedbackForm {
@@ -23,12 +26,19 @@ export function removeAnswer(form: FeedbackForm, chipId: ChipId): FeedbackForm {
   return { ...form, answers };
 }
 
-export function setFreeText(form: FeedbackForm, freeText: string): FeedbackForm {
+export function setFreeText(
+  form: FeedbackForm,
+  freeText: string,
+): FeedbackForm {
   return { ...form, freeText };
 }
 
 export function canSubmit(form: FeedbackForm, compulsory: boolean): boolean {
-  return !compulsory || Object.keys(form.answers).length > 0 || form.freeText.trim() !== "";
+  return (
+    !compulsory ||
+    Object.keys(form.answers).length > 0 ||
+    form.freeText.trim() !== ""
+  );
 }
 
 const orNull = (s: string) => s.trim() || null;
@@ -37,7 +47,9 @@ export function toRequest(form: FeedbackForm, chips: Chip[]): FeedbackRequest {
   return {
     chips: chips.flatMap(({ chip_id }) => {
       const answer = form.answers[chip_id];
-      return answer ? [{ chip_id, strength: answer.strength, text: orNull(answer.text) }] : [];
+      return answer
+        ? [{ chip_id, strength: answer.strength, text: orNull(answer.text) }]
+        : [];
     }),
     free_text: orNull(form.freeText),
   };

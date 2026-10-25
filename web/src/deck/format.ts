@@ -1,4 +1,9 @@
-import type { Commute, PriceQualifier, PropertyType, Tenure } from "../api/types";
+import type {
+  Commute,
+  PriceQualifier,
+  PropertyType,
+  Tenure,
+} from "../api/types";
 
 const priceFormat = new Intl.NumberFormat("en-GB", {
   style: "currency",
@@ -35,11 +40,16 @@ export function formatPrice(gbp: number): string {
   return priceFormat.format(gbp);
 }
 
-export function qualifierPhrase(qualifier: PriceQualifier | null): string | null {
+export function qualifierPhrase(
+  qualifier: PriceQualifier | null,
+): string | null {
   return qualifier === null ? null : QUALIFIER_PHRASES[qualifier];
 }
 
-export function formatPriceWithQualifier(gbp: number, qualifier: PriceQualifier | null): string {
+export function formatPriceWithQualifier(
+  gbp: number,
+  qualifier: PriceQualifier | null,
+): string {
   const phrase = qualifierPhrase(qualifier);
   return phrase === null ? formatPrice(gbp) : `${phrase} ${formatPrice(gbp)}`;
 }
@@ -61,7 +71,10 @@ export function floorLevelLabel(floor: string | null): string | null {
 
 const squash = (text: string) => text.replace(/\s+/g, "").toLowerCase();
 
-export function addressLine(address: string | null, postcode: string | null): string | null {
+export function addressLine(
+  address: string | null,
+  postcode: string | null,
+): string | null {
   const addr = address?.trim() || null;
   const code = postcode?.trim() || null;
   if (!addr || !code) return addr ?? code;
