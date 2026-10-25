@@ -50,7 +50,10 @@ Do not run the API tests against it.
 
 ### TfL commute times
 
-Saving prefs starts the commute lookup for the postcode. Each `GET /api/prefs` while
+Commute is optional. Prefs saved without a `commute_postcode` make no TfL calls, and
+`commute_status` stays `null`. The warm-up below applies only to users who give a postcode.
+
+Saving prefs with a postcode starts the commute lookup for it. Each `GET /api/prefs` while
 `commute_status` is `pending` runs one batch of TfL calls; the status becomes `ready`
 once every listing has a cached time or TfL was asked and could not route it, so a few
 listings can be left unknown. Times are cached per (listing, postcode) in

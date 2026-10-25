@@ -5,7 +5,7 @@
 - **Started**: 2026-10-24
 - **Branch**: feat/prefs-filters
 - **BASE_SHA**: 0755bcb39f9d837b2b4285cd495adf7101cea35d
-- **Status**: complete (2026-10-24)
+- **Status**: in progress (reopened 2026-10-25 for Step 8)
 - **Mode**: full automation (on since 2026-10-24)
 
 ---
@@ -157,7 +157,13 @@ Quoted above. Contract: `docs/api-contract.md` on `main` at `0755bcb`. Plan by t
 
   Tracked as `### Step 7` in PLAN, where its boxes live (the step-order hook reads PLAN headings).
 
-
+2026-10-25 — human instruction — TfL commute becomes a stretch goal.
+Human: "carry on, but leave tlf commute feature as strech goal because I can't get the
+api key for it." Asked how, the human chose: "Keep it, make it optional" — merge the
+commute code as built (it works without a key, slowly); nothing depends on it:
+`commute_postcode` becomes optional on `PUT /prefs`, and B4 serves decks without
+waiting for commute (minutes stay null until ready); `docs/decisions.md` and the
+contract are updated (loosening only). Tracked as `### Step 8` in PLAN.
 
 ---
 
@@ -406,6 +412,41 @@ not a loosening.
 - [x] Matches locked requirements — Step 7 done-when: exact equalities for {}, journeys null, message x; Step 6 commute-status rule untouched (2026-10-24)
 - [x] No scope drift — diff limited to tfl.py classify, test_tfl_unit.py, test_commute.py, README TfL sentence, evidence step-7.md (2026-10-24)
 
+### Step 8 — Commute optional (human amendment, 2026-10-25)
+
+See AMENDMENTS, 2026-10-25.
+
+**Goal**: commute is a stretch goal. `PUT /prefs` accepts a missing or null
+`commute_postcode`; then no TfL work runs, `commute_postcode` and `commute_status` are
+`null` in the response, and `max_commute_min` with no postcode is 422
+`invalid_request`. With a postcode, behaviour is unchanged. Docs say commute is
+optional and that the deck never waits for it.
+
+**Files in scope**: `worker/src/entry.py`, `worker/schema.sql`,
+`worker/src/prefs.py` (only if validation lives there), `worker/tests/test_prefs.py`,
+`worker/tests/test_commute.py` (only if an existing test's premise changes — report
+first), `docs/api-contract.md` (Preferences and the Deck errors/commute lines only),
+`docs/decisions.md` (Commute line only, rewritten and re-dated), `docs/plan.md` (B3
+line wording only), `worker/README.md` (TfL section only), this progress file (B4
+HOOKS note only), `evidence/prefs-filters/step-8.md`.
+
+**Done when**: test-mode tests cover PUT without a postcode (200, both fields null, no
+TfL call made, GET stays null and makes no TfL call), PUT with `commute_postcode: null`,
+`max_commute_min` without a postcode (422 `invalid_request`), and a re-save that adds a
+postcode later (status becomes `pending`, then `ready` on the fake); every existing
+test passes unchanged; the contract no longer makes the deck refuse on commute
+(`commute_pending` / `commute_failed` removed or marked unused, `commute.minutes`
+`null` until ready, `commute` `null` or minutes `null` when no postcode — pick one and
+state it); decisions.md Commute line says stretch, dated 2026-10-25; B4 HOOKS updated.
+
+**Evidence location**: `evidence/prefs-filters/step-8.md`
+
+- [x] Implemented — entry.py put_prefs optional postcode, schema.sql nullable + CHECK, docs updated (2026-10-25)
+- [x] Tested — fresh worktree, fresh seed, server 8790/fake 8801: 183 passed exit 0; server-less 99 passed exit 0; test_no_postcode_is_saved_with_null_commute_and_no_tfl_work, test_resave_adding_a_postcode_starts_commute (2026-10-25)
+- [x] Best practices met — SQL bound params, 422 for non-string/malformed postcode and limit without postcode, CHECK pairs postcode/status; only the two ruled 422 cases changed (2026-10-25)
+- [x] Matches locked requirements — human amendment 2026-10-25: PUT without postcode 200 nulls, deck 409 commute_* removed, decisions.md Commute dated stretch (2026-10-25)
+- [x] No scope drift — diff limited to declared files; contract hunks only in GET/PUT /prefs and Deck; no web/ change; check-process-refs exit 0 (2026-10-25)
+
 ---
 
 ## KICKOFF RULINGS
@@ -461,6 +502,10 @@ Q13: Optional Worker vars `GEMINI_BASE` / `TFL_BASE` overriding the upstream hos
 2026-10-24 | step 3 (qa-gate finding 1) | `tfl.classify` reads any 200 JSON object with no `journeys` and no disambiguation as "no journey" and caches null for good; a degraded TfL answering 200 `{}` gave `ready` with 84 of 96 null on the fake, and a re-save does not retry them | Step 3 design, asserted in test_tfl_unit.py | classify a 200 without a `journeys` key as transient — FIX_NOW by arbiter 2026-10-24: a permanent wrong null drops listings from every deck under a max commute and poisons the shared cache that B6's warm-up and the Sat afternoon checkpoint rely on; TfL documents 404 for no journey, a 200 without `journeys` is not a documented answer, and the pilot did not record the status of its two nulls, so nothing shows the current reading is needed; under 20 lines; see AMENDMENTS (arbiter) Step 7 — resolved by Step 7 2026-10-24
 
 2026-10-24 | step 6 (qa-gate finding 3) | with timeouts, a second user with a different pool caching listings on the same postcode between this user's polls shrinks the uncached list, so the rotation offset can step past a never-asked listing before `ready` | the offset is computed from the current uncached list, with no per-postcode state | track tried ids per postcode (schema change) — accepted by arbiter 2026-10-24: a variant of the accepted step 6 redo 2 timeout tradeoff, needing timeouts, a shared postcode and overlapping polls at once; no deterministic route found; outcome is at most a few unknown listings, same as the accepted case; warm-up is a manual run-book step with one user per destination (HANDOVER item 3 already says so); the fix needs per-postcode state, not cheap
+
+2026-10-25 | step 8 | Existing test cases that expected 422 for a missing or null `commute_postcode` were changed to the new behaviour | human ruling made `commute_postcode` optional; those two cases are now covered as 200 in new tests | none: the parametrised 422 list keeps the non-string postcode and max-commute-without-postcode cases — accepted by arbiter 2026-10-25: a spec change ruled by the human amendment of 2026-10-25 (commute optional), not a loosening; the old shapes are now asserted as exact 200 responses with both fields null and no TfL call, and the replacement 422 cases are still exact
+
+2026-10-25 | step 8 | `schema.sql` changed with no migration | local D1 is rebuilt by `seed.sh`; a stale local D1 with the old NOT NULL columns rejects postcode-less saves until re-seeded | re-run seed.sh on each laptop — FIX_NOW by arbiter 2026-10-25: no migration is right for a local-only D1 that seed.sh rebuilds from scratch, but a stale D1 turns a postcode-less PUT into a 500 on a NOT NULL column, which would hit Yewen's F4 prefs work against the real API with no clue why; the README must say it, the PR body alone is not durable; one sentence in the README TfL section, which is in Step 8's scope, so this is a Step 8 redo; fold in re-wrapping the decisions.md Commute paragraph (also in scope) so no line runs past the file's width
 
 ---
 
@@ -643,9 +688,12 @@ when unset. A null limit is ignored. A listing field that is NULL fails a set li
 
 B4 must also:
 
-- Check `prefs.commute_status` before serving a deck: 409 `prefs_missing` (no prefs row),
-  `commute_pending`, `commute_failed`, as `docs/api-contract.md` says. The filters do not
-  check it; a pending postcode simply has an incomplete cache.
+- Return 409 `prefs_missing` when there is no prefs row. Commute is optional (Step 8): do
+  not refuse or wait on `commute_status`, which is `null` without a postcode and
+  otherwise may be `pending` or `failed`. With a postcode, call
+  `matching_listing_ids_for_postcode`; without one (`commute_postcode` null), call
+  `matching_listing_ids(db, hard)` with `commutes=None`. The card `commute` is `null`
+  with no postcode; with one, `commute.minutes` is `null` until that listing is cached.
 - Put the delete of the user's unswiped served cards in `PUT /prefs`, in the same handler
   that stores the new prefs, once B4 creates the decisions table (kickoff ruling Q10).
 - Poll cap: a permanent TfL 429 leaves a user `pending` for ever (see SPOTTED).

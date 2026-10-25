@@ -143,14 +143,20 @@ async def put_prefs(request: Request, body: dict = Body(...), user_id: str = Dep
     text, postcode, max_commute = body.get("text"), body.get("commute_postcode"), body.get("max_commute_min")
     if not isinstance(text, str) or not text.strip():
         raise ApiError(422, "invalid_request", "text is required and must not be blank.")
-    if not isinstance(postcode, str):
-        raise ApiError(422, "invalid_request", "commute_postcode is required.")
+    if postcode is not None and not isinstance(postcode, str):
+        raise ApiError(422, "invalid_request", "commute_postcode must be a string.")
     # A JSON true is a Python int, so bool is refused by name.
     if max_commute is not None and (isinstance(max_commute, bool) or not isinstance(max_commute, int) or not 1 <= max_commute <= 180):
         raise ApiError(422, "invalid_request", "max_commute_min must be a whole number from 1 to 180.")
-    normalised = prefs.normalise_postcode(postcode)
-    if normalised is None:
-        raise ApiError(422, "invalid_postcode", "commute_postcode must be a full UK postcode such as EC2N 2DB.")
+    if postcode is None and max_commute is not None:
+        raise ApiError(422, "invalid_request", "max_commute_min needs a commute_postcode.")
+    # Commute is optional: with no postcode the row keeps NULL postcode and status, and no TfL work runs.
+    normalised = None
+    if postcode is not None:
+        normalised = prefs.normalise_postcode(postcode)
+        if normalised is None:
+            raise ApiError(422, "invalid_postcode", "commute_postcode must be a full UK postcode such as EC2N 2DB.")
+    status = "pending" if normalised else None
 
     env = request.scope["env"]
     # Parse first, write after: a failed parse leaves the saved prefs as they were.
@@ -169,13 +175,13 @@ async def put_prefs(request: Request, body: dict = Body(...), user_id: str = Dep
     updated_at = datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
     await env.DB.prepare(
         "INSERT INTO prefs (user_id, text, commute_postcode, max_commute_min, parsed_json, parse_request_id,"
-        " commute_status, commute_fail_streak, updated_at) VALUES (?, ?, ?, ?, ?, ?, 'pending', 0, ?)"
+        " commute_status, commute_fail_streak, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?)"
         " ON CONFLICT(user_id) DO UPDATE SET text = excluded.text, commute_postcode = excluded.commute_postcode,"
         " max_commute_min = excluded.max_commute_min, parsed_json = excluded.parsed_json,"
-        " parse_request_id = excluded.parse_request_id, commute_status = 'pending', commute_fail_streak = 0,"
+        " parse_request_id = excluded.parse_request_id, commute_status = excluded.commute_status, commute_fail_streak = 0,"
         " updated_at = excluded.updated_at"
-    ).bind(user_id, text, normalised, max_commute, json.dumps(parsed), result.request_id, updated_at).run()
-    return {"text": text, "commute_postcode": normalised, "max_commute_min": max_commute, "parsed": parsed, "commute_status": "pending"}
+    ).bind(user_id, text, normalised, max_commute, json.dumps(parsed), result.request_id, status, updated_at).run()
+    return {"text": text, "commute_postcode": normalised, "max_commute_min": max_commute, "parsed": parsed, "commute_status": status}
 
 
 app.include_router(api)

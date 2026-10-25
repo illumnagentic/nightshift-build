@@ -116,9 +116,9 @@ def test_invalid_postcode_is_422(user, postcode):
     {"text": "   \n", "commute_postcode": "EC2N 2DB"},
     {"text": None, "commute_postcode": "EC2N 2DB"},
     {"text": 5, "commute_postcode": "EC2N 2DB"},
-    {"text": TEXT},
-    {"text": TEXT, "commute_postcode": None},
     {"text": TEXT, "commute_postcode": 12345},
+    {"text": TEXT, "max_commute_min": 45},
+    {"text": TEXT, "commute_postcode": None, "max_commute_min": 45},
     {"text": TEXT, "commute_postcode": "EC2N 2DB", "max_commute_min": 0},
     {"text": TEXT, "commute_postcode": "EC2N 2DB", "max_commute_min": 181},
     {"text": TEXT, "commute_postcode": "EC2N 2DB", "max_commute_min": -5},
@@ -133,6 +133,32 @@ def test_invalid_request_is_422_and_never_calls_the_parser(user, fake, body):
     assert_error(status, payload, 422, "invalid_request")
     assert len(fake.requests) == before
     assert call("GET", "/api/prefs", user_id=user) == (200, ALL_NULL)
+
+
+@pytest.mark.parametrize("body", [{"text": TEXT}, {"text": TEXT, "commute_postcode": None}, {"text": TEXT, "commute_postcode": None, "max_commute_min": None}])
+def test_no_postcode_is_saved_with_null_commute_and_no_tfl_work(user, fake, body):
+    before = len(fake.tfl_requests)
+    status, saved = call("PUT", "/api/prefs", user_id=user, body=body)
+    assert status == 200
+    assert saved["commute_postcode"] is None and saved["commute_status"] is None
+    assert saved["max_commute_min"] is None and saved["parsed"]["hard"]["max_commute_min"] is None
+    for _ in range(3):
+        assert call("GET", "/api/prefs", user_id=user) == (200, saved)
+    assert len(fake.tfl_requests) == before
+
+
+def test_resave_adding_a_postcode_starts_commute(user, fake):
+    call("PUT", "/api/prefs", user_id=user, body={"text": TEXT})
+    postcode = "WC2 " + str(secrets.randbelow(10)) + "".join(secrets.choice("ABCDEFGHJKLMNPQRSTUVWXYZ") for _ in range(2))
+    status, saved = call("PUT", "/api/prefs", user_id=user, body={"text": TEXT, "commute_postcode": postcode})
+    assert status == 200 and saved["commute_status"] == "pending" and saved["commute_postcode"] == postcode
+    seen = []
+    for _ in range(30):
+        seen.append(call("GET", "/api/prefs", user_id=user)[1]["commute_status"])
+        if seen[-1] != "pending":
+            break
+    assert seen[-1] == "ready"
+    assert any(f"/to/{postcode.replace(' ', '')}?" in p for p in fake.tfl_requests)
 
 
 def test_malformed_json_is_422(user):

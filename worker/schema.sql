@@ -10,13 +10,14 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS prefs (
   user_id TEXT PRIMARY KEY REFERENCES users(user_id), -- one row per user; a save replaces it
   text TEXT NOT NULL,                        -- the user's words, as sent
-  commute_postcode TEXT NOT NULL,            -- normalised: outward, space, inward (EC2N 2DB)
+  commute_postcode TEXT,                     -- normalised: outward, space, inward (EC2N 2DB); NULL = no commute (optional)
   max_commute_min INTEGER CHECK (max_commute_min BETWEEN 1 AND 180), -- NULL = no limit; the request value
   parsed_json TEXT NOT NULL CHECK (json_valid(parsed_json)), -- {hard, soft} after the code's checks
   parse_request_id TEXT,                     -- the parser call's Mubit mreq_ id
-  commute_status TEXT NOT NULL CHECK (commute_status IN ('pending', 'ready', 'failed')),
+  commute_status TEXT CHECK (commute_status IN ('pending', 'ready', 'failed')), -- NULL iff no postcode
   commute_fail_streak INTEGER NOT NULL DEFAULT 0, -- consecutive failed commute polls
-  updated_at TEXT NOT NULL                   -- ISO 8601 UTC
+  updated_at TEXT NOT NULL,                  -- ISO 8601 UTC
+  CHECK ((commute_postcode IS NULL) = (commute_status IS NULL))
 );
 
 CREATE TABLE IF NOT EXISTS commute_cache (
