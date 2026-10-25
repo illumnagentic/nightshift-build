@@ -226,6 +226,54 @@ async def swipe(decision_id: str, request: Request, body: dict = Body(...), user
             "favourited": action == "superlike", "profile_version": version}
 
 
+STRENGTHS = ("must_have", "nice_to_have", "would_prefer_not", "deal_breaker")
+
+
+def blank_to_none(value):
+    return value if value is not None and value.strip() else None
+
+
+def parse_feedback(body: dict):
+    """(chips, free_text, skipped) from a feedback body, blank text as None; ApiError 422 when it breaks the contract."""
+    chips, free_text, skipped = body.get("chips"), body.get("free_text", ...), body.get("skipped", False)
+    bad = (not isinstance(chips, list) or free_text is ... or not (free_text is None or isinstance(free_text, str))
+           or not isinstance(skipped, bool))
+    clean = []
+    for chip in [] if bad else chips:
+        if (not isinstance(chip, dict) or not isinstance(chip.get("chip_id"), str) or chip.get("strength") not in STRENGTHS
+                or not (chip.get("text") is None or isinstance(chip["text"], str))):
+            bad = True
+            break
+        clean.append({"chip_id": chip["chip_id"], "strength": chip["strength"], "text": blank_to_none(chip.get("text"))})
+    if bad or len({c["chip_id"] for c in clean}) != len(clean):
+        raise ApiError(422, "invalid_request", "chips (each with chip_id, strength and text) and free_text are required; chip_id must not repeat.")
+    free_text = blank_to_none(free_text)
+    if skipped and (clean or free_text is not None):
+        raise ApiError(422, "invalid_request", "A skipped feedback must have no chips and no free_text.")
+    return clean, free_text, skipped
+
+
+@api.put("/decisions/{decision_id}/feedback")
+async def put_feedback(decision_id: str, request: Request, body: dict = Body(...), user_id: str = Depends(current_user)):
+    chips, free_text, skipped = parse_feedback(body)
+    db = request.scope["env"].DB
+    rows = await deck._all(db, "SELECT offered_chips, swiped_at FROM decisions WHERE decision_id = ? AND user_id = ?", decision_id, user_id)
+    if not rows:
+        raise ApiError(404, "decision_not_found", "No such decision.")
+    if rows[0]["swiped_at"] is None:
+        raise ApiError(409, "not_swiped", "Swipe the card before sending feedback.")
+    offered = json.loads(rows[0]["offered_chips"])
+    if any(c["chip_id"] not in offered for c in chips):
+        raise ApiError(422, "chip_not_offered", "A chip was not offered on that card.")
+    await db.prepare(
+        "INSERT INTO feedback (decision_id, user_id, chips_json, free_text, skipped, updated_at) VALUES (?, ?, ?, ?, ?, ?)"
+        " ON CONFLICT(decision_id) DO UPDATE SET chips_json = excluded.chips_json, free_text = excluded.free_text,"
+        " skipped = excluded.skipped, updated_at = excluded.updated_at"
+    ).bind(decision_id, user_id, json.dumps(chips), free_text, int(skipped), deck._now()).run()
+    version = await taste.bump(db, user_id, "feedback", decision_id=decision_id)
+    return {"decision_id": decision_id, "chips": chips, "free_text": free_text, "skipped": skipped, "profile_version": version}
+
+
 @api.get("/profile")
 async def get_profile(request: Request, user_id: str = Depends(current_user)):
     return await taste.read(request.scope["env"].DB, user_id)

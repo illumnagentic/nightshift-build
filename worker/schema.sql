@@ -80,3 +80,12 @@ CREATE TABLE IF NOT EXISTS profile_versions (
   factors_json TEXT NOT NULL CHECK (json_valid(factors_json) AND json_type(factors_json) = 'array'), -- the profile at this version
   UNIQUE (user_id, version)
 );
+
+CREATE TABLE IF NOT EXISTS feedback (
+  decision_id TEXT PRIMARY KEY REFERENCES decisions(decision_id), -- one row per swiped decision; a PUT replaces it
+  user_id TEXT NOT NULL REFERENCES users(user_id),
+  chips_json TEXT NOT NULL CHECK (json_valid(chips_json) AND json_type(chips_json) = 'array'), -- [{chip_id, strength, text}]
+  free_text TEXT,                            -- NULL = none; never blank
+  skipped INTEGER NOT NULL DEFAULT 0 CHECK (skipped IN (0, 1)), -- 1 only with no chips and no free text
+  updated_at TEXT NOT NULL                   -- ISO 8601 UTC of the latest PUT
+);

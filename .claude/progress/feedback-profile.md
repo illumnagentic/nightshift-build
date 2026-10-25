@@ -113,6 +113,8 @@ rulings on the open questions are in KICKOFF RULINGS.
 ## AMENDMENTS
 
 - 2026-10-25 (arbiter) — rename `worker/src/profile.py` to `worker/src/taste.py`. Goal: the taste-profile module imports in the Python Worker runtime (`import profile` resolves to the stdlib `profile` module). Files: `worker/src/taste.py` replaces `worker/src/profile.py` in the Files in scope of Steps 1–4 (edited in PLAN); `worker/src/entry.py` imports `taste`. KICKOFF RULINGS references to `profile.py` (Q5) now mean `taste.py`. Done when: `worker/src/profile.py` no longer exists, `entry.py` imports `taste`, and the Step 1 API tests run against the test-mode server with no `AttributeError`. No REQUIREMENTS, contract or dependency change; checked `import taste` fails under python3 and no `taste` module exists in `worker/python_modules`, `.venv` or `.venv-workers`.
+- 2026-10-25 (arbiter) — swipe race returns 404, not 409. Goal: a swipe on a decision dropped by a concurrent prefs re-save returns the contract's 404 `decision_not_found` (TRADEOFFS step 1). Files: `worker/src/entry.py` (already in Step 3 scope). Done when: the extra Step 3 Done-when line holds. Folded into Step 3, not a redo of committed Step 1.
+- 2026-10-25 (arbiter) — README test lists. Goal: `worker/README.md` Tests lists name `tests/test_feedback.py` and `tests/test_profile_unit.py` (SPOTTED step 2), plus Step 3's new test modules. Files: `worker/README.md` (already in Step 4 scope). Done when: the extra Step 4 Done-when line holds.
 
 ---
 
@@ -213,11 +215,15 @@ offered-versus-chosen ratio.
 
 **Evidence location**: `evidence/feedback-profile/step-2.md`
 
-- [ ] Implemented
-- [ ] Tested — evidence: (date)
-- [ ] Best practices met — evidence: (date)
-- [ ] Matches locked requirements — evidence: (date)
-- [ ] No scope drift — evidence: (date)
+- [x] Implemented — evidence: PUT /decisions/{id}/feedback in worker/src/entry.py, taste.compute_factors/current_factors (ORDER BY f.updated_at DESC, f.decision_id), feedback table in worker/schema.sql; redo items done (2026-10-25)
+- [x] Tested — evidence: full suite 373 passed exit=0, server-less 7 modules exit=0 (reviewer run in throwaway worktree, :8850); tests/test_feedback.py, tests/test_profile_unit.py incl. equal-updated_at test (2026-10-25)
+- [x] Best practices met — evidence: body validated before lookup, 404/409/422 per contract, upsert single statement, check-process-refs.sh exit 0 (2026-10-25)
+- [x] Matches locked requirements — evidence: Q3 weight formula, Q4 direction, Q5 TERMS regexes listed in evidence/feedback-profile/step-2.md, Q6 chosen>=1, Q8 snapshot via bump (2026-10-25)
+- [x] No scope drift — evidence: diff vs 12e9460 touches only the six declared Step 2 files plus the progress file (2026-10-25)
+
+**Review FAIL 2026-10-25 (step-reviewer):** `check-process-refs.sh` exit 1, two hits in `evidence/feedback-profile/step-2.md`: line 3 "the Step 2 files" and line 11 "(Step 3)". Reword both without step numbers, then re-review. Everything else passed: code matches Q3/Q4/Q5/Q6/Q8, 372 and 203 tests pass (exit 0 each), no scope drift.
+
+**REDO OF STEP 2 (arbiter 2026-10-25):** (1) reword `evidence/feedback-profile/step-2.md` line 3 "the Step 2 files" and line 11 "(Step 3)" with no step numbers, so `check-process-refs.sh` exits 0; (2) make `taste.current_factors` read feedback in a fixed order: `ORDER BY f.updated_at DESC, f.decision_id` on its query, plus a unit test in `worker/tests/test_profile_unit.py` that two rows with equal `updated_at` give direction text in input order. Files: `evidence/feedback-profile/step-2.md`, `worker/src/taste.py`, `worker/tests/test_profile_unit.py` (all in Step 2 scope). Done when: `check-process-refs.sh` exits 0, full suite and server-less suite pass, then step-reviewer re-reviews Step 2. Review FAILs on Step 2 so far: 1.
 
 ### Step 3 — Favourites, flag corrections and listing detail
 
@@ -246,6 +252,11 @@ no edit), `worker/tests/test_favourites.py` (new), `worker/tests/test_flags.py`
   `corrected_text`, no `split`, no `commute`, no `chips`; unknown id and an `eval`-split
   id are 404 `listing_not_found`; a favourited listing dropped from the deck still
   returns 200.
+- (arbiter 2026-10-25) In `POST /decisions/{id}/swipe`, when the conditional update
+  changes no row, the decision is re-read and a row gone (dropped by a concurrent prefs
+  re-save) returns 404 `decision_not_found`, not 409; a still-present swiped row stays
+  409 `already_swiped`. Checked by reading the code; the existing `test_swipe.py`
+  404/409 tests still pass.
 
 **Evidence location**: `evidence/feedback-profile/step-3.md`
 
@@ -278,6 +289,8 @@ every decision it creates.
   carries the corrected text (decisions.md Photo flags).
 - The trail correction → profile version → curator call → `mreq_` id can be read from
   D1 for one user; the query is written in the evidence file.
+- (arbiter 2026-10-25) `worker/README.md` Tests lists include `tests/test_feedback.py`
+  and `tests/test_profile_unit.py`, plus any test module Step 3 adds.
 
 **Evidence location**: `evidence/feedback-profile/step-4.md`
 
@@ -369,13 +382,20 @@ Plan check — arbiter 2026-10-25: 4 steps, coarse vertical slices, within 3–5
 
 ## TRADEOFFS
 
-2026-10-25 | step 1 | A swipe whose decision row is deleted by a concurrent prefs re-save, between the swipe's lookup and its conditional update, returns 409 `already_swiped` instead of 404 `decision_not_found` | The window is one request wide and needs the same user to re-save prefs while a swipe is in flight; the frontend and personas do not do that | Re-read the row after a zero-change update and return 404 if it is gone (about 3 lines in `entry.py`).
+2026-10-25 | step 1 | A swipe whose decision row is deleted by a concurrent prefs re-save, between the swipe's lookup and its conditional update, returns 409 `already_swiped` instead of 404 `decision_not_found` | The window is one request wide and needs the same user to re-save prefs while a swipe is in flight; the frontend and personas do not do that | Re-read the row after a zero-change update and return 404 if it is gone (about 3 lines in `entry.py`). — FIX_NOW by arbiter 2026-10-25: cheap (about 3 lines) and the contract fixes 404 for a dropped id; folded into Step 3's Done-when (`entry.py` is in its scope) via AMENDMENTS (arbiter), not a redo of committed Step 1.
+2026-10-25 | step 2 | Free-text term matching ignores negation and context: "no garden" counts as a mention of `garden` and raises its weight | Q5 fixes direction to the chips' strengths and texts; code only counts mentions, and a regex list cannot read sentences | Have the model read free text for direction as well as mention (ruled out in Q2), or accept the noise. — accepted by arbiter 2026-10-25: decisions.md makes weight a count of mentions and "no garden" does show the factor matters; direction stays with chip strengths (Q4, Q5), and reading negation needs the LLM call ruled out in Q2.
+2026-10-25 | step 2 | Every swipe and feedback bump recomputes the factors from all the user's feedback rows (one extra query, work grows with swipes) | Q8 stores the fresh snapshot per version; a user has tens to a few hundred rows | Keep the aggregate counts in a table and update them per PUT. — accepted by arbiter 2026-10-25: at tens to a few hundred rows per user the cost is negligible, and a fresh snapshot per version is what Q8 asks for; an aggregate table would be extra state to keep consistent.
+2026-10-25 | step 2 | A body with the wrong shape returns 422 before a missing or foreign decision returns 404 | Same order as the swipe endpoint; the contract fixes no order | Look the decision up first. — accepted by arbiter 2026-10-25: contract General says the backend owns which error wins when several apply; consistent with the swipe endpoint.
 
 ---
 
 ## SPOTTED, NOT FIXED
 
 - 2026-10-25 | step 1 | `worker/src/profile.py` is shadowed by the standard library `profile` module in the Python Worker runtime: `import profile` in `entry.py` returns the stdlib module (`module 'profile' has no attribute 'bump'`, seen in the test-mode server log). Step 1 is blocked until the module is renamed in the plan (Steps 2-4 also name `profile.py`). — FIX_NOW by arbiter 2026-10-25: blocks Step 1 and every later step; renamed to `worker/src/taste.py` via AMENDMENTS (arbiter).
+
+- 2026-10-25 | step 2 | `worker/README.md` Tests lists do not yet include `tests/test_feedback.py` and `tests/test_profile_unit.py`, and README is outside Step 2's scope. Step 4's scope has README. — minor. — FIX_NOW by arbiter 2026-10-25: a two-line doc edit; folded into Step 4's Done-when (README in its scope) via AMENDMENTS (arbiter).
+
+- 2026-10-25 | step 2 | `worker/src/taste.py:73` | `current_factors` reads feedback rows with no `ORDER BY`; `compute_factors` sorts by `updated_at` only (stable sort), so rows with an equal `updated_at` keep D1's unspecified order and direction text (newest first, capped) may vary. `updated_at` comes from `deck._now()` (microseconds, `entry.py:272`), so a tie is unlikely in practice | low. — FIX_NOW by arbiter 2026-10-25: one line plus one unit test, inside Step 2's files; folded into the REDO OF STEP 2 under Step 2's heading.
 
 ---
 
