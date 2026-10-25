@@ -1,26 +1,44 @@
-:root {
-  color-scheme: light;
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", system-ui, sans-serif;
+  --color-page: #ffffff;
+  --color-mist: #f4f4f8; /* soft surface */
+  --color-ink: #1c1c28;
+  --color-muted: #6b6b7b; /* secondary text, on white/mist only */
+  --color-hairline: #e4e4ec;
+  --color-pulse-1: #d6246e; /* pink gradient, deep end; solid fill for text buttons (white ≈4.9:1) */
+  --color-pulse-2: #ec4f6a;
+  --color-pulse-3: #f2794a;
+  --color-income-1: #4f5fd0; /* blue gradient, deep end (white ≈5.4:1) */
+  --color-income-2: #7d8ce8;
+  --color-income-3: #b9d6fb;
+  --color-danger: #c0262d;
 }
 
-body {
-  font-family: system-ui, sans-serif;
-  margin: 2rem;
-  background: #ffffff;
-  color: #1a1a1a;
-}
+@layer base {
+  :root {
+    color-scheme: light;
+  }
 
-ul {
-  padding-left: 1.25rem;
-}
+  body {
+    margin: 0;
+    padding: 2rem 0;
+    font-family: var(--font-sans);
+    line-height: 1.5;
+    background: var(--color-page);
+    color: var(--color-ink);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
 
-li {
-  margin: 0.25rem 0;
-}
+  h1,
+  h2 {
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
 
-form {
-  margin-top: 1rem;
-}
-
-[role="alert"] {
-  color: #b00020;
+  [role="alert"] {
+    color: var(--color-danger);
+  }
 }

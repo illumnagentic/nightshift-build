@@ -1,29 +1,19 @@
 .favourites-screen {
-  --fv-bg: #ffffff;
-  --fv-text: #1a1f24;
-  --fv-muted: #4a5560;
-  --fv-accent: #0b5cad;
-  --fv-pill-bg: #e8eff6;
-  --fv-border: #b9c4cf;
-  --fv-danger: #b42318;
-
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  width: 100%;
+  width: calc(100% - 32px);
   max-width: 400px;
-  padding: 20px;
-  border-radius: 16px;
-  background: var(--fv-bg);
-  color: var(--fv-text);
-  box-shadow: 0 8px 28px rgba(20, 30, 40, 0.14);
-  font-family:
-    system-ui,
-    -apple-system,
-    "Segoe UI",
-    Roboto,
-    sans-serif;
+  margin: 0 auto 48px;
+  padding: 22px;
+  border: 1px solid var(--color-hairline);
+  border-radius: 28px;
+  background: var(--color-page);
+  color: var(--color-ink);
+  box-shadow:
+    0 1px 2px rgba(28, 28, 40, 0.06),
+    0 24px 60px -24px rgba(79, 95, 208, 0.45);
   line-height: 1.4;
 }
 
@@ -35,17 +25,21 @@
 
 .favourites-screen__title {
   margin: 0;
+  color: var(--color-ink);
   font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 .favourites-screen__state {
   margin: 0;
-  color: var(--fv-muted);
+  color: var(--color-muted);
 }
 
 .favourites-screen__error {
   margin: 0 0 8px;
-  color: var(--fv-danger);
+  color: var(--color-danger);
+  font-weight: 600;
 }
 
 .favourites-screen__list {
@@ -63,19 +57,23 @@
   align-items: flex-start;
   gap: 12px;
   padding-bottom: 12px;
-  border-bottom: 1px solid var(--fv-border);
+  border-bottom: 1px solid var(--color-hairline);
 }
 
 .favourites-screen__thumb {
   flex: none;
   width: 88px;
   height: 66px;
-  border-radius: 8px;
+  border-radius: 14px;
   object-fit: cover;
 }
 
 .favourites-screen__thumb--empty {
-  background: var(--fv-pill-bg);
+  background: linear-gradient(
+    135deg,
+    var(--color-income-3),
+    var(--color-income-2)
+  );
 }
 
 .favourites-screen__info {
@@ -89,22 +87,22 @@
 }
 
 .favourites-screen__price {
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .favourites-screen__meta {
-  color: var(--fv-muted);
+  color: var(--color-muted);
   font-size: 0.875rem;
 }
 
 .favourites-screen__button {
   min-width: 44px;
-  min-height: 44px;
-  padding: 4px 16px;
-  border: 1px solid var(--fv-border);
-  border-radius: 8px;
-  background: var(--fv-bg);
-  color: var(--fv-text);
+  min-height: 48px;
+  padding: 4px 20px;
+  border: 1px solid var(--color-hairline);
+  border-radius: 999px;
+  background: var(--color-page);
+  color: var(--color-ink);
   font: inherit;
   font-weight: 600;
   cursor: pointer;
@@ -112,50 +110,49 @@
 }
 
 .favourites-screen__button:hover {
-  background: var(--fv-pill-bg);
+  background: var(--color-mist);
 }
 
 .favourites-screen__remove {
   flex: none;
 }
 
-.favourites-screen__button:focus-visible,
-.favourites-dialog__button:focus-visible,
+.favourites-screen__button:focus-visible {
+  outline: 3px solid var(--color-income-1);
+  outline-offset: 2px;
+}
+
 .favourites-dialog__text:focus-visible {
-  outline: 3px solid var(--fv-accent);
+  outline: 3px solid var(--color-income-1);
+  outline-offset: 2px;
+}
+
+.favourites-dialog__button:focus-visible {
+  outline: 3px solid var(--color-ink);
   outline-offset: 2px;
 }
 
 .favourites-dialog {
-  --fv-bg: #ffffff;
-  --fv-text: #1a1f24;
-  --fv-muted: #4a5560;
-  --fv-accent: #0b5cad;
-  --fv-border: #b9c4cf;
-  --fv-danger: #b42318;
-
   box-sizing: border-box;
   width: calc(100% - 32px);
   max-width: 400px;
   max-height: calc(100% - 32px);
-  padding: 20px;
+  margin: auto;
+  padding: 22px;
   overflow: auto;
-  border: 0;
-  border-radius: 16px;
-  background: var(--fv-bg);
-  color: var(--fv-text);
-  box-shadow: 0 8px 28px rgba(20, 30, 40, 0.14);
-  font-family:
-    system-ui,
-    -apple-system,
-    "Segoe UI",
-    Roboto,
-    sans-serif;
+  border: 1px solid var(--color-hairline);
+  border-radius: 28px;
+  background: var(--color-page);
+  color: var(--color-ink);
+  box-shadow:
+    0 1px 2px rgba(28, 28, 40, 0.06),
+    0 24px 60px -24px rgba(79, 95, 208, 0.45);
   line-height: 1.4;
 }
 
 .favourites-dialog::backdrop {
-  background: rgba(20, 25, 30, 0.6);
+  background: rgba(28, 28, 40, 0.35);
+  backdrop-filter: blur(6px);
 }
 
 .favourites-dialog *,
@@ -172,7 +169,10 @@
 
 .favourites-dialog__title {
   margin: 0;
+  color: var(--color-ink);
   font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 .favourites-dialog__summary {
@@ -183,7 +183,7 @@
 }
 
 .favourites-dialog__summary span {
-  color: var(--fv-muted);
+  color: var(--color-muted);
   font-size: 0.875rem;
 }
 
@@ -193,16 +193,20 @@
 
 .favourites-dialog__text {
   width: 100%;
-  padding: 10px 12px;
-  border: 1px solid var(--fv-border);
-  border-radius: 8px;
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 1px solid var(--color-hairline);
+  border-radius: 16px;
+  background: var(--color-page);
+  color: var(--color-ink);
   font: inherit;
   resize: vertical;
 }
 
 .favourites-dialog__error {
   margin: 0;
-  color: var(--fv-danger);
+  color: var(--color-danger);
+  font-weight: 600;
 }
 
 .favourites-dialog__actions {
@@ -213,22 +217,34 @@
 
 .favourites-dialog__button {
   min-width: 44px;
-  min-height: 44px;
-  padding: 4px 16px;
-  border: 1px solid var(--fv-border);
-  border-radius: 8px;
-  background: var(--fv-bg);
-  color: var(--fv-text);
+  min-height: 48px;
+  padding: 4px 20px;
+  border: 1px solid var(--color-hairline);
+  border-radius: 999px;
+  background: var(--color-page);
+  color: var(--color-ink);
   font: inherit;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    filter 0.15s ease;
+}
+
+.favourites-dialog__button:hover:not(:disabled) {
+  background: var(--color-mist);
 }
 
 .favourites-dialog__button--primary {
-  border-color: var(--fv-accent);
-  background: var(--fv-accent);
+  border-color: transparent;
+  background: var(--color-pulse-1);
   color: #ffffff;
+  box-shadow: 0 10px 22px -10px rgba(214, 36, 110, 0.6);
+}
+
+.favourites-dialog__button--primary:hover:not(:disabled) {
+  background: var(--color-pulse-1);
+  filter: brightness(1.06);
 }
 
 .favourites-dialog__button:disabled {
