@@ -161,3 +161,10 @@ def test_a_removal_reason_does_not_lower_an_unrelated_offered_chip():
     factors = by_name(taste.compute_factors([answered, removal]))
     assert factors["parking"]["weight"] == 0.5
     assert factors["garden"]["weight"] == round(1 / 3, 2)
+
+
+def test_a_factor_with_no_term_pattern_is_never_mentioned(monkeypatch):
+    monkeypatch.delitem(taste.TERMS, "garden")
+    rows = [row([], free_text="a lovely garden"), row(["garden"], at=2)]
+    assert taste.compute_factors(rows) == []
+    assert taste.removal_row(["garden", "parking"], "garden too small", "2026-10-25T10:00:03Z")["offered"] == []

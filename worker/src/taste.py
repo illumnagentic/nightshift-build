@@ -49,7 +49,7 @@ def compute_factors(rows) -> list:
         offered = mentioned_only = chosen = 0
         answers = []
         for row in rows:
-            matched = bool(row["free_text"]) and TERMS[factor].search(row["free_text"]) is not None
+            matched = bool(row["free_text"]) and factor in TERMS and TERMS[factor].search(row["free_text"]) is not None
             answer = next((c for c in row["chips"] if c["chip_id"] == factor), None)
             if factor in row["offered"]:
                 offered += 1
@@ -69,7 +69,7 @@ def compute_factors(rows) -> list:
 def removal_row(offered, reason, removed_at) -> dict:
     """A favourite-removal reason as a feedback row: free text only. Only the chips whose terms the reason matches count
     as offered, so an unrelated chip on that card is not lowered by it."""
-    return {"offered": [f for f in offered if TERMS[f].search(reason)], "chips": [], "free_text": reason,
+    return {"offered": [f for f in offered if f in TERMS and TERMS[f].search(reason)], "chips": [], "free_text": reason,
             "skipped": False, "updated_at": removed_at}
 
 

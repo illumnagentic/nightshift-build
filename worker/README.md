@@ -111,15 +111,17 @@ with the server started with `--var GEMINI_BASE:http://127.0.0.1:8801 --var TFL_
 test-mode server. Before the API tests run, a guard sends one probe save and one probe
 poll. If the fake upstream did not receive them with the fake key, or the server is not
 running, the run stops with exit code 3 and prints the command above. The guard covers
-`test_prefs.py`, `test_commute.py`, `test_deck.py` and `test_swipe.py`.
+`test_prefs.py`, `test_commute.py`, `test_deck.py`, `test_swipe.py`, `test_feedback.py`, `test_favourites.py` and `test_flags.py`.
 
 These modules need no server and no network, and run with a plain
-`uv run --group dev pytest tests/test_filters.py tests/test_prefs_unit.py tests/test_mubit.py tests/test_tfl_unit.py tests/test_profile_unit.py -q`:
+`uv run --group dev pytest tests/test_filters.py tests/test_prefs_unit.py tests/test_mubit.py tests/test_tfl_unit.py tests/test_chips.py tests/test_curator_unit.py tests/test_profile_unit.py -q`:
 
 - `tests/test_filters.py`: the hard filters, including a check over the real listings.
 - `tests/test_prefs_unit.py`: parsing and checking of the model's reply.
 - `tests/test_mubit.py`: the Mubit client.
 - `tests/test_tfl_unit.py`: reading TfL answers and building the journey URL.
+- `tests/test_chips.py`: the chip catalogue and its filtering by listing.
+- `tests/test_curator_unit.py`: the curator request, its reply checking and the fake curator answer.
 - `tests/test_profile_unit.py`: the taste profile factors, term matching and removal rows.
 
 `tests/test_users.py`, `tests/test_prefs.py`, `tests/test_commute.py`, `tests/test_deck.py`, `tests/test_swipe.py`,
@@ -140,8 +142,8 @@ npx wrangler d1 execute haka --local --file schema.sql
 
 Verified on 2026-10-25 against a seeded D1 holding 143 users: it exits 0 and the users stay.
 It cannot add a column to an existing table, so changes to existing tables need a re-seed.
-`worker/scripts/seed.sh` also works but wipes users. The swipe feature adds `favourites`
-and `profile_versions` this way.
+`worker/scripts/seed.sh` also works but wipes users. The swipe and feedback features add `favourites`,
+`profile_versions`, `feedback` and `favourite_removals` this way.
 
 ## Curator and deck
 

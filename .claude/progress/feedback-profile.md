@@ -115,6 +115,8 @@ rulings on the open questions are in KICKOFF RULINGS.
 - 2026-10-25 (arbiter) — rename `worker/src/profile.py` to `worker/src/taste.py`. Goal: the taste-profile module imports in the Python Worker runtime (`import profile` resolves to the stdlib `profile` module). Files: `worker/src/taste.py` replaces `worker/src/profile.py` in the Files in scope of Steps 1–4 (edited in PLAN); `worker/src/entry.py` imports `taste`. KICKOFF RULINGS references to `profile.py` (Q5) now mean `taste.py`. Done when: `worker/src/profile.py` no longer exists, `entry.py` imports `taste`, and the Step 1 API tests run against the test-mode server with no `AttributeError`. No REQUIREMENTS, contract or dependency change; checked `import taste` fails under python3 and no `taste` module exists in `worker/python_modules`, `.venv` or `.venv-workers`.
 - 2026-10-25 (arbiter) — swipe race returns 404, not 409. Goal: a swipe on a decision dropped by a concurrent prefs re-save returns the contract's 404 `decision_not_found` (TRADEOFFS step 1). Files: `worker/src/entry.py` (already in Step 3 scope). Done when: the extra Step 3 Done-when line holds. Folded into Step 3, not a redo of committed Step 1.
 - 2026-10-25 (arbiter) — README test lists. Goal: `worker/README.md` Tests lists name `tests/test_feedback.py` and `tests/test_profile_unit.py` (SPOTTED step 2), plus Step 3's new test modules. Files: `worker/README.md` (already in Step 4 scope). Done when: the extra Step 4 Done-when line holds.
+- 2026-10-25 (arbiter) — Step 3 scope, retroactive: `worker/tests/test_profile_unit.py` (favourite-removal counting tests only) is added to Step 3's Files in scope. Reason (qa-gate finding 1): the Step 3 brief allowed the file for removal-counting tests but the plan was never updated; commit 1024f94 only adds two tests that exercise in-scope Step 3 code (`taste.removal_row`), the step-reviewer saw them and named them in the No scope drift tick, and the file is already declared in Step 2. No requirement, contract or dependency change. — accepted by arbiter 2026-10-25: additive tests on in-scope code, briefed, reviewed; re-doing them would change nothing.
+- 2026-10-25 (arbiter) — Step 4 redo scope: `worker/tests/test_profile_unit.py` (one test for a factor with no regex only) is added to the REDO OF STEP 4 files, so the Q5 "a factor may have no regex" fix carries a test. Done when: the REDO OF STEP 4 note under Step 4 holds.
 
 ---
 
@@ -300,6 +302,10 @@ every decision it creates.
 - [x] Matches locked requirements — evidence: Q6/Q7/Q8 and Done-when met; curator.py unchanged since 1024f94, SHA-256 9b5a064b.../10a031b5... recomputed and match curator-deck.md; trail query ran on test D1 and returned version 13 with mreq_ id; README lists test_feedback.py, test_profile_unit.py (and favourites/flags) (2026-10-25)
 - [x] No scope drift — evidence: diff touches only deck.py, taste.py, test_deck.py, README.md, step-4.md and this progress file (2026-10-25)
 
+**REDO OF STEP 4 (arbiter 2026-10-25, qa-gate findings 2 and 3):** (1) `worker/README.md`, three corrections: the fake-guard sentence (about line 113) names every module the `conftest.py` guard actually covers (check `conftest.py`; at least `test_prefs.py`, `test_commute.py`, `test_deck.py`, `test_swipe.py`, `test_feedback.py`, `test_favourites.py`, `test_flags.py`); the server-less command and bullet list (about line 116) include `tests/test_chips.py` and `tests/test_curator_unit.py`, matching the seven modules qa-gate ran; the table sentence (about line 143) says B5 adds `favourites`, `profile_versions`, `feedback` and `favourite_removals`. (2) `worker/src/taste.py`: the two direct `TERMS[...]` lookups (in `compute_factors` and `removal_row`) tolerate a factor with no entry, so it never matches free text or a removal reason (Q5: "a factor may have no regex"), e.g. `TERMS.get(factor)` checked before `.search`. No change to any existing regex or to the weight formula. (3) `worker/tests/test_profile_unit.py`: one unit test that a factor absent from `TERMS` (e.g. via monkeypatch) gives no error in `compute_factors` and `removal_row` and is not counted as mentioned. Files: `worker/README.md`, `worker/src/taste.py`, `worker/tests/test_profile_unit.py` (AMENDMENTS arbiter 2026-10-25), `evidence/feedback-profile/step-4.md` (note the redo). Done when: README server-less command, run as written, passes with exit 0; full suite passes against the test-mode server with the fake upstream; `check-process-refs.sh` exits 0; diff touches only these four files plus this progress file; then step-reviewer re-reviews Step 4. Review FAILs on Step 4 so far: 0.
+
+**Redo reviewed 2026-10-25 (step-reviewer): PASS.** README names all seven fake-guarded modules (checked against `usefixtures("fake")` in tests) and all seven server-less modules; server-less command as written: 207 passed, exit 0. `taste.py` diff is two `factor in TERMS` guards only, no regex or formula change. New test fails on d2077e1's `taste.py` (KeyError, taste.py:52) and passes after. Full suite in fresh seeded worktree (:8850, fake :8851): 417 passed, exit 0. `check-process-refs.sh` exit 0.
+
 ---
 
 ## KICKOFF QUESTIONS (for the arbiter)
@@ -406,16 +412,150 @@ Plan check — arbiter 2026-10-25: 4 steps, coarse vertical slices, within 3–5
 
 ## VERIFICATION
 
-- [ ] All step checkboxes ticked with evidence
-- [ ] Every evidence path in this file exists
-- [ ] Test suite run — result:
-- [ ] Lint run — result:
-- [ ] Typecheck run — result:
-- [ ] Build run — result:
-- [ ] Diff contains no files outside declared scope
-- [ ] Tradeoff ledger reviewed and signed off by human
-- [ ] Human eye test completed
+- [x] All step checkboxes ticked with evidence — 20 of 20, all dated 2026-10-25, order holds (qa-gate 2026-10-25)
+- [x] Every evidence path in this file exists — `evidence/feedback-profile/step-1.md` to `step-4.md` present (qa-gate 2026-10-25)
+- [x] Test suite run — result: throwaway worktree at d2077e1, seeded, test-mode server :8860, fake :8861. Backend full suite 416 passed exit 0, then 416 passed exit 0 on the same D1; server-less modules (filters, prefs_unit, mubit, tfl_unit, chips, curator_unit, profile_unit) 206 passed exit 0; web `npm ci` exit 0, `npm test` 186 passed exit 0 (qa-gate 2026-10-25)
+- [x] Lint run — result: no lint command configured in `.claude/kit-config.md`; not run (qa-gate 2026-10-25)
+- [x] Typecheck run — result: `npm run typecheck` in `web/` exit 0 (qa-gate 2026-10-25)
+- [x] Build run — result: `npm run build` in `web/` exit 0 (qa-gate 2026-10-25)
+- [x] Diff contains no files outside declared scope — all 16 branch files are in some step's Files in scope or Evidence location. Finding: commit 1024f94 (Step 3) edited `worker/tests/test_profile_unit.py`, which is in Step 2's scope but not Step 3's (qa-gate 2026-10-25)
+- [x] Tradeoff ledger reviewed — signed by arbiter (full automation): 7 entries, each with an arbiter verdict (5 accepted, 1 FIX_NOW done in Step 3, plus the 3 SPOTTED items all FIX_NOW and done) (qa-gate 2026-10-25)
+- [ ] Human eye test completed — not human-verified (full automation) — smoke check: pass, 11 of 11 steps against the test-mode server, see HANDOVER
+
+QA-GATE: PASS WITH FINDINGS 2026-10-25 — (1) Step 3 touched `worker/tests/test_profile_unit.py` outside its declared scope, and its "No scope drift" tick names the file but no AMENDMENT or arbiter ruling covers it (`.claude/CLAUDE.md` Standing prohibitions 1); (2) `worker/README.md` is wrong in three places: line 113 says the fake guard covers four modules, but `test_feedback.py`, `test_favourites.py` and `test_flags.py` use it too; line 116 leaves `test_chips.py` and `test_curator_unit.py` out of the server-less command (already true before B5); line 143 says the swipe feature adds only `favourites` and `profile_versions`, but B5 adds `feedback` and `favourite_removals` as well.
 
 ---
 
 ## HANDOVER
+
+**What was built**
+
+You can now act on the deck. Swipe left, right or superlike a card, then send chip
+feedback and a comment for it, edit it later or skip it. Superliked homes become
+favourites. You can list favourites and remove one with a reason, open a listing's
+full detail with its photo flags, and correct a flag. Every one of these actions adds
+a numbered version to your taste profile (`GET /api/profile`). The next curator call
+sends that profile and your ten latest comments, and records which version it used.
+
+**Before you try it on an existing local D1**
+
+B5 adds four tables (`favourites`, `profile_versions`, `feedback`,
+`favourite_removals`). Your existing D1 does not have them yet. Your users are kept.
+
+1. Stop the dev server on :8787.
+2. From `worker/`, run `npx wrangler d1 execute haka --local --file schema.sql`.
+3. Start it again: `cd worker && uvx --from workers-py pywrangler dev`.
+
+`main` has no swipe endpoint until this branch merges. On `main`, Yewen's deck screen
+will get 404s on swipe and feedback.
+
+**What to check yourself**
+
+The normal dev server uses the real key. Every `GET /api/deck` that needs new cards is
+a paid Gemini call through Mubit, about 7,000 prompt tokens. Swipes, feedback and the
+rest cost nothing.
+
+1. Do the three schema steps above. Then start the web app: `cd web && npm run dev`, and
+   open http://localhost:5173. Do not set `VITE_API_MODE=mock`.
+2. Create a new user. Save prefs, for example "2 bed flat under £550k, bright, near a
+   tube". The deck should load.
+3. Swipe one card left, one right and superlike one. Each time the feedback screen
+   should appear, because the first 15 swipes require it. Pick a chip, choose a
+   strength and phrase, type a comment, press Done. No error should appear.
+4. Open favourites. The superliked home should be there. Remove it and give a reason.
+   A blank reason should be refused with a message, not a crash.
+5. In a terminal, with your user id from step 2:
+   `curl -s http://localhost:8787/api/profile -H "X-User-Id: <user_id>"`.
+   You should see `version` equal to the number of actions you took, `history` newest
+   first with causes `swipe`, `feedback` and `favourite_removed`, and `factors` holding
+   the chips you answered. Directions should read like `must have "Bright and airy"`.
+6. Correct a flag. Get a flag id with
+   `curl -s http://localhost:8787/api/listings/<listing_id> -H "X-User-Id: <user_id>"`,
+   then `curl -s -X POST http://localhost:8787/api/flags/<flag_id>/correction -H 'Content-Type: application/json' -H "X-User-Id: <user_id>" -d '{"text":"Not damp, it is a shadow."}'`.
+   Flag ids contain `:`. That is fine in a URL path. The reply should carry
+   `corrected_text` and a new `profile_version`.
+7. Check the trail. From `worker/`:
+   `npx wrangler d1 execute haka --local --command "SELECT v.version, v.cause_type, c.call_id, c.mreq_id FROM profile_versions v LEFT JOIN curator_calls c ON c.user_id = v.user_id AND c.profile_version = v.version WHERE v.user_id = '<user_id>' ORDER BY v.version"`.
+   After the next deck call that needs new cards, the latest version should have a
+   `call_id` and a `mreq_` id.
+
+**Smoke check run by qa-gate (full automation, not human-verified)**
+
+Throwaway worktree at d2077e1, seeded, test-mode server on :8860 with the fake upstream
+on :8861. No paid calls, :8787 not touched. All 11 steps passed:
+
+1. `POST /api/users` → 201.
+2. `PUT /api/prefs` → 200, parsed prefs returned.
+3. `GET /api/deck?n=5` → 200, 5 cards, one `exploration`, all `feedback_required: true`.
+4. Swipes left, right and superlike → 200, versions 1, 2, 3, `favourited` true only on
+   the superlike. A second swipe → 409 `already_swiped`.
+5. Feedback with two chips and free text → 200, version 4, blank chip text returned as
+   `null`. A second card → version 5. A skip → version 6. A chip not offered → 422
+   `chip_not_offered`. An unswiped card → 409 `not_swiped`.
+6. `GET /api/profile` → version 6, five factors (area_busyness, balcony_terrace and
+   kitchen at 0.5; garden and natural_light at 0.33), six history entries newest first.
+7. `GET /api/favourites` → the superliked listing.
+8. `DELETE /api/favourites/rm-89042490` with a blank reason → 422 `reason_required`.
+   With a reason → 200 `removed: true`. Again → 404 `not_favourited`. List is now empty.
+9. `GET /api/listings/rm-89042490` → 200 for the removed favourite, exactly the 26
+   contract keys, 29 photo flags. An unknown id → 404 `listing_not_found`.
+10. Flag correction → 200 with `corrected_text` and version 8. Blank text → 422
+    `invalid_request`. Unknown id → 404 `flag_not_found`.
+11. `GET /api/deck?n=5` again → second curator call. Its recorded body carries
+    `taste_profile` (six factors, the same as `GET /api/profile`) and `recent_feedback`
+    (two feedback entries and the removal, newest last, the skip left out). System
+    prompt and generation config SHA-256s match the frozen values. D1 shows that call
+    at `profile_version` 8 with `mreq_…0002`, and its 3 new decisions at version 8. The
+    corrected listing was not in this call's random sample, so the digest change was not
+    seen here. `test_a_corrected_flag_reaches_the_next_candidate_digest` covers it, and it
+    passed.
+
+**Tools that will help**
+
+- curl, as above, for profile, listing detail and flag correction. The frontend does
+  not show the profile.
+- Browser devtools, Network tab. Filter on `/api/`. After each swipe look for
+  `POST /api/decisions/<id>/swipe` returning 200 and `PUT .../feedback` returning 200.
+  A 404 there means you are on `main` or an old D1.
+- `npx wrangler d1 execute haka --local --command "..."` from `worker/` to read
+  `profile_versions`, `feedback`, `favourites` and `curator_calls` directly.
+- The `pywrangler dev` terminal. A 500 prints a Python traceback there.
+
+**What is not done**
+
+- A free-text match ignores negation. "No garden" raises the garden weight. Accepted
+  by arbiter.
+- Each swipe and feedback recomputes the whole profile from all the user's rows. Fine
+  at hundreds of rows. Accepted by arbiter.
+- A bad body returns 422 before a missing decision returns 404. Accepted by arbiter.
+- Removing a favourite is three separate writes. A failure between them loses the
+  reason or the version bump. Accepted by arbiter.
+- `GET /listings/{id}` filters no skipped photos. Data prep already removed them.
+  Accepted by arbiter.
+- `deck.py` imports `taste` inside a function to avoid a circular import. Accepted by
+  arbiter.
+- Not built on purpose: undoing a flag correction, re-adding a removed favourite,
+  server-side enforcement of compulsory feedback, any LLM reading of feedback.
+- Flag corrections are lost on a re-seed. `seed.sh` also wipes users, feedback and
+  profiles.
+- No live curator call was made in B5. The profile in the user message has only been
+  seen by the fake upstream, not by Gemini.
+- qa-gate findings, not yet ruled on: the Step 3 scope breach on
+  `worker/tests/test_profile_unit.py`, and the three README errors listed under
+  VERIFICATION.
+
+**What could bite you**
+
+- Weight measures how often a factor comes up, not how strongly the user feels. In the
+  smoke check, one passing mention of "noisy" scored 0.5. An explicit `must_have` on
+  natural light scored 0.33, because that chip was also shown on another card and left
+  alone. The curator sees both numbers. If the persona results look wrong, check this
+  first. The direction text carries the strength, but only if the curator reads it.
+- `taste.TERMS` must have an entry for every catalogue chip. Add a chip to
+  `chips.CATALOGUE` without a regex and, once a user has any comment or removal
+  reason, every swipe, feedback and removal for that user returns 500, because
+  `compute_factors` and `removal_row` look up `TERMS[...]` directly. The kickoff ruling
+  says a factor may have no regex; the code does not allow that. All 20 have one today.
+- Old D1 on Yewen's laptop. If the schema command is not run after merging, a swipe
+  writes the action and then returns 500 (no `profile_versions` table). A retry then
+  gets 409 `already_swiped`, so the card looks stuck. The deck itself still loads.

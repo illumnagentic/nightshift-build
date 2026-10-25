@@ -57,3 +57,11 @@ Throwaway git worktree, `worker/scripts/seed.sh`, server on port 8840 (inspector
 - Full suite, second run on the same D1: 416 passed, exit 0.
 - Server-less modules (chips, curator_unit, filters, mubit, prefs_unit, profile_unit, tfl_unit): 206 passed, exit 0.
 - No paid calls; port 8787 not used.
+
+## Redo: README, factors without a term pattern
+
+- `worker/README.md`: the fake-guard sentence now names all seven guarded modules; the server-less command and list now hold all seven server-less modules; the table sentence names `favourites`, `profile_versions`, `feedback` and `favourite_removals`.
+- `worker/src/taste.py`: `compute_factors` and `removal_row` skip a factor with no `TERMS` entry, so it never matches free text or a removal reason.
+- New unit test removes `garden` from `TERMS`. It failed before the fix (`KeyError` in `taste.py`) and passes after.
+- Server-less command from the README, run from `worker/`: 207 passed, exit 0.
+- Full suite on a fresh throwaway worktree, seeded, server on port 8840, fake upstream 8841: 417 passed, exit 0. No paid calls; port 8787 not used.
