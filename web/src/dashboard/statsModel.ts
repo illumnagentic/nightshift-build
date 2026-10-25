@@ -38,7 +38,7 @@ const ARMS: { id: ArmId; label: string }[] = [
   { id: "updated_memory", label: "Updated + memory" },
 ];
 
-const pct = (x: number) => `${Math.round(x * 100)}%`;
+export const pct = (x: number) => `${Math.round(x * 100)}%`;
 
 const METRICS: Record<
   MetricId,

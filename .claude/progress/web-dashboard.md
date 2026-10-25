@@ -217,11 +217,11 @@ measure per chart; switching user still resets to Deck; the rate chart passes a 
 
 **Evidence location**: `evidence/web-dashboard/step-3.md`.
 
-- [ ] Implemented
-- [ ] Tested — evidence: (date)
-- [ ] Best practices met — evidence: (date)
-- [ ] Matches locked requirements — evidence: (date)
-- [ ] No scope drift — evidence: (date)
+- [x] Implemented — DashboardScreen uses exported pct and GENERIC_ERROR_MESSAGE; typecheck/build exit 0 (2026-10-25)
+- [x] Tested — evidence: npm test exit 0 (186 tests); six-bar hover and keyboard checks in evidence/web-dashboard/step-3.md (2026-10-25)
+- [x] Best practices met — evidence: duplicates removed, reuse of existing helpers; check-process-refs exit 0 (2026-10-25)
+- [x] Matches locked requirements — evidence: done-when for the redo and amended browser checks recorded (2026-10-25)
+- [x] No scope drift — evidence: diff touches only DashboardScreen.tsx, statsModel.ts (one-word export), evidence step-3.md (2026-10-25)
 
 ---
 

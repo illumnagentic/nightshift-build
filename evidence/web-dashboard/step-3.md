@@ -45,3 +45,15 @@ Built-in browser, mock dev server on port 5183, user alex, 2026-10-25.
 - Fallback D (overridden to null the updated arm): the note "The updated curator is not available, so only the base arms are shown." appears and the missing bars read "Not available", not zero.
 - 375 px wide: no sideways scrolling (page width 375), the four tabs fit (right edge 343 px, gaps 8 px), no overlapping chart text. Chart text renders about 9–10 px tall at this width, and the "Preferences" tab text (87 px) is slightly wider than its button (85 px).
 
+
+### Each bar, after the tooltip placement change (2026-10-25)
+
+Built-in browser, mock dev server on port 5183.
+
+- Hover on all six bars (three hits, three rate): each shows its tooltip; no tooltip rectangle intersects that bar's value text.
+- Keyboard (real Tab key presses from each chart heading): each of the six bars receives focus, announces e.g. "Base curator: 2.2 ± 0.8, 5 personas", and shows its tooltip (e.g. "Base curator · Mean 2.2 · SD 0.8 · Personas 5"); no tooltip covers that bar's value text.
+- The two tall hits bars (Base + memory, Updated + memory) draw their tooltip in the bottom band above the baseline; the others use the top band.
+
+## Code
+
+The dashboard screen reuses the existing percent formatter exported from the stats model and the existing network error message from the deck state, instead of local copies.

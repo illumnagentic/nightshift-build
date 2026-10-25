@@ -1,15 +1,14 @@
 import { useCallback, useEffect, useState } from "react";
 import { api, ApiError } from "../api";
+import { GENERIC_ERROR_MESSAGE } from "../deck/deckState";
 import { BarChart } from "./BarChart";
 import {
   buildStatsModel,
+  pct,
   type MetricModel,
   type StatsModel,
 } from "./statsModel";
 import "./dashboard.css";
-
-const NETWORK_MESSAGE = "Could not reach the server. Try again.";
-const percent = (v: number) => `${Math.round(v * 100)}%`;
 
 type State =
   | { status: "loading" }
@@ -52,7 +51,8 @@ export default function DashboardScreen() {
         if (!cancelled)
           setState({
             status: "error",
-            message: err instanceof ApiError ? err.message : NETWORK_MESSAGE,
+            message:
+              err instanceof ApiError ? err.message : GENERIC_ERROR_MESSAGE,
           });
       });
     return () => {
@@ -111,11 +111,7 @@ export default function DashboardScreen() {
         <p className="dashboard__caption">
           Share of rule-good listings ranked below the cut.
         </p>
-        <BarChart
-          metric={model.rate}
-          title="False-exclude rate"
-          format={percent}
-        />
+        <BarChart metric={model.rate} title="False-exclude rate" format={pct} />
         <ChartNotes metric={model.rate} />
       </section>
     </div>
