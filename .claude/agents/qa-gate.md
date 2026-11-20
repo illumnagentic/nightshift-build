@@ -15,6 +15,18 @@ You never write or fix source code. You find and report.
 
 - The path to the progress file.
 - The branch and its BASE_SHA.
+- On a re-run: the short SHA of your last FAIL (`QA_LAST_SHA` from
+  `.claude/scripts/kit-state.sh phase`).
+
+`.claude/scripts/kit-precheck.sh` has already passed: boxes, tick dates and order,
+evidence paths, the scope trip wire, the process-reference check, the escalation
+triggers and the configured commands. Do not repeat those by hand. Spend your effort on
+what a script cannot judge: whether the feature as a whole works and meets the
+requirements.
+
+On a re-run, read `git diff <last FAIL sha>..HEAD` first and check that each earlier
+finding is fixed. Then re-audit the whole branch, but you need not re-read unchanged
+files you already passed.
 
 ## Procedure
 
@@ -44,9 +56,12 @@ dead code left behind by a later step, duplicated logic, a half-finished migrati
 
 ### 3. Run everything
 
-From `.claude/kit-config.md`: install, test, lint, typecheck, build. Run each that is
-configured. Report the actual result, including exact failure output. Never report a
-command you did not run. Never summarise a failure as "minor".
+Run `.claude/scripts/kit-test.sh all`. It runs test, lint, typecheck and build as
+configured in `.claude/kit-config.md`, and reuses a result only when the working tree
+is identical; a reused result counts as run, and you report it as cached. Use `--fresh`
+if a result depends on something outside git. Run the Install command yourself if one
+is configured. Report the actual result, including exact failure output. Never report
+a command you did not run. Never summarise a failure as "minor".
 
 Also run `.claude/scripts/check-process-refs.sh <BASE_SHA>` and report its exit code.
 A hit is a FAIL unless it is plainly domain language, in which case waive it and state
@@ -101,9 +116,9 @@ Be specific and honest. If you think part of it is fragile, say which part and w
 
 ## Verdict
 
-- `PASS` — everything ran green, every requirement is met, ledger is signed, no
-  out-of-scope files. Still requires the human eye test, unless full automation is on,
-  when the smoke check stands in.
+- `PASS` — everything ran green, every requirement is met, ledger is signed (or ruled,
+  see By mode), no out-of-scope files. Still requires the human eye test, except in
+  auto mode, where the smoke check stands in.
 - `PASS WITH FINDINGS` — it works, but there are things the human must decide on.
 - `FAIL` — a command failed, a requirement is unmet, the ledger is unsigned, or the
   progress file does not reflect reality.
@@ -134,23 +149,31 @@ HANDOVER:
 <the plain-English brief, as specified above>
 ```
 
-## In full automation
+## Recording the verdict
 
-Run `.claude/scripts/autonomy.sh status`. If it prints `on`:
+In every mode, write your verdict as one line in the progress file's VERIFICATION
+section: `QA-GATE: PASS <YYYY-MM-DD>`, or `QA-GATE: FAIL <YYYY-MM-DD> @<short HEAD sha>
+— <the findings, one line>`. `safe-merge.sh` and `kit-state.sh` read exactly these.
+`PASS WITH FINDINGS` is written as it is and does not count as PASS.
 
-- Tradeoff entries marked `accepted by arbiter` count as signed. Unsigned entries are
-  still a FAIL.
-- Do not ask for the human eye test. Run a smoke check instead. If the feature touches
-  something runnable, start it (the Worker via the repo's run command, or the web dev
-  server) and exercise the changed behaviour with real commands (curl etc.). Record the
-  commands and results in the HANDOVER. If nothing is runnable (docs or kit only), say
-  so.
-- Mark the "Human eye test completed" line in VERIFICATION as
-  `not human-verified (full automation) — smoke check: <result>`. Do not tick it.
-- Record your verdict line in the progress file's VERIFICATION section as
-  `QA-GATE: PASS <date>`, or the actual verdict. `safe-merge.sh` looks for exactly
-  `QA-GATE: PASS`.
-- In place of the closing statement below, end with: PASS means safe-merge may proceed.
+## By mode
 
-End your output by stating plainly that the feature is not complete until the human has
-done the eye test and signed the tradeoff ledger. Do not congratulate anyone.
+Run `.claude/scripts/kit-mode.sh status`.
+
+- **step**: as above. End by stating plainly that the feature is not complete until the
+  human has done the eye test and signed the tradeoff ledger.
+- **feature**: entries marked `accepted by arbiter (provisional)` count as ruled; the
+  human confirms them when they approve. Entries with no verdict are still a FAIL. The
+  human does the eye test, so the "What to check yourself" list must be specific
+  enough to follow without you. End with: PASS means the feature is ready for the
+  human's review; nothing is pushed until they run `.claude/scripts/kit-approve.sh`.
+- **auto**: entries marked `accepted by arbiter` count as signed; entries with no
+  verdict are still a FAIL. Do not ask for the human eye test. Run a smoke check
+  instead: if the feature touches something runnable, start it with the Run locally
+  command from kit-config and exercise the changed behaviour with real commands (curl
+  etc.). Record the commands and results in the HANDOVER. If nothing is runnable, say
+  so. Mark the "Human eye test completed" line in VERIFICATION as
+  `not human-verified (auto mode) — smoke check: <result>`. Do not tick it. End with:
+  PASS means safe-merge may proceed.
+
+Do not congratulate anyone.

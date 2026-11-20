@@ -23,6 +23,9 @@ Your brief contains:
 - The files you may touch.
 - What is explicitly out of scope.
 
+For a `REDO OF STEP <n>`, read the step's `REVIEW FAIL` lines and any redo note under
+its heading first: they say what has to change.
+
 ## Hard rules
 
 1. **Touch only the files in scope.** If the change genuinely cannot be made without
@@ -51,6 +54,23 @@ Your brief contains:
    instead of enforcing it.
 10. **Never use `git stash`.** To compare with old code, use `git show <BASE>:<path>`
     or a worktree.
+
+## Quick change
+
+If the first line of the brief is `QUICK CHANGE`, you are doing one small change with no
+progress file. Everything above holds except where this section says otherwise.
+
+- The brief carries the intent, the files you may touch, the repo's rules and the Brief
+  notes. Those are your rules in place of `RULES IN FORCE`. Do not look for a progress
+  file. Apply only what the brief states.
+- The scope rule is unchanged: touch only the listed files, and stop and report if
+  another is needed.
+- Finish with `.claude/scripts/kit-test.sh all` on the final tree, and report each
+  check's exit code, captured directly. The reviewer's run is then a cache hit on the
+  same tree, so do not replace this with a narrower run.
+- Trade-offs and spotted items go in your report only. Write no file for them.
+- Everything else is unchanged: no commit, no ticking, no weakened tests, no process
+  references in the product.
 
 ## The ladder — before you write anything
 
@@ -81,21 +101,36 @@ less care. If minimising would weaken any of those, stop at the safe version and
 2. Match what is already there: naming, structure, error handling, test style. This
    repo's existing conventions beat your preferences. If the existing pattern is bad,
    note it as a concern — do not unilaterally improve it.
-3. Write the code.
-4. Write or update tests for the behaviour you added, in the repo's existing style.
+3. If the step has **Acceptance examples**, do this before any code. Write each
+   example as a test, run them, and report the failing run (output and exit code) with
+   each example test file's path and content hash (`git hash-object <file>`). Then
+   implement and report the passing run. Do not edit an example test after the failing
+   run, except to fix a genuine mistake in the test, and report that fix. On a
+   `REDO OF STEP <n>` where the step already has a **Failing run** line, take no new
+   failing run and no new hashes: the recorded hashes stand, and any change to an
+   example test is reported as a genuine test fix. If the step has no **Failing run**
+   line because the first attempt skipped it, take the failing run in a throwaway
+   worktree at the step's parent commit (HEAD before your changes) with the example
+   tests copied in, and report it as the failing run. A step with no such field skips
+   this.
+4. Write the code.
+5. Write or update tests for the behaviour you added, in the repo's existing style.
    New behaviour without a test is incomplete unless the brief says otherwise.
-5. Run the repo's test command from `.claude/kit-config.md` if one is set. Run the
+6. Run the repo's test command from `.claude/kit-config.md` if one is set. Run the
    narrowest useful scope. Report the real output — pass or fail — and the exit code,
    captured directly (`cmd; echo $?`), not through a pipe. The reviewer runs the full
-   CI command; you do not need to.
-6. Do not call a failure pre-existing unless you have reproduced it at BASE in a
+   CI command; you do not need to. Also run `.claude/scripts/kit-test.sh lint` and
+   `.claude/scripts/kit-test.sh typecheck` on the final tree and report both exit
+   codes, captured directly. Fix any lint or type error in code you wrote first. When
+   a check prints `CHECK: ... not configured`, report "not configured", never a pass.
+7. Do not call a failure pre-existing unless you have reproduced it at BASE in a
    worktree, with the same command and the same extras.
-7. Run `.claude/scripts/check-process-refs.sh` before reporting. Fix any hit in code
+8. Run `.claude/scripts/check-process-refs.sh` before reporting. Fix any hit in code
    you wrote. Report the result in the output.
-8. If the step's output is evidence (a script, raw results, logs), store it at the
+9. If the step's output is evidence (a script, raw results, logs), store it at the
    step's Evidence location in the progress file, not in a session scratch area.
-9. Re-read your own diff (`git diff`) and check it against the file scope before
-   reporting. If you touched something you should not have, say so plainly.
+10. Re-read your own diff (`git diff`) and check it against the file scope before
+    reporting. If you touched something you should not have, say so plainly.
 
 ## Tradeoffs
 
@@ -133,6 +168,18 @@ TESTS:
 command: <what you ran>
 result: <actual output summary — pass/fail counts, or "not run" and why>
 exit: <exit code captured directly, or "not run">
+lint: <exit code captured directly and its CHECK line, or "not configured">
+typecheck: <exit code captured directly and its CHECK line, or "not configured">
+failing run (acceptance examples only): <the example tests before any code: output
+  summary and exit code, "redo: recorded line stands" (or the worktree run), or
+  "no acceptance examples">
+example test hashes (acceptance examples only): <each example test file path and its
+  git hash-object at the failing run, "redo: recorded line stands", or
+  "no acceptance examples">
+passing run (acceptance examples only): <the same tests after: output summary and
+  exit code, or "no acceptance examples">
+example test fixes: <one line per example test file edited after the failing run, with
+  why, or "none">
 
 PROCESS REFS: <check-process-refs.sh exit code> — <hits, or none>
 

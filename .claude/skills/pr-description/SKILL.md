@@ -72,18 +72,28 @@ about performance, security or correctness the diff does not evidence.
 
 If the honest description is three lines, it is three lines. Length is not quality.
 
-## In full automation
+## By mode
 
-Run `.claude/scripts/autonomy.sh status`. If it prints `on`, step 3 does not wait to be
-asked. Write the body to a file in the session scratchpad (with the Write tool), push,
-then open the PR as drafted, with no attribution:
+Run `.claude/scripts/kit-mode.sh status`.
+
+- **step**: as above. Open the PR only when asked.
+- **feature**: only after the human has approved the feature
+  (`.claude/scripts/kit-approve.sh --check` exits 0). Show the drafted title and body
+  and say you will open it. Write the body to a file in the session scratchpad, push,
+  then run `gh pr create`; the guard raises a prompt so the human confirms it. Never
+  merge unless the human asks; then `.claude/scripts/safe-merge.sh <pr>`, which asks
+  again.
+- **auto**: step 3 does not wait to be asked. Write the body to a file in the session
+  scratchpad, push, then open the PR as drafted, with no attribution.
+
+The push and PR commands, in feature and auto mode:
 
 ```
 git push -u origin <branch>
-gh pr create --base main --title "<title>" --body-file <path>
+gh pr create --base <target> --title "<title>" --body-file <path>
 ```
 
 The title is one line in double quotes, with no `$(...)`, backticks or newlines. The
 guard only auto-allows this exact shape; a multi-line `--body` stalls on a prompt.
 
-Never push to `main`. Any ESCALATE: stop, write the reason, tell the human.
+Never push to the target branch. Any ESCALATE: stop, write the reason, tell the human.

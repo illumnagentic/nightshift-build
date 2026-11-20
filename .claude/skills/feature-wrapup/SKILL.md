@@ -21,7 +21,8 @@ Do not start the wrap-up if any of these is true — fix them first and say whic
 
 ## 2. Run the gate
 
-Invoke `qa-gate` with the progress file path and the branch's BASE_SHA
+Run `.claude/scripts/kit-precheck.sh` first and fix what it reports. Then invoke
+`qa-gate` with the progress file path and the branch's BASE_SHA
 (`.claude/scripts/kit-context.sh` prints it).
 
 It runs in its own context deliberately: by this point the main conversation is long,
@@ -91,27 +92,49 @@ Once both sign-offs are in:
 
 Do not congratulate anyone. Say what is done and what is next.
 
-## In full automation
+## By mode
 
-Run `.claude/scripts/autonomy.sh status`. If it prints `on`, see `## Modes` in
-`.claude/CLAUDE.md`. Otherwise ignore this section. The sign-offs in section 5 are replaced as follows.
+Run `.claude/scripts/kit-mode.sh status`.
 
-- **Before the gate.** Send unsigned TRADEOFFS and SPOTTED entries to the `arbiter`. It
-  marks ACCEPT entries. Run FIX_NOW briefs through `implementer` and `step-reviewer`.
-- **Section 3, on FAIL.** Send the findings to the `arbiter`. Run its FIX_NOW briefs
-  through `implementer` and `step-reviewer`, then run `qa-gate` again.
-- **VERIFICATION.** The ledger line becomes `signed by arbiter (full automation)`. The
-  eye-test line is `qa-gate`'s not-human-verified smoke line. Tick neither as human.
+**Every mode, before the gate**: run `.claude/scripts/kit-precheck.sh`. It checks
+boxes, tick dates and order, evidence paths, scope, the ledger, process references,
+the escalation triggers and the configured commands. Fix what it reports first, through
+the normal route. Brief `qa-gate` only once it prints `PRECHECK: PASS`. On a re-run,
+give qa-gate `QA_LAST_SHA` from `.claude/scripts/kit-state.sh phase`.
+
+**step**: everything above, unchanged.
+
+**feature and auto, before the gate**: send every ledger entry with no verdict
+(`kit-state.sh unsigned`) to the `arbiter` in one call. It marks ACCEPT entries. Run
+FIX_NOW briefs through `implementer` and `step-reviewer`.
+
+**feature and auto, on FAIL (section 3)**: send the findings to the `arbiter` in one
+call. Run its FIX_NOW briefs through `implementer` and `step-reviewer`, then the
+precheck, then `qa-gate` again.
+
+**feature**:
+
+- On PASS, commit, then stop. Tell the human the feature is ready for review: where the
+  HANDOVER is, the number of provisional arbiter rulings, and that they approve with
+  `.claude/scripts/kit-approve.sh` (in a terminal, or `!` in Claude Code). Do not push,
+  open a PR or set `Status: complete`; the guard refuses them until they approve.
+- After approval: set `Status: complete` with the date, tick the feature in the plan
+  file, commit, then `pr-description` (the human confirms the PR). The human merges,
+  unless they ask you to.
+
+**auto**:
+
+- **VERIFICATION.** The ledger line becomes `signed by arbiter (auto mode)`. The
+  eye-test line is qa-gate's not-human-verified smoke line. Tick neither as human.
 - **Section 4.** Write the handover to the progress file only. Do not wait.
-- **Section 6, close-out.**
-  1. Set `Status: complete` with the date, and tick the feature in `docs/plan.md`. That
+- **Close-out.**
+  1. Set `Status: complete` with the date, and tick the feature in the plan file. That
      edit belongs in this PR.
   2. Commit through `commit-workflow`, then push.
   3. Open the PR through `pr-description`.
-  4. Run `.claude/scripts/safe-merge.sh <pr-number>`. It refuses unless every PLAN step
-     box is ticked and `QA-GATE: PASS` is in VERIFICATION.
-  5. After the merge: `git switch main && git pull --ff-only`.
+  4. Run `.claude/scripts/safe-merge.sh <pr-number>`.
+  5. After the merge: `git switch <target> && git pull --ff-only`.
   6. No retro offer.
-- **Report to the human:** PR link, merge commit, arbiter ACCEPTs (one line each), and
-  anything ESCALATED.
+- **Report:** PR link, merge commit, arbiter ACCEPTs (one line each), anything
+  ESCALATED, and every FOLLOW-UP line.
 - Any ESCALATE: stop, write the reason, tell the human. Do not route around it.

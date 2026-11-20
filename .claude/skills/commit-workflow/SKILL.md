@@ -102,14 +102,27 @@ changed config key, a non-additive schema change, or altered default behaviour t
 would break an existing caller. Internal refactoring is not breaking. When it is
 genuinely borderline, say so and let the human decide rather than quietly picking.
 
-## In full automation
+## Step commits
 
-Run `.claude/scripts/autonomy.sh status`. If it prints `on`:
+After a step passes review, the `step-reviewer` output already carries `COMMIT TITLE`
+and `COMMIT FILES`, drafted from the diff it just read. Use those. Do not call
+`commit-composer` for a step commit: it would read the same diff a second time.
 
-- Step 3 (ask) is skipped. Still delegate to `commit-composer`, and still commit only
-  through `safe-commit.sh`.
-- CONCERNS are judged by the orchestrator. A secret in the diff, a deleted test or an
-  unapproved dependency: do not commit, send it to the `arbiter`.
-- `COHERENT: No`: split as suggested. Do not commit a mixed bag.
-- Commit after each step passes review.
-- Any ESCALATE: stop, write the reason, tell the human. Do not route around it.
+Before committing, run `.claude/scripts/kit-escalate-check.sh`. It flags what
+commit-composer used to raise as concerns: a likely secret, a skipped or deleted test,
+an unapproved dependency, a change under an escalate path.
+
+Use `commit-composer` for every other commit: work outside a feature step, a wrap-up
+fix, anything the human asks to commit directly.
+
+## By mode
+
+Run `.claude/scripts/kit-mode.sh status`.
+
+- **step**: show the human the title, the files and any escalate-check finding as a
+  concern. Ask. Commit only on their yes.
+- **feature** and **auto**: step 3 (ask) is skipped. Any escalate-check finding: do not
+  commit; write the `ESCALATED (arbiter)` line under the step and stop. Otherwise stage
+  the COMMIT FILES and commit through `safe-commit.sh` after each step passes review.
+- In every mode: `COHERENT: No` from commit-composer means split, never a mixed bag.
+  Any ESCALATE: stop, write the reason, tell the human. Do not route around it.

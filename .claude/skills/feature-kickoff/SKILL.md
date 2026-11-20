@@ -1,11 +1,14 @@
 ---
 name: feature-kickoff
-description: Plan a feature and create its locked progress file before any code is written. Use whenever starting work on a feature, a bug fix of any size, or any change that will take more than one step. Triggers on "let's build", "implement", "add support for", "start working on", "new feature".
+description: Plan a feature and create its locked progress file before any code is written. Use whenever starting work on a feature, or any change that will take more than one step. Triggers on "let's build", "implement", "add support for", "start working on", "new feature".
 ---
 
 # Feature kickoff
 
 No code is written before this runs. Not a line, not a scaffold, not a "quick start".
+
+A change that meets the `quick-change` eligibility is offered that lane first, in step
+mode. Anything else comes here.
 
 ## 1. Understand before planning
 
@@ -73,10 +76,20 @@ For each step, write into the file:
 - **Done when** — an observable condition, not "implemented correctly". If the step
   shows a list, deck or paged view, the condition goes past the first batch. If the
   step relies on a rule another step introduced, restate that rule here.
+- **Acceptance examples** - for a step that changes behaviour, 2 to 4 named cases:
+  a concrete input, the expected result, and the path it runs on (real data, demo
+  backend, fake). Write them after drafting the steps. A step with nothing to assert
+  (a measurement, docs) has none: leave the field out.
 - **Evidence location** — where evidence for this step lives. Durable: in the repo, or
   a location the human names. Never only a session scratch area. "The diff" is fine
   where the diff is the evidence.
 - The five checkboxes, all unticked.
+
+**Real data.** Where **Real data** in kit-config is set and a step changes behaviour on
+that data, run the current code on it once now, before the plan is shown. Take at least
+one example from what it actually did. Record figures and outcomes in the progress file,
+never raw records. Where **Real data** is blank or absent, say so in one line and skip
+this.
 
 The human eye test belongs in VERIFICATION at wrap-up, not in a step's done-when. A
 reviewer cannot tick a box that waits on the human.
@@ -86,6 +99,14 @@ explicitly rather than pretending otherwise.
 
 Use the `Plan` agent for the decomposition if the feature is large — it keeps the
 architectural thinking out of the main context.
+
+**Plan review.** In every mode, before the plan is shown to the human (in auto mode,
+before it is locked), send the `plan-reviewer` subagent the progress file path
+(`Progress file: .claude/progress/<slug>.md`) and nothing else. Fix the plan from its
+findings. Then write one line under `## PLAN`, so the record outlives the session:
+`**Plan review**: <n> findings; fixed: <which, how>; left: <which, why>` (or
+`**Plan review**: no findings`). In auto mode a finding left unfixed is not yours to
+waive: it goes to the `arbiter` (see By mode).
 
 ## 5. Gitignore
 
@@ -100,11 +121,13 @@ Check **Progress files** in `.claude/kit-config.md`.
 
 ## 6. Show it and get agreement
 
-Show the human the plan: steps, file scopes, RULES IN FORCE, and what you have ruled
-out of scope. The human confirms RULES IN FORCE before the plan is locked. Ask them to
-confirm the plan before implementation starts. Never fold a new capability into a table
-or list the human approves as a whole. Each new capability is asked as its own question
-with a yes/no. This is the last cheap moment to correct a misunderstanding.
+Show the human the plan: steps, file scopes, acceptance examples, RULES IN FORCE, and
+what you have ruled out of scope. Also show what the plan reviewer raised, what changed,
+and any finding you left alone and why. The human confirms RULES IN FORCE before the
+plan is locked. Ask them to confirm the plan before implementation starts. Never fold
+a new capability into a table or list the human approves as a whole. Each new
+capability is asked as its own question with a yes/no. This is the last cheap moment
+to correct a misunderstanding.
 
 Once they confirm, the requirements block is locked. From this point it changes only
 by explicit instruction, appended to AMENDMENTS with the date and never by rewriting
@@ -114,26 +137,53 @@ the original.
 
 Hand each step to the `implementer` subagent one at a time, and each finished step to
 `step-reviewer`, including steps with no diff. Never run the next step before the
-current one passes review. Never implement in the main context yourself.
+current one passes review. Never implement in the main context yourself. The loop is
+"One step" in `## Modes` of `.claude/CLAUDE.md`; `.claude/scripts/kit-state.sh brief
+<n>` gives the start of each brief.
 
-Every brief starts with the header: `PROGRESS: .claude/progress/<slug>.md`, then
+After each step is committed, tell the human they can `/clear` and say "continue" to
+start the next step with a fresh context.
+
+Every step brief starts with the header: `PROGRESS: .claude/progress/<slug>.md`, then
 `STEP: <n>` or `REDO OF STEP <n>`. Briefs cite rules from RULES IN FORCE. The redo rule
 is in `.claude/CLAUDE.md`, and `.claude/hooks/check-step-order.sh` enforces the order.
 
-## In full automation
+## By mode
 
-Run `.claude/scripts/autonomy.sh status`. If it prints `on`, see `## Modes` in
-`.claude/CLAUDE.md`. Otherwise ignore this section. Then:
+Run `.claude/scripts/kit-mode.sh status`. Step mode is everything above. Otherwise see
+`## Modes` in `.claude/CLAUDE.md`, and:
 
-- **Requirements (sections 2 and 3).** Do not ask the section 2 questions. Quote
-  `REQUIREMENTS (LOCKED)` from the feature's line in `docs/plan.md`, the binding lines
-  in `docs/decisions.md`, and any human instruction. Anything genuinely ambiguous goes
-  to the `arbiter`. On ESCALATE, stop, write the reason, and tell the human.
-- **Branch.** Create the branch named in `docs/plan.md` from an up-to-date `main`
-  (`git switch main && git pull --ff-only && git switch -c <branch>`) before stamping
-  `BASE_SHA`.
-- **Approval (section 6).** Skipped. Instead the `Plan` agent, or the main agent, checks
-  the plan against the requirements and the step size rule in `docs/decisions.md`. Any
-  new capability, or dependency not on the approved list in kit-config, is an ESCALATE.
-- **Dirty working tree.** ESCALATE. Do not commit or stash someone else's changes.
-- Then go straight into the steps.
+**Both feature and auto mode**
+
+- **Requirements (sections 2 and 3).** Quote `REQUIREMENTS (LOCKED)` from the feature's
+  line in the **Plan file** and the binding lines of the **Binding documents** named in
+  kit-config, plus any human instruction. No plan file configured: say so and stop.
+- **Branch.** Create the branch the plan line names (else `feat/<slug>`) from an
+  up-to-date target branch (`git switch <target> && git pull --ff-only && git switch -c
+  <branch>`) before stamping `BASE_SHA`.
+- Write `- **Mode**: <mode> (<date>)` in the header.
+- **Dirty working tree.** Stop. Do not commit or stash someone else's changes.
+- Commit the progress file through `safe-commit.sh` as `docs(kit): record <slug> plan`
+  when **Progress files** is `committed`.
+
+**Feature mode** (interactive, with the human)
+
+- Section 2 questions are asked as usual, but only where the plan line and binding
+  documents leave a real gap.
+- Section 6 runs as usual: the human approves the plan, RULES IN FORCE and each new
+  capability. Then write `- **Plan approved**: <date> (human, in chat)` in the header.
+  Never write that line without the human's yes in this conversation.
+- Then tell them the plan is locked and they can run `.claude/scripts/kit-drive.sh` to
+  build it, one fresh session per step, or carry on here.
+
+**Auto mode** (run by `kit-drive.sh`)
+
+- Do not ask the section 2 questions. Anything ambiguous goes to the `arbiter`. On
+  ESCALATE, write the `ESCALATED (arbiter)` line and stop.
+- Section 6 approval is skipped. Instead, check yourself that every locked requirement
+  is served by a step (the plan reviewer does not check this), and run the plan review
+  in section 4. Fix what you can; every finding you leave unfixed goes to the `arbiter`
+  in one call, as items for `kickoff`, and its rulings stand. A new capability, or a
+  dependency not on the approved list, is an ESCALATE.
+- Stop after the progress file is committed. The driver starts step 1 in a fresh
+  session.

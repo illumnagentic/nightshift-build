@@ -1,0 +1,2 @@
+# The kit runs under bash everywhere, Git Bash on Windows: keep it LF.
+* text=auto eol=lf

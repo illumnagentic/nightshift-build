@@ -16,9 +16,11 @@ set -uo pipefail
 input="$(cat)"
 
 # --- Extract the command field ----------------------------------------------
-# python3 if available (correct JSON parsing), otherwise a good-enough fallback.
-if command -v python3 >/dev/null 2>&1; then
-  command_text="$(printf '%s' "$input" | python3 -c '
+# Python if one runs (correct JSON parsing), otherwise a good-enough fallback. A Python
+# that is found but fails (the Windows Store alias) also falls back, never allows.
+# shellcheck source=../scripts/kit-py.sh
+. "$(dirname "${BASH_SOURCE[0]}")/../scripts/kit-py.sh" 2>/dev/null || KIT_PY=()
+if [ "${#KIT_PY[@]}" -gt 0 ] && command_text="$(printf '%s' "$input" | kit_py -c '
 import json,sys
 try:
     d = json.load(sys.stdin)
@@ -26,7 +28,8 @@ except Exception:
     sys.exit(0)
 ti = d.get("tool_input") or {}
 print(ti.get("command","") if isinstance(ti, dict) else "")
-' 2>/dev/null)"
+' 2>/dev/null)"; then
+  :
 else
   command_text="$(printf '%s' "$input" | tr ',' '\n' | sed -n 's/.*"command"[[:space:]]*:[[:space:]]*"\(.*\)".*/\1/p' | head -1)"
 fi

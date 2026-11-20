@@ -30,13 +30,15 @@ block() {
 }
 
 # --- Extract cwd (line 1) and the prompt (rest) -------------------------------
-# python3 if available (correct JSON parsing). If python3 is missing, or crashes on
+# Python if one runs (correct JSON parsing). If Python is missing, or crashes on
 # input it should have handled, fall back to sed on the raw JSON; never allow because
 # the extractor failed.
 extracted=""
 use_fallback=1
-if command -v python3 >/dev/null 2>&1; then
-  extracted="$(printf '%s' "$input" | python3 -c '
+# shellcheck source=../scripts/kit-py.sh
+. "$(dirname "${BASH_SOURCE[0]}")/../scripts/kit-py.sh" 2>/dev/null || KIT_PY=()
+if [ "${#KIT_PY[@]}" -gt 0 ]; then
+  extracted="$(printf '%s' "$input" | kit_py -c '
 import json,sys
 try:
     d = json.load(sys.stdin)
