@@ -50,6 +50,8 @@ if [ -z "$target" ] || [ "$target" = auto ]; then
   target="${target##*/}"
 fi
 target="${target:-main}"
+msg="$("$here/kit-conf.sh" check "Plan file" 2>/dev/null || true)"
+[ -z "$msg" ] || refuse "$msg"
 plan="$("$here/kit-conf.sh" ticks "Plan file" 2>/dev/null | head -n1 || true)"
 plan="${plan:-docs/plan.md}"
 mode="$("$here/kit-mode.sh" status 2>/dev/null | awk '{print $1}' || true)"
@@ -132,6 +134,11 @@ allowed() {
   [ "$f" = "$progress" ] || [ "$f" = "$plan" ] && return 0
   while IFS= read -r e; do
     [ -n "$e" ] || continue
+    # A bare suffix such as `.uid` ("`main.gd` and its `.uid`") extends every other
+    # entry: it allows <entry><suffix>, as well as a file named exactly the suffix.
+    case "$e" in */*) ;; .?*)
+      [[ "$f" == ?*"$e" ]] && grep -Fqx -- "${f%"$e"}" <<< "$entries" && return 0 ;;
+    esac
     case "$e" in
       */) [[ "$f" == "$e"* ]] && return 0 ;;
       *\**) [[ "$f" == $e ]] && return 0 ;;

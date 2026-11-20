@@ -66,6 +66,7 @@ case "$mode" in feature|auto) ;; *) die "kit mode is '$mode'. The driver runs in
 claude_bin="${KIT_CLAUDE_BIN:-claude}"
 command -v "$claude_bin" >/dev/null 2>&1 || die "cannot find $claude_bin"
 
+msg="$(conf check "Plan file")"; [ -z "$msg" ] || die "$msg"
 plan="$(conf ticks "Plan file" | head -n1)"
 [ -n "$plan" ] && [ -f "$plan" ] || die "set **Plan file** in .claude/kit-config.md to an existing file; $mode mode works from a plan"
 if [ "$mode" = auto ] && [ "$(conf get "Progress files")" != committed ]; then

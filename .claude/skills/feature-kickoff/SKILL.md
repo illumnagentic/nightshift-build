@@ -73,6 +73,8 @@ For each step, write into the file:
 - **Files in scope** — the specific paths it may touch. Be precise. This list is the
   trip wire that catches sprawl later, so a lazy `src/**` defeats the purpose. If you
   genuinely cannot predict a path, say so in the step rather than widening the glob.
+  Put each path in backticks. A bare suffix extends the other paths on the list:
+  "`player.gd` and its `.uid`" allows `player.gd` and `player.gd.uid`.
 - **Done when** — an observable condition, not "implemented correctly". If the step
   shows a list, deck or paged view, the condition goes past the first batch. If the
   step relies on a rule another step introduced, restate that rule here.

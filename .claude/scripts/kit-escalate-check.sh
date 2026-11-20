@@ -13,7 +13,10 @@
 #     **Approved dependencies** list;
 #   - something that looks like a secret in an added line;
 #   - a test skipped in an added line, or a test file deleted;
-#   - a step with **Max review fails** (default 3) or more REVIEW FAIL lines.
+#   - a step with **Max review fails** (default 3) or more REVIEW FAIL lines;
+#   - an Escalate paths, Approved dependencies or Dependency manifests line with text
+#     but nothing in backticks, which would otherwise read as empty and turn the
+#     check off.
 #
 # Output: one "ESCALATE: <reason>" line per finding, then "ESCALATE-CHECK: clear" or
 # "ESCALATE-CHECK: <n> finding(s)".
@@ -62,6 +65,12 @@ matches() {   # <file> <pattern>: dir/ prefix, glob, or exact path
     *) [ "$1" = "$2" ] ;;
   esac
 }
+
+# --- Config lines the checks below depend on --------------------------------------
+for key in "Escalate paths" "Approved dependencies" "Dependency manifests"; do
+  msg="$(conf check "$key")"
+  [ -z "$msg" ] || flag "$msg"
+done
 
 # --- Escalate paths --------------------------------------------------------------
 while IFS= read -r pat; do

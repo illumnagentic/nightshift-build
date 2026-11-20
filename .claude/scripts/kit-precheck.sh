@@ -83,6 +83,11 @@ in_scope() {
   [ "$f" = "$progress" ] || { [ -n "$plan" ] && [ "$f" = "$plan" ]; } && return 0
   while IFS= read -r e; do
     [ -n "$e" ] || continue
+    # A bare suffix such as `.uid` ("`main.gd` and its `.uid`") extends every other
+    # entry: it allows <entry><suffix>, as well as a file named exactly the suffix.
+    case "$e" in */*) ;; .?*)
+      [[ "$f" == ?*"$e" ]] && grep -Fqx -- "${f%"$e"}" <<< "$scope" && return 0 ;;
+    esac
     case "$e" in
       */) [[ "$f" == "$e"* ]] && return 0 ;;
       *\**) [[ "$f" == $e ]] && return 0 ;;
