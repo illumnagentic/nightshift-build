@@ -3,4 +3,6 @@
 # so it stays, and the negation after it overrides it.
 progress/
 !progress/
-.autonomy
+.kit-mode
+.approvals/
+.drive/

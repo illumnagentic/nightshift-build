@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
 #
-# safe-merge.sh — the only permitted way to merge a pull request into main.
+# safe-merge.sh — the only permitted way for the agent to merge a pull request.
 #
-# Refuses unless: the PR is open and targets main; the title is in commit format;
-# the progress file on the PR branch has every PLAN box ticked and a recorded
-# "QA-GATE: PASS"; and every changed file is inside the paths that progress file
-# declares. Then squash-merges with the PR title as subject, an empty body, and
-# deletes the branch.
+# Refuses unless: the PR is open and targets the target branch (kit-config, else
+# origin/HEAD, else main); the title is in commit format; the progress file on the PR
+# branch has every PLAN box ticked and a recorded "QA-GATE: PASS"; nothing but the
+# progress file and the plan file changed after that PASS; every changed file is inside
+# the paths the progress file declares; and, in feature mode, the human has approved
+# the PR's head commit (kit-approve.sh). Then squash-merges with the PR title as
+# subject, an empty body, and deletes the branch.
 #
 # Usage:
 #   safe-merge.sh 12
@@ -39,20 +41,35 @@ done
 [[ "$pr" =~ ^[0-9]+$ ]] || die "usage: safe-merge.sh <pr-number> [--check-only]"
 git rev-parse --is-inside-work-tree >/dev/null 2>&1 || die "not inside a git repository"
 
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+. "$here/kit-py.sh"
+[ "${#KIT_PY[@]}" -gt 0 ] || die "Python 3 is needed (tried python3, python, py -3)"
+target="$("$here/kit-conf.sh" get "Target branch" 2>/dev/null | tr -d '`' || true)"
+if [ -z "$target" ] || [ "$target" = auto ]; then
+  target="$(git symbolic-ref -q refs/remotes/origin/HEAD 2>/dev/null || true)"
+  target="${target##*/}"
+fi
+target="${target:-main}"
+msg="$("$here/kit-conf.sh" check "Plan file" 2>/dev/null || true)"
+[ -z "$msg" ] || refuse "$msg"
+plan="$("$here/kit-conf.sh" ticks "Plan file" 2>/dev/null | head -n1 || true)"
+plan="${plan:-docs/plan.md}"
+mode="$("$here/kit-mode.sh" status 2>/dev/null | awk '{print $1}' || true)"
+
 # --- PR state ----------------------------------------------------------------
 json="$(gh pr view "$pr" --json state,baseRefName,headRefName,headRefOid,title,files)" \
   || die "could not read PR #${pr}"
-field() { printf '%s' "$json" | python3 -I -c 'import json,sys; print(json.load(sys.stdin)[sys.argv[1]])' "$1"; }
+field() { printf '%s' "$json" | kit_py -I -c 'import json,sys; print(json.load(sys.stdin)[sys.argv[1]])' "$1"; }
 
 state="$(field state)"
 base="$(field baseRefName)"
 head="$(field headRefName)"
 oid="$(field headRefOid)"
 title="$(field title)"
-changed="$(printf '%s' "$json" | python3 -I -c 'import json,sys; print("\n".join(f["path"] for f in json.load(sys.stdin)["files"]))')"
+changed="$(printf '%s' "$json" | kit_py -I -c 'import json,sys; print("\n".join(f["path"] for f in json.load(sys.stdin)["files"]))')"
 
 [ "$state" = "OPEN" ] || refuse "PR #${pr} is ${state}, not OPEN"
-[ "$base" = "main" ] || refuse "PR #${pr} targets ${base}, not main"
+[ "$base" = "$target" ] || refuse "PR #${pr} targets ${base}, not ${target}"
 
 # --- Title: same rules as safe-commit.sh --------------------------------------
 printf '%s' "$title" | grep -Eq "^(${VALID_TYPES})(\([a-z0-9._/-]+\))?!?: .+$" \
@@ -92,16 +109,16 @@ printf '%s\n' "$content" | grep '^- \[x\]' >/dev/null || refuse "no ticked boxes
 
 # --- QA-GATE: PASS in VERIFICATION ----------------------------------------------
 verification="$(printf '%s\n' "$content" | awk '/^## /{v = ($0 ~ /^## VERIFICATION/); next} v')"
-printf '%s\n' "$verification" | grep 'QA-GATE: PASS' | grep -v 'PASS WITH FINDINGS' >/dev/null \
+printf '%s\n' "$verification" | grep -E '^(\*\*)?QA-GATE: PASS' | grep -v 'PASS WITH FINDINGS' >/dev/null \
   || refuse "no 'QA-GATE: PASS' line in VERIFICATION of ${progress}"
 
 # --- No code change after the QA-GATE PASS --------------------------------------
-# Only the progress file and docs/plan.md may change after the commit that recorded PASS.
-pass_commit="$(git log -1 --format=%H -G'QA-GATE: PASS( [^W]|$)' "$oid" -- "$progress")"
+# Only the progress file and the plan file may change after the commit that recorded PASS.
+pass_commit="$(git log -1 --format=%H -G'^(\*\*)?QA-GATE: PASS( [^W]|$)' "$oid" -- "$progress")"
 [ -n "$pass_commit" ] || refuse "cannot find the commit that recorded 'QA-GATE: PASS' in ${progress}"
-code_commit="$(git log -1 --format=%H "$oid" -- . ":(exclude)${progress}" ':(exclude)docs/plan.md')"
+code_commit="$(git log -1 --format=%H "$oid" -- . ":(exclude)${progress}" ":(exclude)${plan}")"
 if [ -n "$code_commit" ] && ! git merge-base --is-ancestor "$code_commit" "$pass_commit"; then
-  refuse "files other than ${progress} and docs/plan.md changed after QA-GATE: PASS (commit ${code_commit})"
+  refuse "files other than ${progress} and ${plan} changed after QA-GATE: PASS (commit ${code_commit})"
 fi
 
 # --- Changed files inside declared scope ---------------------------------------
@@ -114,9 +131,14 @@ entries="$(printf '%s\n' "$content" | awk '
 
 allowed() {
   local f="$1" e
-  [ "$f" = "$progress" ] || [ "$f" = "docs/plan.md" ] && return 0
+  [ "$f" = "$progress" ] || [ "$f" = "$plan" ] && return 0
   while IFS= read -r e; do
     [ -n "$e" ] || continue
+    # A bare suffix such as `.uid` ("`main.gd` and its `.uid`") extends every other
+    # entry: it allows <entry><suffix>, as well as a file named exactly the suffix.
+    case "$e" in */*) ;; .?*)
+      [[ "$f" == ?*"$e" ]] && grep -Fqx -- "${f%"$e"}" <<< "$entries" && return 0 ;;
+    esac
     case "$e" in
       */) [[ "$f" == "$e"* ]] && return 0 ;;
       *\**) [[ "$f" == $e ]] && return 0 ;;
@@ -133,6 +155,12 @@ while IFS= read -r f; do
 done <<< "$changed"
 [ -z "$bad" ] || refuse "files outside the declared scope:
 ${bad%$'\n'}"
+
+# --- Feature mode: the human approved this head --------------------------------------
+if [ "$mode" = feature ]; then
+  "$here/kit-approve.sh" --check "$head" "$oid" >/dev/null 2>&1 \
+    || refuse "feature mode: ${head} has no valid human approval (kit-approve.sh) for its current head"
+fi
 
 if [ "$check_only" -eq 1 ]; then
   echo "ok: all checks passed"

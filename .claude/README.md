@@ -14,5 +14,6 @@ By default it only blocks commits made from inside a Claude Code session that by
 `.claude/scripts/safe-commit.sh`. Your own commits pass through. See the header of
 `.claude/hooks/pre-commit-guard.sh` for modes and overrides.
 
-For full automation, see `.claude/AUTO_SETUP.md`. It covers setting it up on another
-machine and updating the kit. The mode is off by default on every machine.
+For the three modes (step, feature, auto), see `.claude/MODES_SETUP.md`. It covers
+setting them up on another machine and updating the kit. Every machine starts in step
+mode.

@@ -5,6 +5,7 @@
 - **Branch**: {{BRANCH}}
 - **BASE_SHA**: {{BASE_SHA}}
 - **Status**: in progress
+- **Mode**: {{MODE}}
 
 ---
 
@@ -59,7 +60,17 @@ _None._
 
 **Done when**: {{STEP_DONE_WHEN}}
 
+<!-- Optional. 2 to 4 named cases for a step that changes behaviour. Each: a name, a
+     concrete input, the expected result, and the path it runs on (real data, demo
+     backend, fake). e.g. "Late forecast: input 14:05 file for the 14:00 run; expect the
+     latest value kept; path: fake". Omit for a step with nothing to assert (a
+     measurement or docs step). An absent field means not used. -->
+
+**Acceptance examples**: {{STEP_EXAMPLES}}
+
 **Evidence location**: {{STEP_EVIDENCE}}
+
+<!-- step-reviewer writes "REVIEW FAIL <date>: <first fix>" below the boxes on a FAIL. -->
 
 - [ ] Implemented
 - [ ] Tested — evidence: (date)
@@ -104,6 +115,10 @@ _None._
 - [ ] Diff contains no files outside declared scope
 - [ ] Tradeoff ledger reviewed and signed off by human
 - [ ] Human eye test completed
+
+<!-- qa-gate writes its verdict here: QA-GATE: PASS <date> or
+     QA-GATE: FAIL <date> @<sha> — <findings>. In feature mode kit-approve.sh adds the
+     HUMAN APPROVAL line. -->
 
 ---
 
