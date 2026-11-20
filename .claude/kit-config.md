@@ -70,7 +70,7 @@ and Approved dependencies to flag concerns before a step commit.
 The mechanical triggers are checked by `.claude/scripts/kit-escalate-check.sh`; the
 arbiter judges the rest.
 
-- **Approved dependencies**: fastapi, google-genai, pytest
+- **Approved dependencies**: `fastapi`, `google-genai`, `pytest`
   <!-- May be added without asking. Any other dependency escalates. -->
 - **Escalate paths**: <!-- e.g. `web/`, `docs/api-contract.md`, `migrations/*.sql`.
   Any change to these escalates. A trailing / means the whole directory. -->
